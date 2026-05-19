@@ -35,9 +35,6 @@ publishDate: 'Jan 1 2026'
 
 Optional fields: `excerpt`, `updatedDate`, `isFeatured`, `tags`, `seo`.
 
-## Deploy
-
-Pushed to `main` → auto-deployed by Vercel.
 
 ## License
 
