@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1584 396" width="1584" height="396">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;1,400&amp;display=swap');
+      text { font-family: 'Newsreader', 'Source Serif Pro', Georgia, serif; }
+    </style>
+  </defs>
+  <rect width="1584" height="396" fill="#ffffff"/>
+  <text x="792" y="198"
+        font-size="80"
+        font-weight="400"
+        fill="#0a0a0a"
+        text-anchor="middle"
+        dominant-baseline="central">AI gets smarter. <tspan font-style="italic">Are we?</tspan></text>
+</svg>

@@ -1,13 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <defs>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Newsreader:wght@400&amp;display=swap');
       text { font-family: 'Newsreader', 'Source Serif Pro', Georgia, serif; }
     </style>
   </defs>
-  <rect width="32" height="32" fill="#ffffff"/>
-  <text x="16" y="16"
-        font-size="22"
+  <rect width="1024" height="1024" fill="#ffffff"/>
+  <text x="512" y="512"
+        font-size="560"
         font-weight="400"
         fill="#0a0a0a"
         text-anchor="middle"
