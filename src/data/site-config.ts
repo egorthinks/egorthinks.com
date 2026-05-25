@@ -31,6 +31,10 @@ const siteConfig: SiteConfig = {
             href: 'https://x.com/egorthinks'
         },
         {
+            text: 'LinkedIn',
+            href: 'https://www.linkedin.com/in/egorthinks'
+        },
+        {
             text: 'GitHub',
             href: 'https://github.com/egorthinks'
         }
