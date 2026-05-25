@@ -5,6 +5,7 @@ const siteConfig: SiteConfig = {
     title: 'Egor Fedorov',
     subtitle: 'Notes on cognition, focus, and code',
     description: 'Tools and notes for developers who code with AI and want to stay sharp.',
+    twitterHandle: '@egorthinks',
     headerNavLinks: [
         {
             text: 'Home',
