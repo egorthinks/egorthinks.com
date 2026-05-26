@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Button from '../components/Button.astro';
 import Hero from '../components/Hero.astro';
 import PostPreview from '../components/PostPreview.astro';
+import Subscribe from '../components/Subscribe.astro';
 import siteConfig from '../data/site-config';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { sortItemsByDateDesc } from '../utils/data-utils';
@@ -26,4 +27,5 @@ const featuredPosts = posts.filter(({ data }) => data.isFeatured);
             </div>
         )
     }
+    <Subscribe class="my-16 sm:my-24" />
 </BaseLayout>

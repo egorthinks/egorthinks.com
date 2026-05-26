@@ -46,7 +46,15 @@ const siteConfig: SiteConfig = {
         actions: []
     },
     subscribe: {
-        enabled: false
+        enabled: true,
+        title: 'Notes by email',
+        text: 'Occasional essays on cognition and code. 1–2 per month. No spam, ever.',
+        form: {
+            // Replace YOUR_USERNAME with your Buttondown username (e.g. egorthinks → buttondown.com/egorthinks)
+            action: 'https://buttondown.com/api/emails/embed-subscribe/egorthinks',
+            emailFieldName: 'email',
+            hiddenFields: [{ name: 'embed', value: '1' }]
+        }
     },
     postsPerPage: 8
 };

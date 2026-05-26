@@ -1,25 +1,28 @@
 ---
 title: I read my own commits like a stranger
-publishDate: 'May 25 2026'
+publishDate: 'May 27 2026'
+excerpt: An MIT study found 83% of ChatGPT users could not quote their own essay. The same started happening with my code.
+tags:
+  - ai
+  - cognition
+  - programming
 seo:
   title: I read my own commits like a stranger
-  description: Egor Fedorov writes that he began reading his own commits like a stranger.
+  description: '83% of ChatGPT users could not quote their own essay. The same started happening with my code - notes on cognitive debt from AI coding.'
 ---
 
-<!-- # I read my own commits like a stranger -->
+> When MIT researchers put EEG caps on people writing essays with ChatGPT, **83%** of the AI group could not quote a single sentence from the essay they had just finished. The number stayed abstract to me until I opened my own repo and did not recognize the code on screen.
 
 
-*When MIT researchers put EEG caps on people writing essays with ChatGPT, 83% of the AI group could not quote a single sentence from the essay they had just finished. The number stayed abstract to me until I opened my own repo and did not recognize the code on screen.*
+Last Tuesday I opened my project repo to fix a small bug in the scoring code. The bug was nothing, a wrong threshold. I knew which file, opened it, and then I just sat there for maybe forty seconds.
 
-Last Tuesday I opened SaveUrMind to fix a small bug in the scoring code. The bug was nothing, a wrong threshold. I knew which file, opened it, and then I just sat there for maybe forty seconds.
-
-The function was 28 lines. My name was on the commit. The code was fine. I had no idea I had written it.
+The function was 28 lines. My name was on the commit. The code was fine. *I had no idea I had written it.*
 
 I scrolled up to look at git blame and there I was, `Egor Fedorov, 6 days ago`. I scrolled through the rest of the file and the same thing kept happening. I recognized the structure (because I had asked for the structure), but the specific lines were a blank. Like reading a translation of a book I wrote in another language.
 
 For a while I told myself this was just me. Bad sleep, too many projects, getting older. The usual excuses for when your brain stops doing something it used to do without effort. Then I read the MIT paper.
 
-In June 2025, a team led by Nataliya Kosmyna at the MIT Media Lab put EEG caps on 54 people and had them write essays in three sessions. One group wrote unaided, one had Google, the third was given ChatGPT and told to use it. The headline behavioral result is a single number: 83% of the ChatGPT group could not produce any quote from the essay they had just written, minutes earlier. Of the 17% who managed a quote, none of them were accurate to the original text. In the unaided group, that quote-failure rate was around 11%.
+In June 2025, a team led by Nataliya Kosmyna at the MIT Media Lab put EEG caps on 54 people and had them write essays in three sessions. One group wrote unaided, one had Google, the third was given ChatGPT and told to use it. The headline behavioral result is a single number: **83% of the ChatGPT group could not produce any quote** from the essay they had just written, minutes earlier. Of the 17% who managed a quote, none of them were accurate to the original text. In the unaided group, that quote-failure rate was around 11%.
 
 The EEG side of the paper showed the matching picture in the brain. The unaided group exhibited the strongest, most distributed neural networks during writing. The Search Engine group sat in the middle. The ChatGPT group showed the weakest connectivity, particularly in the alpha and beta bands associated with internal attention. The paper is an arXiv preprint, not yet peer-reviewed, and there are published critiques of the sample size and the EEG methodology. I take those seriously. But the 83% behavioral number is the kind of result that does not need fancy statistics to land. They typed the words. They could not say them back.
 
@@ -40,7 +43,7 @@ Everyone reading this has felt the GPS version. You drive to the same friend's h
 
 What worries me is not the forgetting itself but the habit forming around it. Every block I accept without really reading is practice at not-reading. A few hundred such reps and the impulse to read carefully starts to weaken. I can still do it if I make myself. What fades is the wanting to. The cost shows up later, in a debugging session that takes twice as long because I have to learn my own code from scratch.
 
-There is one more study worth knowing about here, and I want to include it with the right caveats. In July 2025, a research group called METR ran a randomized trial on 16 experienced open-source developers, 246 tasks, in repositories where each developer had on average five years of prior experience. The headline result that everyone repeated: developers using AI tools (Cursor with Claude 3.5/3.7 Sonnet) took 19% longer to complete tasks than developers without. The developers themselves had forecast a 24% speedup, and reported feeling 20% faster after the study. METR have since walked back the 19% number; in a February 2026 update they acknowledged selection effects and methodology issues, and now say they cannot confidently estimate the direction of the speed effect at all.
+There is one more study worth knowing about here, and I want to include it with the right caveats. In July 2025, a research group called METR ran a randomized trial on 16 experienced open-source developers, 246 tasks, in repositories where each developer had on average five years of prior experience. The headline result that everyone repeated: developers using AI tools (Cursor with Claude 3.5/3.7 Sonnet) took **19% longer** to complete tasks than developers without. The developers themselves had forecast a 24% speedup, and reported feeling **20% faster** after the study. METR have since walked back the 19% number; in a February 2026 update they acknowledged selection effects and methodology issues, and now say they cannot confidently estimate the direction of the speed effect at all.
 
 I do not have a stake in the methodological argument. What I cannot stop thinking about is the perception gap. Whatever the true effect on speed turns out to be, the participants in the original study felt 20% faster while being measured 19% slower, and they had no idea. That gap is hard to argue with, and it is the same shape as the MIT finding. The participants did not feel less engaged. They felt fine. The offloading is invisible from the inside.
 
