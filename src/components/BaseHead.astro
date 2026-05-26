@@ -19,12 +19,23 @@ export type Props = {
 const { description = '', pageType = 'website', publishDate, updatedDate } = Astro.props;
 const title = [Astro.props.title, siteConfig.title].filter(Boolean).join(' | ');
 const image = Astro.props.image ?? siteConfig.image;
-let resolvedImage: { src: string; alt?: string } | undefined;
+let resolvedImage: { src: string; alt?: string; width?: number; height?: number; type?: string } | undefined;
 if (image?.src) {
     if (typeof image.src === 'string') {
+        const srcLower = image.src.toLowerCase();
+        const mime = srcLower.endsWith('.jpg') || srcLower.endsWith('.jpeg')
+            ? 'image/jpeg'
+            : srcLower.endsWith('.webp')
+              ? 'image/webp'
+              : srcLower.endsWith('.svg')
+                ? 'image/svg+xml'
+                : 'image/png';
         resolvedImage = {
             src: new URL(image.src, Astro.site).toString(),
-            alt: image.alt
+            alt: image.alt,
+            width: 1200,
+            height: 630,
+            type: mime
         };
     } else {
         const optimizedImage = await getImage({
@@ -36,7 +47,10 @@ if (image?.src) {
         });
         resolvedImage = {
             src: new URL(optimizedImage.src, Astro.site).toString(),
-            alt: image.alt
+            alt: image.alt,
+            width: 1200,
+            height: 630,
+            type: 'image/jpeg'
         };
     }
 }
@@ -116,6 +130,9 @@ const jsonLdBase = {
 <meta property="og:locale" content="en_US" />
 {description && <meta property="og:description" content={description} />}
 {resolvedImage?.src && <meta property="og:image" content={resolvedImage.src} />}
+{resolvedImage?.type && <meta property="og:image:type" content={resolvedImage.type} />}
+{resolvedImage?.width && <meta property="og:image:width" content={String(resolvedImage.width)} />}
+{resolvedImage?.height && <meta property="og:image:height" content={String(resolvedImage.height)} />}
 {resolvedImage?.alt && <meta property="og:image:alt" content={resolvedImage.alt} />}
 
 <!-- X/Twitter -->

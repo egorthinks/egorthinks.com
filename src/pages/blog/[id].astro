@@ -28,7 +28,7 @@ const { post, prevPost, nextPost } = Astro.props;
 const { title, publishDate, updatedDate, excerpt, seo } = post.data;
 const { Content } = await render(post);
 const readingTimeMinutes = getReadingTime(post.body ?? '');
-const ogImage = seo?.image ?? { src: `/og/${post.id}.svg`, alt: title };
+const ogImage = seo?.image ?? { src: `/og/${post.id}.png`, alt: title };
 ---
 
 <BaseLayout title={seo?.title ?? title} description={seo?.description ?? excerpt} image={ogImage} pageType="article" publishDate={publishDate} updatedDate={updatedDate} showHeader={false}>
