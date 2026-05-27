@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://egorthinks.com/sitemap-index.xml
+Sitemap: https://www.egorthinks.com/sitemap-index.xml

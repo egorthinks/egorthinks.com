@@ -25,7 +25,7 @@ type Props = { post: CollectionEntry<'blog'>; prevPost: CollectionEntry<'blog'>;
 
 const { href } = Astro.url;
 const { post, prevPost, nextPost } = Astro.props;
-const { title, publishDate, updatedDate, excerpt, seo } = post.data;
+const { title, publishDate, updatedDate, excerpt, seo, tags } = post.data;
 const { Content } = await render(post);
 const readingTimeMinutes = getReadingTime(post.body ?? '');
 const ogImage = seo?.image ?? { src: `/og/${post.id}.png`, alt: title };
@@ -65,6 +65,15 @@ const ogImage = seo?.image ?? { src: `/og/${post.id}.png`, alt: title };
         <div class="prose sm:prose-lg max-w-none">
             <Content />
         </div>
+        {
+            tags && tags.length > 0 && (
+                <ul class="mt-8 flex flex-wrap gap-2 text-sm sm:mt-12" aria-label="Tags">
+                    {tags.map((tag) => (
+                        <li class="border-main rounded-full border border-dashed px-3 py-1 text-main/70">#{tag}</li>
+                    ))}
+                </ul>
+            )
+        }
         <div class="mt-8 flex flex-wrap items-center justify-end gap-6 text-sm sm:mt-12 sm:text-base">
             <Button class="copy-url-button" aria-label="Copy link" data-url={href} data-tooltip-default="Copy link" data-tooltip-success="Copied">Share</Button>
         </div>

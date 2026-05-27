@@ -9,21 +9,24 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { sortItemsByDateDesc } from '../utils/data-utils';
 
 const posts = (await getCollection('blog')).sort(sortItemsByDateDesc);
-const featuredPosts = posts.filter(({ data }) => data.isFeatured);
+const recentPosts = posts.slice(0, 3);
+const hasMorePosts = posts.length > recentPosts.length;
 ---
 
-<BaseLayout description={siteConfig.description}>
+<BaseLayout title="Notes on cognition, focus, and code" description={siteConfig.description}>
     <Hero {...siteConfig.hero} />
     {
-        featuredPosts?.length > 0 && (
+        recentPosts.length > 0 && (
             <div class="mb-16 sm:mb-24">
                 <h2 class="mb-12 font-serif text-xl italic sm:mb-16 sm:text-2xl">Writing</h2>
-                {featuredPosts.map((post) => (
+                {recentPosts.map((post) => (
                     <PostPreview post={post} class="mb-10 sm:mb-12" headingLevel="h3" />
                 ))}
-                <div class="mt-12 sm:mt-16">
-                    <Button href="/blog">View All Posts</Button>
-                </div>
+                {hasMorePosts && (
+                    <div class="mt-12 sm:mt-16">
+                        <Button href="/blog">View All Posts</Button>
+                    </div>
+                )}
             </div>
         )
     }

@@ -134,6 +134,12 @@ const jsonLdBase = {
 {resolvedImage?.width && <meta property="og:image:width" content={String(resolvedImage.width)} />}
 {resolvedImage?.height && <meta property="og:image:height" content={String(resolvedImage.height)} />}
 {resolvedImage?.alt && <meta property="og:image:alt" content={resolvedImage.alt} />}
+{pageType === 'article' && publishDate && (
+    <meta property="article:published_time" content={publishDate.toISOString()} />
+)}
+{pageType === 'article' && (updatedDate ?? publishDate) && (
+    <meta property="article:modified_time" content={(updatedDate ?? publishDate)!.toISOString()} />
+)}
 
 <!-- X/Twitter -->
 <meta name="twitter:card" content="summary_large_image" />
