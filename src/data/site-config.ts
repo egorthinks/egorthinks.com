@@ -1,7 +1,7 @@
 import type { SiteConfig } from '../types';
 
 const siteConfig: SiteConfig = {
-    website: 'https://egorthinks.com',
+    website: 'https://www.egorthinks.com/',
     title: 'Egor Fedorov',
     subtitle: 'Notes on cognition, focus, and code',
     description: 'Tools and notes for developers who code with AI and want to stay sharp.',
