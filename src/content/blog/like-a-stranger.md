@@ -32,7 +32,7 @@ Here is what I think is going on, mechanically. When I type code myself, my hand
 
 What I am describing (you encode more strongly when you produce something than when you only recognize it) is sometimes called the *generation effect*. Slamecka and Graf showed it on word pairs in 1978; it has been replicated many times since, on other materials. None of it is about code. But the shape of it lines up with what I feel in my repo, and with what the MIT EEG caps were picking up in a different task.
 
-![SKETCH placeholder 1](../../assets/images/blog/stranger/1.png)
+![Two columns divided by a vertical line. Left column labeled 'typed by me': a brain with four arrows pointing down to a solid-bordered code block. Right column labeled 'accepted from Claude': a smaller brain with one thin arrow pointing down to a dashed-bordered code block.](../../assets/images/blog/stranger/1.png)
 *Same code, two different traces left in my head.*
 
 So I started paying attention to which files I could navigate and which I could not. The ones I can find my way around without git blame are the ones I typed by hand. There is a small scoring helper I wrote myself in one of those moods where Claude Code kept getting an off-by-one wrong and I just took the keyboard back; I can still see the indentation in my head a month later. Forty lines down in the same file is a function the agent generated in one shot, which I have read maybe five times this week, and which is still a stranger.
@@ -43,6 +43,10 @@ Everyone reading this has felt the GPS version. You drive to the same friend's h
 
 What worries me is not the forgetting itself but the habit forming around it. Every block I accept without really reading is practice at not-reading. A few hundred such reps and the impulse to read carefully starts to weaken. I can still do it if I make myself. What fades is the wanting to. The cost shows up later, in a debugging session that takes twice as long because I have to learn my own code from scratch.
 
+In January 2026, Judy Hanwen Shen and Alex Tamkin published a study that came at this from a different angle. They had developers learn a new asynchronous Python library (Trio) either with AI help or without, then tested them on conceptual understanding, code reading, and debugging. The AI group scored about **17% lower** on the comprehension quiz. They finished the work, sometimes faster, but understood it less. Tamkin is at Anthropic, which I noticed and which probably matters less than it sounds.
+ 
+The part of that paper that stuck with me is the part most of the coverage skipped over. Shen and Tamkin identified six different patterns of how people used the AI, and three of them preserved learning even with assistance. The pattern that did not preserve learning was the obvious one. Copy the output, accept, move on. The patterns that did preserve learning involved staying engaged with what the model produced instead of just receiving it. Which is roughly the rule I am trying to write for myself, except they had data and I had a forty-second pause.
+
 There is one more study worth knowing about here, and I want to include it with the right caveats. In July 2025, a research group called METR ran a randomized trial on 16 experienced open-source developers, 246 tasks, in repositories where each developer had on average five years of prior experience. The headline result that everyone repeated: developers using AI tools (Cursor with Claude 3.5/3.7 Sonnet) took **19% longer** to complete tasks than developers without. The developers themselves had forecast a 24% speedup, and reported feeling **20% faster** after the study. METR have since walked back the 19% number; in a February 2026 update they acknowledged selection effects and methodology issues, and now say they cannot confidently estimate the direction of the speed effect at all.
 
 I do not have a stake in the methodological argument. What I cannot stop thinking about is the perception gap. Whatever the true effect on speed turns out to be, the participants in the original study felt 20% faster while being measured 19% slower, and they had no idea. That gap is hard to argue with, and it is the same shape as the MIT finding. The participants did not feel less engaged. They felt fine. The offloading is invisible from the inside.
@@ -51,7 +55,7 @@ I am not going to stop using Claude Code. I tried writing everything by hand for
 
 For now my rough rule, written in pencil so I can erase it next month: anything that touches the core logic of the system I am responsible for, I type with my own hands, even if Claude could do it faster. Anything else (boilerplate, tests, glue code, scripts I will run twice and throw away) I let the agent do.
 
-![SKETCH placeholder 2](../../assets/images/blog/stranger/2.png)
+![A circular hand-drawn diagram. Center circle labeled 'core logic - I type this'. Four outer circles connected by inward-pointing arrows along wavy lines: 'tests' top left, 'scripts' top right, 'glue' bottom left, 'config' bottom right.](../../assets/images/blog/stranger/2.png)
 *The line I am drawing this month. It might move.*
 
 I do not know if this rule will hold. The category "core logic" may dissolve as the tools get better, and then I will need a new line. And I cannot tell yet whether reading my own code like a stranger is a phase I adapt out of, or the first sign of something more permanent.
