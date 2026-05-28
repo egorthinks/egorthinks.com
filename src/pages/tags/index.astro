@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import Subscribe from '../../components/Subscribe.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAllTags, getPostsByTag, sortItemsByDateDesc } from '../../utils/data-utils';
+
+const posts = (await getCollection('blog')).sort(sortItemsByDateDesc);
+const tags = getAllTags(posts)
+    .map((tag) => ({ ...tag, count: getPostsByTag(posts, tag.id).length }))
+    .sort((a, b) => b.count - a.count);
+---
+
+<BaseLayout title="Topics" description="Browse all writing by topic — attention, memory, dopamine, AI, and focus." showHeader={false}>
+    <h1 class="mb-12 font-serif text-2xl leading-tight italic sm:mb-16 sm:text-4xl">Topics</h1>
+    {
+        tags.length > 0 ? (
+            <div class="flex flex-wrap gap-3">
+                {tags.map((tag) => (
+                    <a class="bg-muted rounded-full px-4 py-2 text-sm hover:underline hover:underline-offset-2" href={`/tags/${tag.id}/`}>
+                        #{tag.name} <span class="opacity-60">({tag.count})</span>
+                    </a>
+                ))}
+            </div>
+        ) : (
+            <p class="text-sm">No topics yet — check back once the first posts are published.</p>
+        )
+    }
+    <Subscribe class="my-16 sm:my-24" />
+</BaseLayout>

@@ -5,6 +5,8 @@ import Button from '../../components/Button.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import PostPreview from '../../components/PostPreview.astro';
 import Subscribe from '../../components/Subscribe.astro';
+import siteConfig from '../../data/site-config';
+import { slugify } from '../../utils/common-utils';
 import { sortItemsByDateDesc } from '../../utils/data-utils';
 
 export async function getStaticPaths() {
@@ -24,11 +26,11 @@ type Props = { post: CollectionEntry<'blog'>; prevPost: CollectionEntry<'blog'>;
 
 const { href } = Astro.url;
 const { post, prevPost, nextPost } = Astro.props;
-const { title, publishDate, updatedDate, excerpt, seo } = post.data;
+const { title, publishDate, updatedDate, excerpt, tags, seo } = post.data;
 const { Content } = await render(post);
 ---
 
-<BaseLayout title={seo?.title ?? title} description={seo?.description ?? excerpt} image={seo?.image} pageType="article" publishDate={publishDate} updatedDate={updatedDate} showHeader={false}>
+<BaseLayout title={seo?.title ?? title} description={seo?.description ?? excerpt ?? siteConfig.description} image={seo?.image} pageType="article" publishDate={publishDate} updatedDate={updatedDate} showHeader={false}>
     <article class="mb-16 sm:mb-24">
         <header class="mb-8">
             <h1 class="font-serif text-3xl leading-tight font-medium sm:text-5xl sm:leading-tight">{title}</h1>
@@ -49,6 +51,17 @@ const { Content } = await render(post);
         <div class="prose sm:prose-lg max-w-none">
             <Content />
         </div>
+        {
+            tags.length > 0 && (
+                <div class="mt-8 flex flex-wrap gap-2 text-sm sm:mt-12">
+                    {tags.map((tag) => (
+                        <a class="bg-muted rounded-full px-3 py-1 hover:underline hover:underline-offset-2" href={`/tags/${slugify(tag)}/`}>
+                            #{tag}
+                        </a>
+                    ))}
+                </div>
+            )
+        }
         <div class="mt-8 flex flex-wrap items-center justify-end gap-6 text-sm sm:mt-12 sm:text-base">
             <Button class="copy-url-button" aria-label="Copy link" data-url={href} data-tooltip-default="Copy link" data-tooltip-success="Copied">Share</Button>
         </div>

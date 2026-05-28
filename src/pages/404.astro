@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Button from '../components/Button.astro';
+---
+
+<BaseLayout title="Page not found" description="The page you're looking for doesn't exist." showHeader={false}>
+    <div class="py-16 text-center sm:py-24">
+        <p class="font-serif text-6xl font-medium sm:text-8xl">404</p>
+        <h1 class="mt-6 font-serif text-2xl leading-tight italic sm:text-3xl">This page wandered off.</h1>
+        <p class="mx-auto mt-4 max-w-md text-sm leading-relaxed sm:text-base">
+            The link may be broken or the page may have been moved. Let's get you back on track.
+        </p>
+        <div class="mt-10 flex flex-wrap justify-center gap-4">
+            <Button href="/">Go home</Button>
+            <Button href="/blog">Browse writing</Button>
+        </div>
+    </div>
+</BaseLayout>

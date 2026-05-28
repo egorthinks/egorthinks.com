@@ -1,0 +1,28 @@
+---
+import { getCollection } from 'astro:content';
+import PostPreview from '../../components/PostPreview.astro';
+import Subscribe from '../../components/Subscribe.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAllTags, getPostsByTag, sortItemsByDateDesc } from '../../utils/data-utils';
+
+export async function getStaticPaths() {
+    const posts = (await getCollection('blog')).sort(sortItemsByDateDesc);
+    const tags = getAllTags(posts);
+    return tags.map((tag) => ({
+        params: { tag: tag.id },
+        props: { tag, posts: getPostsByTag(posts, tag.id) }
+    }));
+}
+
+const { tag, posts } = Astro.props;
+const description = `Posts tagged "${tag.name}" — essays on cognition, focus, and coding with AI.`;
+---
+
+<BaseLayout title={`#${tag.name}`} description={description} showHeader={false}>
+    <h1 class="mb-2 font-serif text-2xl leading-tight italic sm:text-4xl">#{tag.name}</h1>
+    <p class="mb-12 text-sm sm:mb-16">
+        {posts.length} {posts.length === 1 ? 'post' : 'posts'} tagged with this topic.
+    </p>
+    {posts.map((post) => <PostPreview post={post} class="mb-10 sm:mb-12" />)}
+    <Subscribe class="my-16 sm:my-24" />
+</BaseLayout>
