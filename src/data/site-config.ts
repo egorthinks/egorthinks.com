@@ -19,6 +19,10 @@ const siteConfig: SiteConfig = {
         {
             text: 'Writing',
             href: '/blog'
+        },
+        {
+            text: 'Topics',
+            href: '/tags'
         }
     ],
     footerNavLinks: [
