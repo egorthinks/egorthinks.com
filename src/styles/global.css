@@ -93,6 +93,47 @@ html.dark {
     }
 
     .prose blockquote {
-        @apply font-serif font-normal italic border-none pl-0 text-[1.375em] leading-snug sm:text-[1.66667em];
+        @apply my-8 border-l-2 border-main/30 pl-5 font-serif text-[1.125em] leading-relaxed sm:text-[1.25em];
+    }
+
+    .prose blockquote p {
+        @apply italic;
+    }
+
+    /* Lead blockquote: the opening pull-quote of a post. Calm, no italics, subtle left rule. */
+    .prose > blockquote:first-child {
+        @apply mt-0 mb-12 border-l-2 border-main/40 py-1 pl-5 font-serif text-[1.15em] leading-snug text-main sm:text-[1.3em];
+    }
+
+    .prose > blockquote:first-child p {
+        @apply not-italic;
+    }
+
+    .prose :where(h2) {
+        @apply mt-12 mb-4 text-2xl leading-snug sm:text-3xl;
+    }
+
+    .prose :where(h2 + p) {
+        @apply mt-0;
+    }
+
+    .prose :where(p) {
+        @apply leading-[1.8];
+    }
+
+    .prose :where(strong) {
+        @apply font-semibold;
+    }
+
+    .prose :where(ul) {
+        @apply my-6;
+    }
+
+    .prose :where(img) {
+        @apply my-10 rounded-sm;
+    }
+
+    .prose :where(img + em) {
+        @apply -mt-6 mb-10 block text-center text-sm italic text-main/60;
     }
 }

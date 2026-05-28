@@ -2,7 +2,7 @@ import type { SiteConfig } from '../types';
 import ogDefault from '../assets/og-default.png';
 
 const siteConfig: SiteConfig = {
-    website: 'https://egorthinks.com',
+    website: 'https://www.egorthinks.com/',
     title: 'Egor Fedorov',
     subtitle: 'Notes on cognition, focus, and code',
     description: 'Tools and notes for developers who code with AI and want to stay sharp.',
@@ -41,6 +41,10 @@ const siteConfig: SiteConfig = {
             href: 'https://x.com/egorthinks'
         },
         {
+            text: 'LinkedIn',
+            href: 'https://www.linkedin.com/in/egorthinks'
+        },
+        {
             text: 'GitHub',
             href: 'https://github.com/egorthinks'
         }
@@ -51,7 +55,15 @@ const siteConfig: SiteConfig = {
         actions: []
     },
     subscribe: {
-        enabled: false
+        enabled: true,
+        title: 'Notes by email',
+        text: 'Occasional essays on cognition and code. 1–2 per month. No spam, ever.',
+        form: {
+            // Replace YOUR_USERNAME with your Buttondown username (e.g. egorthinks → buttondown.com/egorthinks)
+            action: 'https://buttondown.com/api/emails/embed-subscribe/egorthinks',
+            emailFieldName: 'email',
+            hiddenFields: [{ name: 'embed', value: '1' }]
+        }
     },
     postsPerPage: 8
 };

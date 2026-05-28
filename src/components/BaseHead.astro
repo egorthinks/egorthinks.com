@@ -19,12 +19,23 @@ export type Props = {
 const { description = '', pageType = 'website', publishDate, updatedDate } = Astro.props;
 const title = [Astro.props.title, siteConfig.title].filter(Boolean).join(' | ');
 const image = Astro.props.image ?? siteConfig.image;
-let resolvedImage: { src: string; alt?: string } | undefined;
+let resolvedImage: { src: string; alt?: string; width?: number; height?: number; type?: string } | undefined;
 if (image?.src) {
     if (typeof image.src === 'string') {
+        const srcLower = image.src.toLowerCase();
+        const mime = srcLower.endsWith('.jpg') || srcLower.endsWith('.jpeg')
+            ? 'image/jpeg'
+            : srcLower.endsWith('.webp')
+              ? 'image/webp'
+              : srcLower.endsWith('.svg')
+                ? 'image/svg+xml'
+                : 'image/png';
         resolvedImage = {
             src: new URL(image.src, Astro.site).toString(),
-            alt: image.alt
+            alt: image.alt,
+            width: 1200,
+            height: 630,
+            type: mime
         };
     } else {
         const optimizedImage = await getImage({
@@ -36,7 +47,10 @@ if (image?.src) {
         });
         resolvedImage = {
             src: new URL(optimizedImage.src, Astro.site).toString(),
-            alt: image.alt
+            alt: image.alt,
+            width: 1200,
+            height: 630,
+            type: 'image/jpeg'
         };
     }
 }
@@ -48,7 +62,7 @@ function formatCanonicalURL(url: string | URL) {
     return path.replace(/\/?$/, hasQueryParams ? '' : '/');
 }
 
-const siteUrl = siteConfig.website;
+const siteUrl = siteConfig.website.replace(/\/$/, '');
 const canonicalStr = formatCanonicalURL(canonicalURL);
 
 const jsonLdBase = {
@@ -60,6 +74,7 @@ const jsonLdBase = {
             url: siteUrl,
             name: siteConfig.title,
             description: siteConfig.description,
+            logo: { '@type': 'ImageObject', url: `${siteUrl}/favicon-32x32.png` },
             publisher: { '@id': `${siteUrl}/#person` }
         },
         {
@@ -100,7 +115,12 @@ const jsonLdBase = {
 <link rel="preload" as="font" type="font/woff2" href={newsreaderWoff2} crossorigin="anonymous" />
 
 <!-- Low Priority Global Metadata -->
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<meta name="application-name" content={siteConfig.title} />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <link rel="sitemap" href="/sitemap-index.xml" />
 <link rel="alternate" type="application/rss+xml" href="/rss.xml" title="RSS" />
 
@@ -116,7 +136,16 @@ const jsonLdBase = {
 <meta property="og:locale" content="en_US" />
 {description && <meta property="og:description" content={description} />}
 {resolvedImage?.src && <meta property="og:image" content={resolvedImage.src} />}
+{resolvedImage?.type && <meta property="og:image:type" content={resolvedImage.type} />}
+{resolvedImage?.width && <meta property="og:image:width" content={String(resolvedImage.width)} />}
+{resolvedImage?.height && <meta property="og:image:height" content={String(resolvedImage.height)} />}
 {resolvedImage?.alt && <meta property="og:image:alt" content={resolvedImage.alt} />}
+{pageType === 'article' && publishDate && (
+    <meta property="article:published_time" content={publishDate.toISOString()} />
+)}
+{pageType === 'article' && (updatedDate ?? publishDate) && (
+    <meta property="article:modified_time" content={(updatedDate ?? publishDate)!.toISOString()} />
+)}
 
 <!-- X/Twitter -->
 <meta name="twitter:card" content="summary_large_image" />

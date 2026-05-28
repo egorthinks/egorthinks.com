@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;1,400&amp;display=swap');
+      text { font-family: 'Newsreader', 'Source Serif Pro', Georgia, serif; }
+    </style>
+  </defs>
+  <rect width="1200" height="630" fill="#f2f1ec"/>
+  <text x="600" y="250"
+        font-size="58"
+        font-weight="400"
+        fill="#171717"
+        text-anchor="middle">I read my own commits</text>
+  <text x="600" y="330"
+        font-size="58"
+        font-weight="400"
+        fill="#171717"
+        text-anchor="middle"><tspan font-style="italic">like a stranger</tspan></text>
+  <text x="600" y="430"
+        font-size="28"
+        fill="#171717"
+        opacity="0.72"
+        text-anchor="middle">egorthinks.com</text>
+</svg>

@@ -18,7 +18,7 @@ type Props = { page: Page<CollectionEntry<'blog'>> };
 const { page } = Astro.props;
 const blog = page.data;
 
-const baseDescription = 'Essays on attention, memory, dopamine, and staying sharp while coding with AI.';
+const baseDescription = 'Essays on cognition, focus, and what AI coding does to your brain. Short, evidence-led notes from Egor Fedorov.';
 const description = page.currentPage > 1 ? `${baseDescription} Page ${page.currentPage} of ${page.lastPage}.` : baseDescription;
 const title = page.currentPage > 1 ? `Writing — Page ${page.currentPage}` : 'Writing';
 ---

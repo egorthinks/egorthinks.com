@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <style>
+      text { font-family: 'Newsreader', 'Source Serif Pro', Georgia, serif; }
+    </style>
+  </defs>
+  <rect width="1200" height="630" fill="#f2f1ec"/>
+  <text x="600" y="260"
+        font-size="64"
+        font-weight="500"
+        fill="#171717"
+        text-anchor="middle">Egor Fedorov</text>
+  <text x="600" y="340"
+        font-size="34"
+        fill="#171717"
+        opacity="0.78"
+        text-anchor="middle"><tspan font-style="italic">Notes on cognition, focus, and code</tspan></text>
+  <text x="600" y="450"
+        font-size="24"
+        fill="#171717"
+        opacity="0.6"
+        text-anchor="middle">egorthinks.com</text>
+</svg>
