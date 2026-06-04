@@ -6,7 +6,7 @@ import PostPreview from '../../components/PostPreview.astro';
 import Subscribe from '../../components/Subscribe.astro';
 import siteConfig from '../../data/site-config';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { sortItemsByDateDesc } from '../../utils/data-utils';
+import { getAllTags, getPostsByTag, sortItemsByDateDesc } from '../../utils/data-utils';
 
 export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
     const posts = (await getCollection('blog')).sort(sortItemsByDateDesc);
@@ -17,14 +17,34 @@ type Props = { page: Page<CollectionEntry<'blog'>> };
 
 const { page } = Astro.props;
 const blog = page.data;
+
+const allPosts = (await getCollection('blog')).sort(sortItemsByDateDesc);
+const tags = getAllTags(allPosts)
+    .map((tag) => ({ ...tag, count: getPostsByTag(allPosts, tag.id).length }))
+    .sort((a, b) => b.count - a.count);
+
+const baseDescription = 'Essays on cognition, focus, and what AI coding does to your brain. Short, evidence-led notes from Egor Fedorov.';
+const description = page.currentPage > 1 ? `${baseDescription} Page ${page.currentPage} of ${page.lastPage}.` : baseDescription;
+const title = page.currentPage > 1 ? `Writing — Page ${page.currentPage}` : 'Writing';
 ---
 
-<BaseLayout
-    title="Writing"
-    description="Essays on cognition, focus, and what AI coding does to your brain. Short, evidence-led notes from Egor Fedorov."
-    showHeader={false}
->
-    <h1 class="mb-12 font-serif text-2xl leading-tight italic sm:mb-16 sm:text-4xl">Writing</h1>
+<BaseLayout title={title} description={description} showHeader={false}>
+    <h1 class="mb-8 font-serif text-2xl leading-tight italic sm:mb-10 sm:text-4xl">Writing</h1>
+    {
+        tags.length > 0 && (
+            <div class="mb-12 flex flex-wrap items-center gap-2 text-sm sm:mb-16">
+                <span class="mr-1 opacity-70">Browse by topic:</span>
+                {tags.map((tag) => (
+                    <a class="bg-muted rounded-full px-3 py-1 hover:underline hover:underline-offset-2" href={`/tags/${tag.id}/`}>
+                        #{tag.name} <span class="opacity-60">({tag.count})</span>
+                    </a>
+                ))}
+                <a class="font-serif italic underline decoration-dashed decoration-1 underline-offset-4 hover:decoration-solid" href="/tags/">
+                    All topics →
+                </a>
+            </div>
+        )
+    }
     {blog.map((post) => <PostPreview post={post} class="mb-10 sm:mb-12" />)}
     <Pagination page={page} class="my-16 sm:my-24" />
     <Subscribe class="my-16 sm:my-24" />

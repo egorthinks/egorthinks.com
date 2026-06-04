@@ -1,4 +1,5 @@
 import type { SiteConfig } from '../types';
+import ogDefault from '../assets/og-default.png';
 
 const siteConfig: SiteConfig = {
     website: 'https://www.egorthinks.com/',
@@ -6,7 +7,7 @@ const siteConfig: SiteConfig = {
     subtitle: 'Notes on cognition, focus, and code',
     description: 'Tools and notes for developers who code with AI and want to stay sharp.',
     image: {
-        src: '/og/default.svg',
+        src: ogDefault,
         alt: 'Egor Fedorov — Notes on cognition, focus, and code'
     },
     twitterHandle: '@egorthinks',
@@ -18,12 +19,20 @@ const siteConfig: SiteConfig = {
         {
             text: 'Writing',
             href: '/blog'
+        },
+        {
+            text: 'Topics',
+            href: '/tags'
         }
     ],
     footerNavLinks: [
         {
             text: 'About',
             href: '/about'
+        },
+        {
+            text: 'Topics',
+            href: '/tags'
         },
         {
             text: 'RSS',

@@ -11,9 +11,10 @@ export async function GET(context) {
         site: context.site,
         items: posts.map((item) => ({
             title: item.data.title,
-            description: item.data.excerpt,
+            description: item.data.excerpt ?? siteConfig.description,
             link: `/blog/${item.id}/`,
-            pubDate: item.data.publishDate.setUTCHours(0)
+            pubDate: item.data.publishDate,
+            categories: item.data.tags
         }))
     });
 }
