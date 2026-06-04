@@ -1,6 +1,6 @@
 ---
 title: I read my own commits like a stranger
-publishDate: 'May 27 2026'
+publishDate: 'June 4 2026'
 excerpt: An MIT study found 83% of ChatGPT users could not quote their own essay. The same started happening with my code.
 tags:
   - ai
@@ -13,75 +13,69 @@ seo:
 
 > When MIT researchers put EEG caps on people writing essays with ChatGPT, **83%** of the AI group could not quote a single sentence from the essay they had just finished. The number stayed abstract to me until I opened my own repo and did not recognize the code on screen.
 
-## The forty-second pause
+## What happened with me?
 
-Last Tuesday I opened my project repo to fix a small bug in the scoring code. The bug was nothing, a wrong threshold. I knew which file, opened it, and then I just sat there for maybe forty seconds.
+Yesterday I opened my project repo on github to fix one small bug. The bug was not critical, it was just wrongly set weights for the ranking system. I knew the architecture of my own code perfectly, where each file is and how it works. But that did not stop me from getting stuck for a minute, maybe two, reading the code of a file that I wrote with my own hands, but at the same time it felt like somebody else's commit.
 
-The function was 28 lines. My name was on the commit. The code was fine. *I had no idea I had written it.*
+At first I thought maybe it really wasn't me who wrote it, but these 28 lines of code, I was exactly the author. `egorthinks "ranking system upd weight", last week`. It was written well. If I was a team lead for myself, I would for sure praise the elegance and the simplicity of the implementation. But. I did not remember that it was me who wrote this code.
 
-I scrolled up to look at git blame and there I was, `Egor Fedorov, 6 days ago`. I scrolled through the rest of the file and the same thing kept happening. I recognized the structure (because I had asked for the structure), but the specific lines were a blank. Like reading a translation of a book I wrote in another language.
+Of course, as it turned out later, nobody said anything because, just like me, they thought the problem was in themselves. I found this out after a small survey of seven of my colleagues (4 confirmed, 2 more yes than no, and 1 denied it, but he really writes everything by hand and hates AI). It does not count as a scientific paper, but it lets me make a conclusion that the problem exists. And anyway, the scientific papers already exist.
 
-For a while I told myself this was just me. Bad sleep, too many projects, getting older. The usual excuses for when your brain stops doing something it used to do without effort. Then I read the MIT paper.
 
 ## What the MIT study found
 
-In June 2025, a team led by Nataliya Kosmyna at the MIT Media Lab put EEG caps on 54 people and had them write essays in three sessions. One group wrote unaided, one had Google, the third was given ChatGPT and told to use it. The headline behavioral result is a single number: **83% of the ChatGPT group could not produce any quote** from the essay they had just written, minutes earlier. Of the 17% who managed a quote, none of them were accurate to the original text. In the unaided group, that quote-failure rate was around 11%.
+While researching this problem I came across a paper from June 2025 in which a team led by Natalia Kosmyna from MIT Media Lab put EEG helmets on 54 people and asked them to write an essay. They split them into three groups: the first group wrote without help, the second with Google, the third used ChatGPT. One specific number caught me in this work, 83%. **83% of people from the third group could not reproduce a single quote from the essay they wrote a few minutes ago**. From the same 17% who remembered at least something, they could not reproduce the text word for word. Meanwhile in the groups without AI the failure rate was only 11%.
 
-The EEG side of the paper showed the matching picture in the brain. The unaided group exhibited the strongest, most distributed neural networks during writing. The Search Engine group sat in the middle. The ChatGPT group showed the weakest connectivity, particularly in the alpha and beta bands associated with internal attention. The paper is [an arXiv preprint](https://arxiv.org/abs/2506.08872), not yet peer-reviewed, and there are published critiques of the sample size and the EEG methodology. I take those seriously. But the 83% behavioral number is the kind of result that does not need fancy statistics to land. They typed the words. They could not say them back.
+The electroencephalography data showed the same picture as the oral survey of the participants. The brain of the no-AI group showed the strongest and most branched neural networks while writing the essay. The Google group was in the middle. And the ChatGPT group had the weakest connectivity, especially in the alpha and beta ranges, which are especially connected to internal attention in the human brain.
 
-This was what was happening to me with my own code. Not metaphorically. Specifically: the part of my brain that should hold what I just made was not doing it. I had been calling this a personal weakness. It is a pattern, and there is now imaging that matches the feeling.
+The paper is still a [preprint on arxiv](https://arxiv.org/abs/2506.08872), it (as of 27.05.2026) has not passed peer review yet. There is also criticism of the sample and of the methodology of the EEG research. But even with all the criticism of the paper and the problems with EEG research, you can take the results seriously just from the oral surveys alone. When almost everyone (83 percent) of the people using AI could not give an answer about their own text, this is exactly the problem that me and my friends saw on ourselves with coding.
 
-## Why accepting a diff is not the same as writing
 
-Here is what I think is going on, mechanically. When I type code myself, my hands are part of the encoding. My fingers know `useEffect` before my conscious mind does. There is a small piece of motor memory that fires when I see code I wrote. A faint *yes, I made that*. When I review AI-generated code and accept it, that motor piece never happens. The code goes in through my eyes and out through a `y/n` decision and that is the whole loop.
+## So why is simply accepting changes not the same as writing them by hand?
 
-What I am describing (you encode more strongly when you produce something than when you only recognize it) is sometimes called the *generation effect*. [Slamecka and Graf showed it on word pairs in 1978](https://doi.org/10.1037/0278-7393.4.6.592); it has been replicated many times since, on other materials. None of it is about code. But the shape of it lines up with what I feel in my repo, and with what the MIT EEG caps were picking up in a different task.
+I think this happens on the lowest motor level. Our whole life we learned to write, on paper, on screen, no difference. Our thought always went into matter through our hands perfectly. When you write code you already remember the next lines of code in advance, because they were already there and you just reinforced this memory by pressing the keyboard keys, confirming the correctness of the action in your thoughts. You can ask *"but what about talking?"*. And I can ask back *"how many conversations from today do you remember compared to messages in the messenger?"*. I can't answer for you, but for myself I can answer for sure. Conversations I remember 50/50, but what I wrote I remember almost 9 out of 10.
+
+Meanwhile when writing code with AI, whether it's simple autocomplete or an agent like claude code, the motor part of the subconscious accepting and saving the code in the head does not work. It's a simple yes/no accept loop like when updating packages (does anyone even read what the terminal programs ask us to give our consent to?), only with your code.
+
+
+What I described above (you remember information stronger when you create something, than when you only recognize it) is called the generation effect. [Slamecka and Graf showed it on word pairs in 1978](https://doi.org/10.1037/0278-7393.4.6.592). It was not connected to code, but the shape of the result matches what me and my colleagues feel and what the researchers at MIT caught.
 
 ![Two columns divided by a vertical line. Left column labeled 'typed by me': a brain with four arrows pointing down to a solid-bordered code block. Right column labeled 'accepted from Claude': a smaller brain with one thin arrow pointing down to a dashed-bordered code block.](../../assets/images/blog/stranger/1.png)
 *Same code, two different traces left in my head.*
 
-## Hand-typed vs agent-generated, in the same file
+## Memorization with agent and manually
 
-So I started paying attention to which files I could navigate and which I could not. The ones I can find my way around without git blame are the ones I typed by hand. There is a small scoring helper I wrote myself in one of those moods where Claude Code kept getting an off-by-one wrong and I just took the keyboard back; I can still see the indentation in my head a month later. Forty lines down in the same file is a function the agent generated in one shot, which I have read maybe five times this week, and which is still a stranger.
+After this kind of thinking I started to pay attention to which files I can move freely in and which I can't. And I won't keep the intrigue, the ones I moved in calmly without search or git blame are the ones I typed by hand. For example, in the same repo that I started this article with there is a file for working with graphs. There was one function in it that claude code constantly messed up, because of which the system broke. I fixed it by hand (without going into details, the problem was in one line) and this exact line I remember a month later. And meanwhile in the same file there is a function, already 40 lines, that I read like 6 times but still did not memorize this code, it's a stranger to me.
 
 ## The taxi driver and the GPS
 
-There is a parallel here that should make this less surprising, and it bothers me that it took me this long to see it. In 2000, [Maguire's group at University College London](https://doi.org/10.1073/pnas.070039597) scanned the brains of licensed London taxi drivers, who memorize about 26,000 streets to get certified. Their posterior hippocampus (the part of the brain that builds spatial maps) was measurably larger than matched controls, and grew with years on the job. Later research on heavy GPS users has found, roughly, the inverse pattern: when you outsource the map to a device, the map-making system goes quiet. The story on the GPS side is less clean than the taxi-driver one (different groups, different methods, contested effect sizes), but the direction is consistent. Use the equipment, the equipment stays in shape. Hand the work to a tool, the equipment stops bothering.
+Talking about this problem, I can't not mention a study, even if it's not about AI (which actually does not matter for the human brain, for it any simplification is a simplification). In 2000 a group led by [Maguire group from University College London](https://doi.org/10.1073/pnas.070039597) did brain scans of licensed London taxi drivers, who memorize around 26000 streets to get a license. Their posterior hippocampus (the brain area responsible for building spatial maps) was noticeably bigger than in the control group of non-taxi-drivers, and it noticeably grew with the years. Later studies on active GPS users showed roughly the opposite dependency: when you trust the route building to the device, your own route builder in the head stops working and developing. I will still note that the studies with the GPS group are not as clear as with the taxi drivers, but the direction stays the same. Almost every day we use different programs for building routes, everyone to their own taste and color, but we give up the more complex one at the start but more reliable one in our head. Same with code, and everything else when you delegate it to AI.
 
-Everyone reading this has felt the GPS version. You drive to the same friend's house six Saturdays in a row with Waze on, and you still need Waze on the seventh, because your brain never bothered to build the map. The MIT result is the same mechanism applied to writing. What I am describing in my own repo is the same mechanism applied to code.
+## Main point that worries me
 
-## The habit that forms around not-reading
-
-What worries me is not the forgetting itself but the habit forming around it. Every block I accept without really reading is practice at not-reading. A few hundred such reps and the impulse to read carefully starts to weaken. I can still do it if I make myself. What fades is the wanting to. The cost shows up later, in a debugging session that takes twice as long because I have to learn my own code from scratch.
+But the main point that worries me the most is the habit of trusting AI and losing your own opinion. Before I did not notice this in myself, but now for any reason and without one I consult with claude or just delegate part of the routine tasks to him. I'm not saying delegating is bad, but mindless trust is bad. Every time you let AI work alone, even without copilot mode, it's another coin in the piggy bank of future problems, which can be either not scary (just longer to read the code) or simply getting banned on HN *(who hold the wave of AI, which earns respect in our time)*.
 
 ## Learning less while finishing faster (Shen & Tamkin)
 
-In January 2026, [Judy Hanwen Shen and Alex Tamkin published a study](https://arxiv.org/abs/2601.20245) that came at this from a different angle. They had developers learn a new asynchronous Python library (Trio) either with AI help or without, then tested them on conceptual understanding, code reading, and debugging. The AI group scored about **17% lower** on the comprehension quiz. They finished the work, sometimes faster, but understood it less. Tamkin is at Anthropic, which I noticed and which probably matters less than it sounds.
+In January 2026 researchers from anthropic (yes, trusting 100% the ones who sell us AI is not the best idea, but again, we are looking exactly at the vector of the result!), [Judy Hanwen Shen and Alex Tamkin](https://arxiv.org/abs/2601.20245), published their research in which they looked at the question from a different angle. They offered developers to learn a new asynchronous python library (trio) which they did not know yet, using AI or without it, and then tested them on understanding concepts, reading code and debugging. The group that used AI showed about **17 percent** lower results on the comprehension test. They finished the work faster but understood worse. The cornerstone moment for me in this paper is the 6 marked patterns of AI usage, and three of them, as the researchers note, preserved people's skills even with using an agent. These patterns assumed constant interaction with what the LLM put out instead of simply accepting the result. This is roughly how we should work with AI. (PS in the remaining usage patterns people just copied and pasted mindlessly, this is a bad option, don't do this)
 
 The part of that paper that stuck with me is the part most of the coverage skipped over. Shen and Tamkin identified six different patterns of how people used the AI, and three of them preserved learning even with assistance. The pattern that did not preserve learning was the obvious one. Copy the output, accept, move on. The patterns that did preserve learning involved staying engaged with what the model produced instead of just receiving it. Which is roughly the rule I am trying to write for myself, except they had data and I had a forty-second pause.
 
-## The perception gap (METR)
+## My thoughts on this.
 
-There is one more study worth knowing about here, and I want to include it with the right caveats. In July 2025, [METR ran a randomized trial](https://arxiv.org/abs/2507.09089) on 16 experienced open-source developers, 246 tasks, in repositories where each developer had on average five years of prior experience. The headline result that everyone repeated: developers using AI tools (Cursor with Claude 3.5/3.7 Sonnet) took **19% longer** to complete tasks than developers without. The developers themselves had forecast a 24% speedup, and reported feeling **20% faster** after the study. METR have since walked back the 19% number; in a February 2026 update they acknowledged selection effects and methodology issues, and now say they cannot confidently estimate the direction of the speed effect at all.
-
-I do not have a stake in the methodological argument. What I cannot stop thinking about is the perception gap. Whatever the true effect on speed turns out to be, the participants in the original study felt 20% faster while being measured 19% slower, and they had no idea. That gap is hard to argue with, and it is the same shape as the MIT finding. The participants did not feel less engaged. They felt fine. The offloading is invisible from the inside.
-
-## The line I am drawing (for now)
-
-I am not going to stop using Claude Code. I tried writing everything by hand for a week as an experiment and got about a fifth as much done. The honest position is that AI coding tools are a permanent part of how I work, and the question I keep returning to is which parts I refuse to delegate.
-
-For now my rough rule, written in pencil so I can erase it next month: anything that touches the core logic of the system I am responsible for, I type with my own hands, even if Claude could do it faster. Anything else (boilerplate, tests, glue code, scripts I will run twice and throw away) I let the agent do.
+Right now I wrote down a rule that I have to follow on a napkin (*the only paper I had on the desk, and on the site make do with a work of AI, I was ashamed to post photos of my napkins on the web*): everything that touches the core logic is mine, don't give to any AI even if it's claude Mythos. The rest, templates, tests, glue, scripts, I give to the agent.
 
 ![A circular hand-drawn diagram. Center circle labeled 'core logic - I type this'. Four outer circles connected by inward-pointing arrows along wavy lines: 'tests' top left, 'scripts' top right, 'glue' bottom left, 'config' bottom right.](../../assets/images/blog/stranger/2.png)
 *The line I am drawing this month. It might move.*
 
-I do not know if this rule will hold. The category "core logic" may dissolve as the tools get better, and then I will need a new line. And I cannot tell yet whether reading my own code like a stranger is a phase I adapt out of, or the first sign of something more permanent.
 
-## Cognitive debt
+## To sum up.
 
-What I do know is that the forty-second pause at my own function was not nothing. *Cognitive debt* is the phrase the MIT team used for the thing their EEG caps were measuring, and it is the right word for what I felt looking at that file. Debts compound while you feel fine. They show up later, on a day you were not planning to need the principal.
+That pause with my "own" code, which made me write this article and start this blog in general, was not a small thing at all. The guys from MIT called it cognitive debt. The word debt describes it as well as possible. Debt first piles up, and only after that you get problems. Same here.
 
-The reason I wrote this down is that I want a way to notice the bill earlier next time. I cannot tell anyone else what to do about this. I do not know yet what to do about it myself. I would rather see the cost clearly than keep pretending the trade is free.
+I wrote this article so that both me and you-the-reader next time would notice this debt earlier and could pay it off. Of course I can't tell you what exactly to do, but I can try to give answers why this happens.
+
+**PS I can't insist, but I would be very happy if you subscribed to my newsletter below, this way you'll learn more about this problem and support me. Thanks!**
 
 ## Sources
 
@@ -91,4 +85,3 @@ The reason I wrote this down is that I want a way to notice the bill earlier nex
 - [Shen, J. H., & Tamkin, A. (2026). How AI Impacts Skill Formation. arXiv:2601.20245.](https://arxiv.org/abs/2601.20245)
 - [Anthropic: How AI assistance affects coding skills.](https://www.anthropic.com/research/AI-assistance-coding-skills)
 - [Becker, J., Rush, N., Barnes, B., & Rein, D. (2025). Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity. arXiv:2507.09089.](https://arxiv.org/abs/2507.09089)
-- [METR: Measuring the impact of early-2025 AI on experienced open-source developer productivity.](https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/)
