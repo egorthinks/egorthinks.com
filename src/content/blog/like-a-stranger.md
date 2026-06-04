@@ -19,6 +19,10 @@ Yesterday I opened my project repo on github to fix one small bug. The bug was n
 
 At first I thought maybe it really wasn't me who wrote it, but these 28 lines of code, I was exactly the author. `egorthinks "ranking system upd weight", last week`. It was written well. If I was a team lead for myself, I would for sure praise the elegance and the simplicity of the implementation. But. I did not remember that it was me who wrote this code.
 
+I scrolled through this code and read it like, probably, authors of original books read their own translations. The architecture and the idea of the implementation are mine, but damn, I did not recognize the lines of this code.
+
+Maybe you will say that I'm just a dumb vibecoder or something like that. I thought about myself the same way, because before AI this did not happen. I really thought the problem was in me, because nobody else from my friends and colleagues talked about it.
+
 Of course, as it turned out later, nobody said anything because, just like me, they thought the problem was in themselves. I found this out after a small survey of seven of my colleagues (4 confirmed, 2 more yes than no, and 1 denied it, but he really writes everything by hand and hates AI). It does not count as a scientific paper, but it lets me make a conclusion that the problem exists. And anyway, the scientific papers already exist.
 
 
