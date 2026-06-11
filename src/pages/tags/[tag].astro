@@ -15,7 +15,7 @@ export async function getStaticPaths() {
 }
 
 const { tag, posts } = Astro.props;
-const description = `Posts tagged "${tag.name}" — essays on cognition, focus, and coding with AI.`;
+const description = `Posts tagged "${tag.name}" - essays on cognition, focus, and coding with AI.`;
 ---
 
 <BaseLayout title={`#${tag.name}`} description={description} showHeader={false}>

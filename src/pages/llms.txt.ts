@@ -18,7 +18,7 @@ export const GET: APIRoute = async () => {
         '',
         `> ${siteConfig.description} Essays and reference material on AI-induced cognitive decline in developers and knowledge workers: cognitive offloading, cognitive debt, skill atrophy, and how to use AI coding assistants without losing your skills.`,
         '',
-        `Written by Egor Fedorov (@egorthinks), founder of SaveUrMind — a tool against AI-induced cognitive degradation in developers.`,
+        `Written by Egor Fedorov (@egorthinks), founder of SaveUrMind - a tool against AI-induced cognitive degradation in developers.`,
         ''
     ];
 

@@ -25,7 +25,7 @@ const tags = getAllTags(allPosts)
 
 const baseDescription = 'Essays on cognition, focus, and what AI coding does to your brain. Short, evidence-led notes from Egor Fedorov.';
 const description = page.currentPage > 1 ? `${baseDescription} Page ${page.currentPage} of ${page.lastPage}.` : baseDescription;
-const title = page.currentPage > 1 ? `Writing — Page ${page.currentPage}` : 'Writing';
+const title = page.currentPage > 1 ? `Writing - Page ${page.currentPage}` : 'Writing';
 ---
 
 <BaseLayout title={title} description={description} showHeader={false}>

@@ -8,7 +8,7 @@ const siteConfig: SiteConfig = {
     description: 'Tools and notes for developers who code with AI and want to stay sharp.',
     image: {
         src: ogDefault,
-        alt: 'Egor Fedorov — Notes on cognition, focus, and code'
+        alt: 'Egor Fedorov - Notes on cognition, focus, and code'
     },
     twitterHandle: '@egorthinks',
     headerNavLinks: [
@@ -73,7 +73,7 @@ const siteConfig: SiteConfig = {
     subscribe: {
         enabled: true,
         title: 'Notes by email',
-        text: 'Occasional essays on cognition and code. 1–2 per month. No spam, ever.',
+        text: 'Occasional essays on cognition and code. 1-2 per month. No spam, ever.',
         form: {
             // Replace YOUR_USERNAME with your Buttondown username (e.g. egorthinks → buttondown.com/egorthinks)
             action: 'https://buttondown.com/api/emails/embed-subscribe/egorthinks',

@@ -10,7 +10,7 @@ const tags = getAllTags(posts)
     .sort((a, b) => b.count - a.count);
 ---
 
-<BaseLayout title="Topics" description="Browse all writing by topic — attention, memory, dopamine, AI, and focus." showHeader={false}>
+<BaseLayout title="Topics" description="Browse all writing by topic - attention, memory, dopamine, AI, and focus." showHeader={false}>
     <h1 class="mb-12 font-serif text-2xl leading-tight italic sm:mb-16 sm:text-4xl">Topics</h1>
     {
         tags.length > 0 ? (
@@ -22,7 +22,7 @@ const tags = getAllTags(posts)
                 ))}
             </div>
         ) : (
-            <p class="text-sm">No topics yet — check back once the first posts are published.</p>
+            <p class="text-sm">No topics yet - check back once the first posts are published.</p>
         )
     }
     <Subscribe class="my-16 sm:my-24" />
