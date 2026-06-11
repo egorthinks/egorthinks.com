@@ -1,0 +1,54 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import siteConfig from '../../data/site-config';
+
+const terms = (await getCollection('glossary')).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const siteUrl = siteConfig.website.replace(/\/$/, '');
+
+const termSetJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTermSet',
+    '@id': `${siteUrl}/glossary/#termset`,
+    name: 'AI & Cognition Glossary',
+    url: `${siteUrl}/glossary/`,
+    hasDefinedTerm: terms.map((term) => ({
+        '@type': 'DefinedTerm',
+        name: term.data.title,
+        description: term.data.definition,
+        url: `${siteUrl}/glossary/${term.id}/`
+    }))
+};
+
+const description = 'Plain-language definitions of cognitive offloading, cognitive debt, AI skill atrophy, and other terms for what AI does to a working brain.';
+---
+
+<BaseLayout title="AI & Cognition Glossary" description={description} showHeader={false}>
+    <script type="application/ld+json" set:html={JSON.stringify(termSetJsonLd)} />
+    <article class="mb-16 sm:mb-24">
+        <header class="mb-8">
+            <h1 class="font-serif text-3xl leading-tight font-medium sm:text-5xl sm:leading-tight">AI &amp; Cognition Glossary</h1>
+        </header>
+        <div class="prose sm:prose-lg max-w-none">
+            <p>
+                Short, sourced definitions of the terms used to describe what heavy AI use does to thinking — written for developers, not for a psychology
+                exam. Each entry links to the research behind it. For the full evidence base, see
+                <a href="/research/">every study on AI and cognitive decline</a>.
+            </p>
+        </div>
+        <div class="mt-12 space-y-10">
+            {
+                terms.map((term) => (
+                    <div>
+                        <h2 class="mb-2 font-serif text-xl font-medium sm:text-2xl">
+                            <a class="hover:underline hover:underline-offset-2" href={`/glossary/${term.id}/`}>
+                                {term.data.title}
+                            </a>
+                        </h2>
+                        <p class="text-main/80">{term.data.definition}</p>
+                    </div>
+                ))
+            }
+        </div>
+    </article>
+</BaseLayout>

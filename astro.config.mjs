@@ -18,8 +18,11 @@ export default defineConfig({
                 // Lower priority for paginated archive pages (e.g. /blog/2/)
                 if (/\/blog\/\d+\/?$/.test(item.url)) {
                     item.priority = 0.4;
-                } else if (item.url === `${siteConfig.website}/`) {
+                } else if (item.url === siteConfig.website) {
                     item.priority = 1.0;
+                } else if (/\/(research|faq)\/$/.test(item.url) || item.url.includes('/glossary/')) {
+                    // Reference pages targeted at search and AI answer engines
+                    item.priority = 0.9;
                 }
                 return item;
             }

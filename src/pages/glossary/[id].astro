@@ -1,0 +1,63 @@
+---
+import { type CollectionEntry, getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import FaqSection from '../../components/FaqSection.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+
+export async function getStaticPaths() {
+    const terms = await getCollection('glossary');
+    return terms.map((term) => {
+        return {
+            params: { id: term.id },
+            props: { term, allTerms: terms }
+        };
+    });
+}
+
+type Props = { term: CollectionEntry<'glossary'>; allTerms: CollectionEntry<'glossary'>[] };
+
+const { term, allTerms } = Astro.props;
+const { title, definition, publishDate, updatedDate, related, faq, seo } = term.data;
+const { Content } = await render(term);
+const relatedTerms = related.map((id) => allTerms.find((t) => t.id === id)).filter(Boolean) as CollectionEntry<'glossary'>[];
+---
+
+<BaseLayout
+    title={seo?.title ?? `What is ${title}?`}
+    description={seo?.description ?? definition.slice(0, 160)}
+    pageType="article"
+    publishDate={publishDate}
+    updatedDate={updatedDate}
+    faq={faq}
+    definedTerm={{ term: title, definition }}
+    showHeader={false}
+>
+    <article class="mb-16 sm:mb-24">
+        <header class="mb-8">
+            <div class="mb-3 text-sm text-main/70">
+                <a class="hover:underline hover:underline-offset-2" href="/glossary/">AI &amp; Cognition Glossary</a>
+            </div>
+            <h1 class="font-serif text-3xl leading-tight font-medium sm:text-5xl sm:leading-tight">{title}</h1>
+            <div class="mt-4 text-sm text-main/70">
+                Last updated <FormattedDate date={updatedDate ?? publishDate} />
+            </div>
+        </header>
+        <p class="mb-8 font-serif text-lg italic sm:text-xl">{definition}</p>
+        <div class="prose sm:prose-lg max-w-none">
+            <Content />
+        </div>
+        {faq && <FaqSection faq={faq} />}
+        {
+            relatedTerms.length > 0 && (
+                <div class="mt-8 flex flex-wrap items-center gap-2 text-sm sm:mt-12">
+                    <span class="text-main/70">Related terms:</span>
+                    {relatedTerms.map((t) => (
+                        <a class="bg-muted rounded-full px-3 py-1 hover:underline hover:underline-offset-2" href={`/glossary/${t.id}/`}>
+                            {t.data.title}
+                        </a>
+                    ))}
+                </div>
+            )
+        }
+    </article>
+</BaseLayout>

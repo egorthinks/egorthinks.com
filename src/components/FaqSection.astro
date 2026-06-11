@@ -1,0 +1,28 @@
+---
+import { marked } from 'marked';
+import type { FaqItem } from './BaseHead.astro';
+
+export type Props = {
+    faq: FaqItem[];
+    title?: string;
+    class?: string;
+};
+
+const { faq, title = 'FAQ', class: className } = Astro.props;
+---
+
+{
+    faq.length > 0 && (
+        <section class:list={['mt-12 sm:mt-16', className]}>
+            <h2 class="mb-8 font-serif text-xl italic sm:text-2xl">{title}</h2>
+            <div class="space-y-8">
+                {faq.map((item) => (
+                    <div>
+                        <h3 class="mb-2 font-medium">{item.question}</h3>
+                        <div class="prose max-w-none text-main/80" set:html={marked.parse(item.answer)} />
+                    </div>
+                ))}
+            </div>
+        </section>
+    )
+}

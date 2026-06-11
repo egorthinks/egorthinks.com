@@ -1,6 +1,8 @@
 ---
 import { type CollectionEntry, getCollection, render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import FaqSection from '../components/FaqSection.astro';
+import FormattedDate from '../components/FormattedDate.astro';
 
 export async function getStaticPaths() {
     const pages = await getCollection('pages');
@@ -15,17 +17,34 @@ export async function getStaticPaths() {
 type Props = { page: CollectionEntry<'pages'> };
 
 const { page } = Astro.props;
-const { title, seo } = page.data;
+const { title, publishDate, updatedDate, faq, seo } = page.data;
 const { Content } = await render(page);
 ---
 
-<BaseLayout title={seo?.title ?? title} description={seo?.description} image={seo?.image} showHeader={false}>
+<BaseLayout
+    title={seo?.title ?? title}
+    description={seo?.description}
+    image={seo?.image}
+    pageType={seo?.pageType}
+    publishDate={publishDate}
+    updatedDate={updatedDate}
+    faq={faq}
+    showHeader={false}
+>
     <article class="mb-16 sm:mb-24">
         <header class="mb-8">
             <h1 class="font-serif text-3xl leading-tight font-medium sm:text-5xl sm:leading-tight">{title}</h1>
+            {
+                updatedDate && (
+                    <div class="mt-4 text-sm text-main/70">
+                        Last updated <FormattedDate date={updatedDate} />
+                    </div>
+                )
+            }
         </header>
         <div class="prose sm:prose-lg max-w-none">
             <Content />
         </div>
+        {faq && <FaqSection faq={faq} />}
     </article>
 </BaseLayout>

@@ -15,6 +15,13 @@ const seoSchema = (image: ImageFunction) =>
         pageType: z.enum(['website', 'article']).default('website')
     });
 
+const faqSchema = z.array(
+    z.object({
+        question: z.string(),
+        answer: z.string()
+    })
+);
+
 const blog = defineCollection({
     loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/blog' }),
     schema: ({ image }) =>
@@ -25,6 +32,7 @@ const blog = defineCollection({
             updatedDate: z.coerce.date().optional(),
             isFeatured: z.boolean().default(false),
             tags: z.array(z.string()).default([]),
+            faq: faqSchema.optional(),
             seo: seoSchema(image).optional()
         })
 });
@@ -34,8 +42,26 @@ const pages = defineCollection({
     schema: ({ image }) =>
         z.object({
             title: z.string(),
+            publishDate: z.coerce.date().optional(),
+            updatedDate: z.coerce.date().optional(),
+            faq: faqSchema.optional(),
             seo: seoSchema(image).optional()
         })
 });
 
-export const collections = { blog, pages };
+const glossary = defineCollection({
+    loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/glossary' }),
+    schema: ({ image }) =>
+        z.object({
+            title: z.string(),
+            // Short plain-text definition used for the DefinedTerm schema and the glossary hub listing
+            definition: z.string().min(40).max(360),
+            publishDate: z.coerce.date(),
+            updatedDate: z.coerce.date().optional(),
+            related: z.array(z.string()).default([]),
+            faq: faqSchema.optional(),
+            seo: seoSchema(image).optional()
+        })
+});
+
+export const collections = { blog, pages, glossary };

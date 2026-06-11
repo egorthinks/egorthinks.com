@@ -7,6 +7,9 @@ import type { ImageInput } from '../types';
 
 import '../styles/global.css';
 
+export type FaqItem = { question: string; answer: string };
+export type DefinedTermInput = { term: string; definition: string };
+
 export type Props = {
     title?: string;
     description?: string;
@@ -14,9 +17,11 @@ export type Props = {
     pageType?: 'website' | 'article';
     publishDate?: Date;
     updatedDate?: Date;
+    faq?: FaqItem[];
+    definedTerm?: DefinedTermInput;
 };
 
-const { description = '', pageType = 'website', publishDate, updatedDate } = Astro.props;
+const { description = '', pageType = 'website', publishDate, updatedDate, faq, definedTerm } = Astro.props;
 const title = [Astro.props.title, siteConfig.title].filter(Boolean).join(' | ');
 const image = Astro.props.image ?? siteConfig.image;
 let resolvedImage: { src: string; alt?: string; width?: number; height?: number; type?: string } | undefined;
@@ -87,7 +92,7 @@ const jsonLdBase = {
         ...(pageType === 'article' && publishDate
             ? [
                   {
-                      '@type': 'Article',
+                      '@type': 'BlogPosting',
                       '@id': canonicalStr,
                       headline: Astro.props.title ?? siteConfig.title,
                       description: description || undefined,
@@ -97,6 +102,36 @@ const jsonLdBase = {
                       author: { '@id': `${siteUrl}/#person` },
                       publisher: { '@id': `${siteUrl}/#website` },
                       ...(resolvedImage?.src ? { image: resolvedImage.src } : {})
+                  }
+              ]
+            : []),
+        ...(faq && faq.length > 0
+            ? [
+                  {
+                      '@type': 'FAQPage',
+                      '@id': `${canonicalStr}#faq`,
+                      mainEntity: faq.map((item) => ({
+                          '@type': 'Question',
+                          name: item.question,
+                          acceptedAnswer: { '@type': 'Answer', text: item.answer }
+                      }))
+                  }
+              ]
+            : []),
+        ...(definedTerm
+            ? [
+                  {
+                      '@type': 'DefinedTerm',
+                      '@id': `${canonicalStr}#term`,
+                      name: definedTerm.term,
+                      description: definedTerm.definition,
+                      url: canonicalStr,
+                      inDefinedTermSet: {
+                          '@type': 'DefinedTermSet',
+                          '@id': `${siteUrl}/glossary/#termset`,
+                          name: 'AI & Cognition Glossary',
+                          url: `${siteUrl}/glossary/`
+                      }
                   }
               ]
             : [])

@@ -18,21 +18,33 @@ const siteConfig: SiteConfig = {
         },
         {
             text: 'Writing',
-            href: '/blog'
+            href: '/blog/'
         },
         {
             text: 'Topics',
-            href: '/tags'
+            href: '/tags/'
         }
     ],
     footerNavLinks: [
         {
             text: 'About',
-            href: '/about'
+            href: '/about/'
+        },
+        {
+            text: 'Research',
+            href: '/research/'
+        },
+        {
+            text: 'Glossary',
+            href: '/glossary/'
+        },
+        {
+            text: 'FAQ',
+            href: '/faq/'
         },
         {
             text: 'Topics',
-            href: '/tags'
+            href: '/tags/'
         },
         {
             text: 'RSS',
