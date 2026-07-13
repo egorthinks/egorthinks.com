@@ -100,3 +100,8 @@ No pre-drawn trees, no runtime dependencies, 100% procedural. The username goes 
 The whole point of a unique tree is showing it off. If you grow one, post it with **#gitbonsai** or drop a link in the [repo discussions](https://github.com/egorthinks/git-bonsai/discussions). I genuinely want to see what a decade of someone else's commits looks like as a living thing. And if your tree comes out with a *shari* scar down the trunk, wear it proudly. It just means you came back.
 
 **PS if you liked this, subscribe to the newsletter below. I write about code, cognition and small strange projects like this one. Thanks!**
+
+## Sources
+
+- [git-bonsai on GitHub: the action, the source code and the design notes.](https://github.com/egorthinks/git-bonsai)
+- [My own bonsai, growing live in my profile repo.](https://github.com/egorthinks/egorthinks)
