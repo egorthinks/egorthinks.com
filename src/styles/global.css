@@ -130,7 +130,7 @@ html.dark {
     }
 
     .prose :where(img) {
-        @apply my-10 rounded-sm;
+        @apply mx-auto my-10 block rounded-sm;
     }
 
     .prose :where(img + em) {
