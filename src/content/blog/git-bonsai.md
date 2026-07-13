@@ -58,6 +58,18 @@ My favorite detail: the tree lives with the calendar. Leaves flush light in spri
 ![A three-era sakura bonsai swaying in the wind](../../assets/images/blog/git-bonsai/bonsai-sakura.gif)
 *A three-era sakura in the wind. The loop is seamless and, like everything else, deterministic.*
 
+## The Hall of Fame
+
+If the tree is a biography, the obvious question is: what did the greats grow? So the repo now has a [Bonsai Hall of Fame](https://github.com/egorthinks/git-bonsai/blob/main/HALL_OF_FAME.md), trees grown from the public history of people whose work shaped how we all write software. Same rules as everyone, nothing drawn by hand: every trunk, scar and blossom is earned, and the gallery is regenerated from cached metrics so it stays reproducible bit for bit.
+
+![Three Hall of Fame bonsai: the slanting pine of Linus Torvalds, the maple of Guido van Rossum, and the formal upright pine of Salvatore Sanfilippo with a shari scar](../../assets/images/blog/git-bonsai/hall-of-fame.png)
+*Left to right: Linus Torvalds (15 years, a slanting sumo pine), Guido van Rossum (14 years, a maple), Salvatore Sanfilippo of Redis (17 years, formal upright with a shari scar down the trunk).*
+
+There are sixteen keepers in there so far: Dan Abramov's windswept sakura, DHH's twin-trunk maple with both *shari* and *uro* scars, Fabien Potencier's tree fed by 264,440 contributions. And my favorite entry is the gardener itself:
+
+![A bare literati bonsai with deadwood scars and no foliage, grown for the claude account](../../assets/images/blog/git-bonsai/hall-claude.png)
+*The @claude account. Its real work hides in Co-Authored-By trailers, so the calendar shows a bare literati with honorable scars.*
+
 ## How to grow yours
 
 Add `.github/workflows/bonsai.yml` to your profile repo (the one named after your username):
@@ -75,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: egorthinks/git-bonsai@main
+      - uses: egorthinks/git-bonsai@v1
 ```
 
 Then embed the result in your README:
@@ -84,7 +96,9 @@ Then embed the result in your README:
 <img src="output/bonsai-growth.gif" width="384" alt="my git-bonsai" />
 ```
 
-The action writes four files: `bonsai.svg`, `bonsai.png`, `bonsai.gif` (wind loop) and `bonsai-growth.gif` (the seed-to-tree timelapse). If you just want to peek at your tree without touching CI:
+The action writes four files: `bonsai.svg`, `bonsai.png`, `bonsai.gif` (wind loop) and `bonsai-growth.gif` (the seed-to-tree timelapse). The images are auto-cropped to your tree's real size, so a young bonsai ships in a small box with no empty sky above it, and the canvas grows as the tree grows. Every run also drops a shareable summary with a one-click "Share on X" link into the workflow's job summary page, and if you are proud of your tree there is a ["grown with git-bonsai" badge](https://github.com/egorthinks/git-bonsai#install-3-lines-of-yaml) for your README.
+
+If you just want to peek at your tree without touching CI:
 
 ```bash
 npx git-bonsai --user yourname --token $GITHUB_TOKEN   # real data
@@ -104,4 +118,5 @@ The whole point of a unique tree is showing it off. If you grow one, post it wit
 ## Sources
 
 - [git-bonsai on GitHub: the action, the source code and the design notes.](https://github.com/egorthinks/git-bonsai)
+- [The Bonsai Hall of Fame: the trees of Linus, Guido and other keepers of legendary histories.](https://github.com/egorthinks/git-bonsai/blob/main/HALL_OF_FAME.md)
 - [My own bonsai, growing live in my profile repo.](https://github.com/egorthinks/egorthinks)
