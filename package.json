@@ -6,7 +6,8 @@
     "scripts": {
         "dev": "astro dev",
         "start": "astro dev",
-        "build": "astro build",
+        "build": "npm run check:dashes && astro build",
+        "check:dashes": "node scripts/check-dashes.mjs",
         "preview": "astro preview",
         "astro": "astro"
     },
