@@ -65,7 +65,7 @@ If the tree is a biography, the obvious question is: what did the greats grow? S
 ![Three Hall of Fame bonsai: the slanting pine of Linus Torvalds, the maple of Guido van Rossum, and the formal upright pine of Salvatore Sanfilippo with a shari scar](../../assets/images/blog/git-bonsai/hall-of-fame.png)
 *Left to right: Linus Torvalds (15 years, a slanting sumo pine), Guido van Rossum (14 years, a maple), Salvatore Sanfilippo of Redis (17 years, formal upright with a shari scar down the trunk).*
 
-There are sixteen keepers in there so far: Dan Abramov's windswept sakura, DHH's twin-trunk maple with both *shari* and *uro* scars, Fabien Potencier's tree fed by 264,440 contributions. And my favorite entry is the gardener itself:
+There are sixteen keepers in there so far: Dan Abramov's windswept sakura, DHH's twin-trunk maple with both *shari* and *uro* scars, Fabien Potencier's tree fed by 264,440 contributions. And of course, Claude Code:
 
 ![A bare literati bonsai with deadwood scars and no foliage, grown for the claude account](../../assets/images/blog/git-bonsai/hall-claude.png)
 *The @claude account. Its real work hides in Co-Authored-By trailers, so the calendar shows a bare literati with honorable scars.*
