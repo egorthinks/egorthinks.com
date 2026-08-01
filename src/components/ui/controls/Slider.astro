@@ -1,0 +1,135 @@
+---
+/**
+ * Range input on the dash grid. The track is a dashed rule, the filled part is
+ * solid - same rule the meters and bars follow: solid means value, dashed means
+ * the space it could occupy.
+ */
+type Props = {
+    name: string;
+    label: string;
+    min?: number;
+    max?: number;
+    step?: number;
+    value?: number;
+    /** Right-aligned readout. Islands update the [data-readout] span. */
+    readout?: string;
+    /** Labels under the ends of the track. */
+    ends?: [string, string];
+    class?: string;
+};
+
+const { name, label, min = 0, max = 10, step = 1, value = 0, readout, ends, class: className } = Astro.props;
+const percent = ((value - min) / (max - min || 1)) * 100;
+---
+
+<div class:list={['pencil-slider', className]} style={`--fill:${percent}%`}>
+    <div class="mb-2 flex items-baseline justify-between gap-4">
+        <label class="eyebrow" for={`sl-${name}`}>{label}</label>
+        <span class="text-main text-xs tabular-nums" data-readout={name}>{readout ?? value}</span>
+    </div>
+    <input
+        id={`sl-${name}`}
+        class="pencil-slider-input"
+        type="range"
+        name={name}
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        data-control={name}
+    />
+    {
+        ends && (
+            <div class="text-main/40 mt-1 flex justify-between text-[0.65rem]">
+                <span>{ends[0]}</span>
+                <span>{ends[1]}</span>
+            </div>
+        )
+    }
+</div>
+
+<style>
+    .pencil-slider-input {
+        -webkit-appearance: none;
+        appearance: none;
+        display: block;
+        width: 100%;
+        height: 18px;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .pencil-slider-input:focus-visible {
+        outline: 1px dashed var(--ink-70);
+        outline-offset: 4px;
+    }
+
+    /* Track: solid up to the value, dashed for the remainder. */
+    .pencil-slider-input::-webkit-slider-runnable-track {
+        height: 18px;
+        background:
+            linear-gradient(var(--ink-100) 0 0) no-repeat 0 50% / var(--fill, 0%) 2px,
+            repeating-linear-gradient(90deg, var(--ink-45) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))) no-repeat
+                0 50% / 100% 1px;
+    }
+
+    .pencil-slider-input::-moz-range-track {
+        height: 18px;
+        background:
+            linear-gradient(var(--ink-100) 0 0) no-repeat 0 50% / var(--fill, 0%) 2px,
+            repeating-linear-gradient(90deg, var(--ink-45) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))) no-repeat
+                0 50% / 100% 1px;
+    }
+
+    /* Thumb: a short upright graphite stroke, not a dot. */
+    .pencil-slider-input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 3px;
+        height: 18px;
+        border: 0;
+        border-radius: 1px;
+        background: var(--ink-100);
+    }
+
+    .pencil-slider-input::-moz-range-thumb {
+        width: 3px;
+        height: 18px;
+        border: 0;
+        border-radius: 1px;
+        background: var(--ink-100);
+    }
+</style>
+
+<script>
+    /**
+     * The filled part of the track and the readout follow the thumb on their
+     * own. An island may also listen to the same input, but a slider that is
+     * only decorative still has to look right when someone drags it.
+     */
+    function initPencilSliders() {
+        document.querySelectorAll<HTMLElement>('.pencil-slider').forEach((root) => {
+            if (root.dataset.ready === 'true') return;
+            root.dataset.ready = 'true';
+
+            const input = root.querySelector<HTMLInputElement>('.pencil-slider-input');
+            if (!input) return;
+            const readout = root.querySelector<HTMLElement>('[data-readout]');
+            const custom = readout?.dataset.readoutCustom === 'true';
+
+            const sync = () => {
+                const min = Number(input.min || 0);
+                const max = Number(input.max || 100);
+                const value = Number(input.value);
+                root.style.setProperty('--fill', `${((value - min) / (max - min || 1)) * 100}%`);
+                if (readout && !custom) readout.textContent = input.value;
+            };
+
+            input.addEventListener('input', sync);
+            sync();
+        });
+    }
+
+    initPencilSliders();
+    document.addEventListener('astro:after-swap', initPencilSliders);
+</script>

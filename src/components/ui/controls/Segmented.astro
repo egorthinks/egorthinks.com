@@ -1,0 +1,65 @@
+---
+/**
+ * Segmented control: a row of dashed pills where exactly one is solid.
+ * Radio inputs underneath, so it works with the keyboard and without JS.
+ */
+type Props = {
+    name: string;
+    label?: string;
+    options: { value: string; label: string }[];
+    value?: string;
+    class?: string;
+};
+
+const { name, label, options, value, class: className } = Astro.props;
+const selected = value ?? options[0]?.value;
+---
+
+<div class:list={['pencil-segmented', className]}>
+    {label && <span class="eyebrow mb-2 block">{label}</span>}
+    <div class="flex flex-wrap gap-1.5" role="radiogroup" aria-label={label}>
+        {
+            options.map((option) => (
+                <label class="pencil-segment">
+                    <input
+                        class="sr-only"
+                        type="radio"
+                        name={name}
+                        value={option.value}
+                        checked={option.value === selected}
+                        data-control={name}
+                    />
+                    <span class="pencil-segment-face border-main/45 rounded-full border border-dashed px-3.5 py-1 text-sm transition-colors">
+                        {option.label}
+                    </span>
+                </label>
+            ))
+        }
+    </div>
+</div>
+
+<style>
+    .pencil-segment {
+        cursor: pointer;
+    }
+
+    .pencil-segment-face {
+        display: inline-block;
+        color: var(--ink-70);
+    }
+
+    .pencil-segment:hover .pencil-segment-face {
+        border-color: var(--ink-70);
+    }
+
+    .pencil-segment input:checked + .pencil-segment-face {
+        border-style: solid;
+        border-color: var(--ink-100);
+        color: var(--ink-100);
+    }
+
+    .pencil-segment input:focus-visible + .pencil-segment-face {
+        outline: 1px dashed var(--ink-70);
+        outline-offset: 3px;
+    }
+</style>

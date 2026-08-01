@@ -1,0 +1,161 @@
+---
+/**
+ * Interactive artifact: what spaced review does to retention, and what happens
+ * to the same curve when the encoding was offloaded.
+ *
+ * Server-rendered complete, then enhanced. Without JS it is still a correct
+ * figure at the default settings, which is also what the OG image captures.
+ */
+import Plot from '../ui/Plot.astro';
+import Artifact from '../ui/Artifact.astro';
+import Slider from '../ui/controls/Slider.astro';
+import Toggle from '../ui/controls/Toggle.astro';
+import { retention, retentionCurve, stabilityAfter, type Axis } from '../../utils/plot';
+
+type Props = { id?: string; class?: string };
+
+const { id = 'forgetting-curve', class: className } = Astro.props;
+
+const HORIZON = 30;
+const DEFAULT_REVIEWS = 2;
+
+const x: Axis = { min: 0, max: HORIZON, ticks: [0, 7, 14, 21, 30], label: 'Days since', format: 'day' };
+const y: Axis = { min: 0, max: 1, ticks: [0, 0.25, 0.5, 0.75, 1], label: 'Recall', format: 'percent' };
+
+const ownStability = stabilityAfter(DEFAULT_REVIEWS, false);
+const offloadedStability = stabilityAfter(DEFAULT_REVIEWS, true);
+
+const series = [
+    { name: 'You worked it out', points: retentionCurve(ownStability, HORIZON), style: 'solid' as const, fill: 'hatch-up' as const },
+    { name: 'You accepted the diff', points: retentionCurve(offloadedStability, HORIZON), style: 'dashed' as const }
+];
+
+const pct = (v: number) => `${Math.round(v * 100)}%`;
+---
+
+<Artifact
+    id={id}
+    kind="Widget"
+    title="What survives thirty days"
+    lede="Retention decays exponentially. Spaced review moves the whole curve; offloading the encoding moves it the other way."
+    source="Model, not measurement: R = e^(-t/S), with S rising per spaced review. Shapes follow Ebbinghaus and the spacing literature; the offload penalty is a stand-in, not a measured effect size."
+    resettable
+    class={className}
+>
+    <div slot="controls" class="grid gap-5 sm:grid-cols-2 sm:items-center">
+        <Slider
+            name="reviews"
+            label="Spaced reviews"
+            min={0}
+            max={5}
+            step={1}
+            value={DEFAULT_REVIEWS}
+            readout={String(DEFAULT_REVIEWS)}
+            ends={['none', '5 reviews']}
+        />
+        <Toggle name="offloaded" label="Show the offloaded curve" hint="The agent wrote it and you accepted the diff." checked />
+    </div>
+
+    <div class="forgetting-curve" data-artifact-island data-horizon={HORIZON} data-default-reviews={DEFAULT_REVIEWS}>
+        <Plot x={x} y={y} series={series} height={250} animate={false} />
+
+        <dl class="border-main/25 mt-6 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-dashed pt-5 sm:grid-cols-4">
+            <div>
+                <dt class="eyebrow">Own, day 7</dt>
+                <dd class="mt-1 font-serif text-2xl leading-none tabular-nums" data-stat="own-7">{pct(retention(7, ownStability))}</dd>
+            </div>
+            <div>
+                <dt class="eyebrow">Own, day 30</dt>
+                <dd class="mt-1 font-serif text-2xl leading-none tabular-nums" data-stat="own-30">{pct(retention(30, ownStability))}</dd>
+            </div>
+            <div>
+                <dt class="eyebrow">Offloaded, day 7</dt>
+                <dd class="text-main/60 mt-1 font-serif text-2xl leading-none tabular-nums" data-stat="off-7">
+                    {pct(retention(7, offloadedStability))}
+                </dd>
+            </div>
+            <div>
+                <dt class="eyebrow">Offloaded, day 30</dt>
+                <dd class="text-main/60 mt-1 font-serif text-2xl leading-none tabular-nums" data-stat="off-30">
+                    {pct(retention(30, offloadedStability))}
+                </dd>
+            </div>
+        </dl>
+    </div>
+</Artifact>
+
+<script>
+    import { areaPath, curvePath, retention, retentionCurve, stabilityAfter, type Axis } from '../../utils/plot';
+
+    const HORIZON_X: Axis = { min: 0, max: 30 };
+    const RECALL_Y: Axis = { min: 0, max: 1 };
+    const OWN = 'You worked it out';
+    const OFFLOADED = 'You accepted the diff';
+
+    function initForgettingCurve() {
+        document.querySelectorAll<HTMLElement>('.forgetting-curve[data-artifact-island]').forEach((island) => {
+            if (island.dataset.ready === 'true') return;
+            island.dataset.ready = 'true';
+
+            const root = island.closest<HTMLElement>('[data-artifact]');
+            const reviewsInput = root?.querySelector<HTMLInputElement>('[data-control="reviews"]');
+            const offloadInput = root?.querySelector<HTMLInputElement>('[data-control="offloaded"]');
+            const readout = root?.querySelector<HTMLElement>('[data-readout="reviews"]');
+            const reset = root?.querySelector<HTMLButtonElement>('[data-artifact-reset]');
+
+            const ownLine = island.querySelector<SVGPathElement>(`[data-series="${OWN}"]`);
+            const ownClip = island.querySelector<SVGPathElement>(`[data-series-clip="${OWN}"]`);
+            const offLine = island.querySelector<SVGPathElement>(`[data-series="${OFFLOADED}"]`);
+            const offLegend = root?.querySelectorAll<HTMLElement>('.plot-legend-item')[1];
+
+            const horizon = Number(island.dataset.horizon ?? 30);
+            const fallback = Number(island.dataset.defaultReviews ?? 2);
+
+            const stat = (key: string) => island.querySelector<HTMLElement>(`[data-stat="${key}"]`);
+            const pct = (v: number) => `${Math.round(v * 100)}%`;
+
+            function render() {
+                const reviews = Number(reviewsInput?.value ?? fallback);
+                const showOffloaded = offloadInput?.checked ?? true;
+
+                const own = stabilityAfter(reviews, false);
+                const off = stabilityAfter(reviews, true);
+                const ownPoints = retentionCurve(own, horizon);
+                const offPoints = retentionCurve(off, horizon);
+
+                ownLine?.setAttribute('d', curvePath(ownPoints, HORIZON_X, RECALL_Y));
+                ownClip?.setAttribute('d', areaPath(ownPoints, HORIZON_X, RECALL_Y, 1));
+                offLine?.setAttribute('d', curvePath(offPoints, HORIZON_X, RECALL_Y));
+
+                if (offLine) offLine.style.display = showOffloaded ? '' : 'none';
+                if (offLegend) offLegend.style.opacity = showOffloaded ? '' : '0.35';
+
+                if (readout) readout.textContent = String(reviews);
+                if (reviewsInput) {
+                    const min = Number(reviewsInput.min || 0);
+                    const max = Number(reviewsInput.max || 5);
+                    const fill = ((reviews - min) / (max - min || 1)) * 100;
+                    reviewsInput.closest<HTMLElement>('.pencil-slider')?.style.setProperty('--fill', `${fill}%`);
+                }
+
+                stat('own-7')!.textContent = pct(retention(7, own));
+                stat('own-30')!.textContent = pct(retention(30, own));
+                stat('off-7')!.textContent = pct(retention(7, off));
+                stat('off-30')!.textContent = pct(retention(30, off));
+            }
+
+            reviewsInput?.addEventListener('input', render);
+            offloadInput?.addEventListener('change', render);
+            reset?.addEventListener('click', () => {
+                if (reviewsInput) reviewsInput.value = String(fallback);
+                if (offloadInput) offloadInput.checked = true;
+                render();
+            });
+
+            render();
+        });
+    }
+
+    initForgettingCurve();
+    document.addEventListener('astro:after-swap', initForgettingCurve);
+</script>

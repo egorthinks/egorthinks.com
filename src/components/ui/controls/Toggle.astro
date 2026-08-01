@@ -1,0 +1,50 @@
+---
+/**
+ * Dashed switch. Off is an empty dashed box; on fills it and draws a tick.
+ * Same vocabulary as the checklist, at control size.
+ */
+import Mark from '../Mark.astro';
+
+type Props = {
+    name: string;
+    label: string;
+    /** Small print under the label, for what the switch actually changes. */
+    hint?: string;
+    checked?: boolean;
+    class?: string;
+};
+
+const { name, label, hint, checked = false, class: className } = Astro.props;
+---
+
+<label class:list={['pencil-toggle flex cursor-pointer items-start gap-3', className]}>
+    <input class="pencil-toggle-input sr-only" type="checkbox" name={name} checked={checked} data-control={name} />
+    <span class="pencil-toggle-box border-main/45 relative mt-px h-[17px] w-[17px] shrink-0 rounded-[2px] border border-dashed" aria-hidden="true">
+        <Mark variant="check" class="pencil-toggle-tick absolute -top-[3px] left-[2px] h-[17px] w-[17px]" stroke={2} dash="solid" duration={380} animate={false} />
+    </span>
+    <span class="min-w-0">
+        <span class="block text-sm leading-snug">{label}</span>
+        {hint && <span class="text-main/50 mt-0.5 block text-xs leading-snug">{hint}</span>}
+    </span>
+</label>
+
+<style>
+    .pencil-toggle-input:focus-visible + .pencil-toggle-box {
+        outline: 1px dashed var(--ink-70);
+        outline-offset: 3px;
+    }
+
+    .pencil-toggle :global(.pencil-toggle-tick) {
+        opacity: 0;
+        transition: opacity 120ms ease-out;
+    }
+
+    .pencil-toggle-input:checked ~ .pencil-toggle-box :global(.pencil-toggle-tick) {
+        opacity: 1;
+    }
+
+    .pencil-toggle-input:checked + .pencil-toggle-box {
+        border-style: solid;
+        border-color: var(--ink-70);
+    }
+</style>

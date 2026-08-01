@@ -1,0 +1,96 @@
+---
+/**
+ * Chrome for anything embeddable: a widget, a plot, a generated image.
+ *
+ * The point of an artifact is that it travels without the post around it, so it
+ * carries its own title, its own source line, and its own permalink. Everything
+ * interactive on this site sits in one of these, which is what makes a widget
+ * screenshot look like it came from here.
+ */
+import Mark from './Mark.astro';
+
+type Props = {
+    title: string;
+    /** Kind of thing, shown above the title: "Widget", "Benchmark", "Figure". */
+    kind?: string;
+    /** One line under the title. What the reader is looking at. */
+    lede?: string;
+    /** Attribution, method note, or the data behind it. Rendered small. */
+    source?: string;
+    /** Fragment id. Gives the artifact a permalink so it can be shared alone. */
+    id?: string;
+    /** Shows a reset control that interactive islands can listen for. */
+    resettable?: boolean;
+    /**
+     * Let the artifact break out of the text column on wide screens. Opt-in:
+     * inside anything that is already a box, the overhang just looks like a
+     * mistake.
+     */
+    bleed?: boolean;
+    class?: string;
+};
+
+const { title, kind = 'Figure', lede, source, id, resettable = false, bleed = false, class: className } = Astro.props;
+const hasControls = Astro.slots.has('controls');
+---
+
+<figure id={id} class:list={['artifact frame-dashed relative', { 'is-bleed': bleed }, className]} data-artifact>
+    <header class="border-main/25 border-b border-dashed px-5 py-4 sm:px-6">
+        <div class="flex items-baseline justify-between gap-4">
+            <span class="eyebrow">{kind}</span>
+            <div class="flex items-center gap-3">
+                {
+                    resettable && (
+                        <button type="button" class="artifact-reset text-main/50 hover:text-main cursor-pointer text-xs transition-colors" data-artifact-reset>
+                            Reset
+                        </button>
+                    )
+                }
+                {
+                    id && (
+                        <a class="text-main/35 hover:text-main text-xs transition-colors" href={`#${id}`} aria-label={`Permalink to ${title}`}>
+                            #
+                        </a>
+                    )
+                }
+            </div>
+        </div>
+        <h3 class="mt-1.5 font-serif text-lg leading-snug font-medium sm:text-xl">{title}</h3>
+        {lede && <p class="text-main/70 mt-1 text-sm leading-relaxed">{lede}</p>}
+    </header>
+
+    {
+        hasControls && (
+            <div class="border-main/25 bg-muted/40 border-b border-dashed px-5 py-4 sm:px-6">
+                <slot name="controls" />
+            </div>
+        )
+    }
+
+    <div class="artifact-body px-5 py-5 sm:px-6">
+        <slot />
+    </div>
+
+    {
+        source && (
+            <figcaption class="border-main/25 text-main/55 flex items-start gap-2 border-t border-dashed px-5 py-3 text-xs leading-relaxed sm:px-6">
+                <Mark variant="corner" class="mt-0.5 h-3 w-3 shrink-0" stroke={1.5} dash="solid" duration={400} />
+                <span>{source}</span>
+            </figcaption>
+        )
+    }
+</figure>
+
+<style>
+    .artifact {
+        container-type: inline-size;
+    }
+
+    /* Opt-in overhang, for an artifact sitting directly in a text column. */
+    @media (min-width: 1180px) {
+        .artifact.is-bleed {
+            width: calc(100% + 5rem);
+            margin-left: -2.5rem;
+        }
+    }
+</style>
