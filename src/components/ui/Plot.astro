@@ -49,7 +49,7 @@ const filled = series.filter((s) => Boolean(s.fill));
 const DASHES = { solid: undefined, dashed: '7 5', hair: '2 3' } as const;
 ---
 
-<div class:list={['plot', className]} style={`--plot-h:${height}px`} data-draw={animate ? '' : undefined}>
+<div class:list={['not-prose plot', className]} style={`--plot-h:${height}px`} data-draw={animate ? '' : undefined}>
     <div class="plot-grid">
         {/* y tick labels, in the left gutter */}
         <div class="plot-ygutter">

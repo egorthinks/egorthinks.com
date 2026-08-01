@@ -28,6 +28,10 @@ const blog = defineCollection({
         z.object({
             title: z.string(),
             excerpt: z.string().optional(),
+            // Which track the post belongs to. Essays are slow and cited, Builds
+            // take something apart and must leave the reader a runnable piece,
+            // Lab notes are short and keep the cadence.
+            kind: z.enum(['Essay', 'Build', 'Lab note']).default('Essay'),
             publishDate: z.coerce.date(),
             updatedDate: z.coerce.date().optional(),
             isFeatured: z.boolean().default(false),

@@ -12,7 +12,7 @@ type Props = { title?: string; class?: string };
 const { title, class: className } = Astro.props;
 ---
 
-<section class:list={[className]}>
+<section class:list={['not-prose', className]}>
     {title && <h2 class="mb-8 font-serif text-xl italic sm:text-2xl">{title}</h2>}
     <ol class="changelog relative">
         <span class="spine-dashed absolute top-1 bottom-1 left-[5px]" aria-hidden="true"></span>

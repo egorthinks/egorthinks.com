@@ -34,7 +34,7 @@ const { title, kind = 'Figure', lede, source, id, resettable = false, bleed = fa
 const hasControls = Astro.slots.has('controls');
 ---
 
-<figure id={id} class:list={['artifact frame-dashed relative', { 'is-bleed': bleed }, className]} data-artifact>
+<figure id={id} class:list={['not-prose artifact frame-dashed relative', { 'is-bleed': bleed }, className]} data-artifact>
     <header class="border-main/25 border-b border-dashed px-5 py-4 sm:px-6">
         <div class="flex items-baseline justify-between gap-4">
             <span class="eyebrow">{kind}</span>

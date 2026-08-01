@@ -6,6 +6,8 @@ import FaqSection from '../../components/FaqSection.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import PostPreview from '../../components/PostPreview.astro';
 import Subscribe from '../../components/Subscribe.astro';
+import Rule from '../../components/ui/Rule.astro';
+import Tag from '../../components/ui/Tag.astro';
 import siteConfig from '../../data/site-config';
 import { slugify } from '../../utils/common-utils';
 import { sortItemsByDateDesc } from '../../utils/data-utils';
@@ -28,7 +30,7 @@ type Props = { post: CollectionEntry<'blog'>; prevPost: CollectionEntry<'blog'>;
 
 const { href } = Astro.url;
 const { post, prevPost, nextPost } = Astro.props;
-const { title, publishDate, updatedDate, excerpt, tags, faq, seo } = post.data;
+const { title, kind, publishDate, updatedDate, excerpt, tags, faq, seo } = post.data;
 const { Content } = await render(post);
 const readingTimeMinutes = getReadingTime(post.body ?? '');
 // Only an image the post chose for itself. Without one, BaseHead points at the
@@ -40,7 +42,8 @@ const ogImage = seo?.image;
 <BaseLayout title={seo?.title ?? title} description={seo?.description ?? excerpt ?? siteConfig.description} image={ogImage} pageType="article" publishDate={publishDate} updatedDate={updatedDate} faq={faq} showHeader={false}>
     <article class="mb-16 sm:mb-24">
         <header class="mb-8">
-            <h1 class="font-serif text-3xl leading-tight font-medium sm:text-5xl sm:leading-tight">{title}</h1>
+            <span class="eyebrow">{kind}</span>
+            <h1 class="mt-3 font-serif text-3xl leading-tight font-medium sm:text-5xl sm:leading-tight">{title}</h1>
             <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-main/70">
                 <FormattedDate date={publishDate} />
                 <span aria-hidden="true">·</span>
@@ -67,30 +70,36 @@ const ogImage = seo?.image;
                     Share
                 </button>
             </div>
+            <Rule variant="dashed" class="mt-8" />
         </header>
         <div class="prose sm:prose-lg max-w-none">
             <Content />
         </div>
         {faq && <FaqSection faq={faq} />}
-        {
-            tags.length > 0 && (
-                <div class="mt-8 flex flex-wrap gap-2 text-sm sm:mt-12">
-                    {tags.map((tag) => (
-                        <a class="bg-muted rounded-full px-3 py-1 hover:underline hover:underline-offset-2" href={`/tags/${slugify(tag)}/`}>
-                            #{tag}
-                        </a>
-                    ))}
-                </div>
-            )
-        }
-        <div class="mt-8 flex flex-wrap items-center justify-end gap-6 text-sm sm:mt-12 sm:text-base">
-            <Button class="copy-url-button" aria-label="Copy link" data-url={href} data-tooltip-default="Copy link" data-tooltip-success="Copied">Share</Button>
+        <Rule variant="dashed" class="mt-12 sm:mt-16" />
+        <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+            {
+                tags.length > 0 && (
+                    <div class="flex flex-wrap gap-2">
+                        {tags.map((tag) => (
+                            <Tag size="sm" href={`/tags/${slugify(tag)}/`}>
+                                {tag}
+                            </Tag>
+                        ))}
+                    </div>
+                )
+            }
+            <Button class="copy-url-button ml-auto" aria-label="Copy link" data-url={href} data-tooltip-default="Copy link" data-tooltip-success="Copied">
+                Share
+            </Button>
         </div>
     </article>
     {
         (prevPost || nextPost) && (
             <div class="my-16 sm:my-24">
-                <h2 class="mb-12 font-serif text-xl italic sm:mb-16 sm:text-2xl">Read Next</h2>
+                <Rule variant="ornament" class="mb-12 sm:mb-16">
+                    read next
+                </Rule>
                 {nextPost && <PostPreview post={nextPost} class="mb-10 sm:mb-12" headingLevel="h3" />}
                 {prevPost && <PostPreview post={prevPost} class="mb-10 sm:mb-12" headingLevel="h3" />}
             </div>

@@ -27,7 +27,7 @@ const preset = DEFAULTS[variant];
 const heading = title ?? preset.title;
 ---
 
-<aside class:list={['frame-dashed relative px-5 py-4 sm:px-6 sm:py-5', className]}>
+<aside class:list={['not-prose frame-dashed relative px-5 py-4 sm:px-6 sm:py-5', className]}>
     <div class="mb-2 flex items-center gap-2">
         <Mark variant={preset.mark} class="text-main/60 h-4 w-4 shrink-0" stroke={1.5} dash="solid" duration={450} />
         <span class="eyebrow">{heading}</span>

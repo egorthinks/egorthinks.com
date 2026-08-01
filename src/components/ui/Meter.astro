@@ -21,7 +21,7 @@ const ratio = Math.max(0, Math.min(1, value / max));
 const filled = Math.round(ratio * ticks);
 ---
 
-<div class:list={['w-full', className]}>
+<div class:list={['not-prose w-full', className]}>
     {
         (label || readout) && (
             <div class="mb-1.5 flex items-baseline justify-between gap-4">

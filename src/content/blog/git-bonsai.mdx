@@ -1,5 +1,6 @@
 ---
 title: I grew a bonsai out of my GitHub history
+kind: Build
 publishDate: 'July 13 2026'
 excerpt: I made git-bonsai, a GitHub Action that grows a unique pixel-art bonsai tree from your commit history. Your streaks bloom, your burnout gaps leave deadwood.
 tags:
@@ -10,6 +11,26 @@ seo:
   title: git-bonsai - grow a pixel-art bonsai from your GitHub history
   description: 'git-bonsai is a GitHub Action that grows a deterministic pixel-art bonsai from your commit history. Streaks bloom as sakura, gaps become deadwood.'
 ---
+
+import Annotate from '../../components/ui/Annotate.astro';
+import Artifact from '../../components/ui/Artifact.astro';
+import Callout from '../../components/ui/Callout.astro';
+import Frame from '../../components/ui/Frame.astro';
+import Leaderboard from '../../components/ui/Leaderboard.astro';
+import SideNote from '../../components/ui/SideNote.astro';
+import SpecList from '../../components/ui/SpecList.astro';
+
+<Frame variant="ticks" label="at a glance" class="not-prose mt-2 mb-10 px-5 py-6 sm:px-6">
+    <SpecList
+        items={[
+            { term: 'What', value: 'A bonsai grown from your commit history' },
+            { term: 'Install', value: 'npx git-bonsai' },
+            { term: 'Output', value: 'SVG, PNG, wind loop, growth timelapse' },
+            { term: 'Gallery', value: 'Bonsai Hall of Fame', href: 'https://github.com/egorthinks/git-bonsai/blob/main/HALL_OF_FAME.md' },
+            { term: 'Source', value: 'egorthinks/git-bonsai', href: 'https://github.com/egorthinks/git-bonsai' }
+        ]}
+    />
+</Frame>
 
 I shipped a small side project this week and I like it more than anything I built this year. It is called [git-bonsai](https://github.com/egorthinks/git-bonsai) and it does exactly one thing: it grows a pixel-art bonsai tree out of your GitHub history.
 
@@ -22,14 +43,14 @@ Every account gets exactly one tree. Your username is the seed, your history is 
 
 Bonsai is one of the oldest living art forms. It started in Han-dynasty China as *penjing*, "tray scenery", miniature landscapes of trees and rock, then came to Japan around the Kamakura period together with Zen Buddhism, where it was distilled into the art of a single tree in a single pot. A bonsai is never finished. It is a decades-long collaboration between the tree and its keeper, shaped season by season. A crooked trunk, a dead branch, a scar: these are not flaws, they are biography.
 
-And that is exactly what a commit history is. Ten years of an account is not a green calendar heatmap, it is a biography with growth spurts, obsessions, long silences and comebacks. git-bonsai just makes the biography visible: your years become growth rings, your streaks bloom, your burnout gaps leave honest deadwood. You don't draw this tree, you live it.
+And that is exactly what a commit history is. Ten years of an account is not a green calendar heatmap, it is a biography with growth spurts, obsessions, long silences and comebacks. git-bonsai just makes the biography visible: your years become growth rings, your streaks bloom, your burnout gaps leave honest deadwood. <Annotate mark="underline">You don't draw this tree, you live it.</Annotate>
 
 ## How the tree reads your history
 
 Everything is derived, nothing is chosen. A few of the rules:
 
 - **Account age** sets the trunk: height, thickness, branching depth. A young account grows a slim sapling, a decade grows a massive base. It literally cannot be rushed.
-- **Total contributions** fill the crown. More commits means denser foliage. Private contributions count too if you enable them on your profile.
+- **Total contributions** fill the crown. More commits means denser foliage.<SideNote>Private contributions count too, if you enable them on your profile.</SideNote>
 - **Streaks bloom.** Each milestone (7, 30, 100, 365 days) adds sakura blossoms, and a live streak of 7+ keeps the tree in bloom.
 - **Gaps leave deadwood.** Every silence longer than 60 days turns a branch into gray *jin*. A year away carves a *shari* strip down the trunk. Coming back after two or more years leaves an *uro* hollow. Worn with honor.
 - **Your languages paint the crown.** The top language of each of three eras of your account colors the canopy, past at the bottom, present on top. Switch stacks and the tree will show it.
@@ -50,7 +71,7 @@ Some accounts don't even grow one trunk. Two flagship repos of similar weight gr
 ![Twin-trunk, clump, root-over-rock and forest bonsai styles, plus small and large pot size classes](../../assets/images/blog/git-bonsai/styles-multi.png)
 *Twin trunks, a clump, root-over-rock, a forest. All earned from the shape of the history.*
 
-My favorite detail: the tree lives with the calendar. Leaves flush light in spring, deepen in autumn and frost over in winter, while your languages' hues stay recognizable all year (only true greens turn amber, a TypeScript-blue crown stays TypeScript-blue):
+My favorite detail: the tree lives with the calendar. Leaves flush light in spring, deepen in autumn and frost over in winter, while your languages' hues stay recognizable all year.<SideNote>Only true greens turn amber. A TypeScript-blue crown stays TypeScript-blue.</SideNote>
 
 ![The same bonsai across spring, summer, autumn and winter](../../assets/images/blog/git-bonsai/seasons.png)
 *One tree, four seasons. Re-grow daily and it follows the real calendar.*
@@ -61,6 +82,24 @@ My favorite detail: the tree lives with the calendar. Leaves flush light in spri
 ## The Hall of Fame
 
 If the tree is a biography, the obvious question is: what did the greats grow? So the repo now has a [Bonsai Hall of Fame](https://github.com/egorthinks/git-bonsai/blob/main/HALL_OF_FAME.md), trees grown from the public history of people whose work shaped how we all write software. Same rules as everyone, nothing drawn by hand: every trunk, scar and blossom is earned, and the gallery is regenerated from cached metrics so it stays reproducible bit for bit.
+
+<Artifact
+    id="hall-of-fame"
+    kind="Gallery"
+    title="What the greats grew"
+    lede="Three of the sixteen keepers, ranked by the length of the history that fed the tree."
+    source="Grown from public GitHub history with the same rules as every other tree, then regenerated from cached metrics so the gallery stays reproducible bit for bit."
+    class="my-10"
+>
+    <Leaderboard
+        heads={['#', 'Keeper', 'Tree', 'Years']}
+        rows={[
+            { name: 'Salvatore Sanfilippo', score: 17, note: 'formal upright, shari scar' },
+            { name: 'Linus Torvalds', score: 15, note: 'slanting sumo pine' },
+            { name: 'Guido van Rossum', score: 14, note: 'maple' }
+        ]}
+    />
+</Artifact>
 
 ![Three Hall of Fame bonsai: the slanting pine of Linus Torvalds, the maple of Guido van Rossum, and the formal upright pine of Salvatore Sanfilippo with a shari scar](../../assets/images/blog/git-bonsai/hall-of-fame.png)
 *Left to right: Linus Torvalds (15 years, a slanting sumo pine), Guido van Rossum (14 years, a maple), Salvatore Sanfilippo of Redis (17 years, formal upright with a shari scar down the trunk).*
@@ -74,7 +113,7 @@ There are sixteen keepers in there so far: Dan Abramov's windswept sakura, DHH's
 
 Add `.github/workflows/bonsai.yml` to your profile repo (the one named after your username):
 
-```yaml
+```yaml title=".github/workflows/bonsai.yml"
 name: bonsai
 on:
   schedule:
@@ -92,18 +131,22 @@ jobs:
 
 Then embed the result in your README:
 
-```html
+```html title="README.md"
 <img src="output/bonsai-growth.gif" width="384" alt="my git-bonsai" />
 ```
 
 The action writes four files: `bonsai.svg`, `bonsai.png`, `bonsai.gif` (wind loop) and `bonsai-growth.gif` (the seed-to-tree timelapse). The images are auto-cropped to your tree's real size, so a young bonsai ships in a small box with no empty sky above it, and the canvas grows as the tree grows. Every run also drops a shareable summary with a one-click "Share on X" link into the workflow's job summary page, and if you are proud of your tree there is a ["grown with git-bonsai" badge](https://github.com/egorthinks/git-bonsai#install-3-lines-of-yaml) for your README.
 
-If you just want to peek at your tree without touching CI:
+<Callout variant="repro" title="Reproduce this" class="my-8">
+    Two lines, no CI, no token needed for the offline mode:
 
-```bash
-npx git-bonsai --user yourname --token $GITHUB_TOKEN   # real data
-npx git-bonsai --synth yourname                        # offline demo
-```
+    ```bash
+    npx git-bonsai --user yourname --token $GITHUB_TOKEN   # real data
+    npx git-bonsai --synth yourname                        # offline demo
+    ```
+
+    Same username and same metrics produce bit-identical bytes, so anything you see above you can regrow yourself.
+</Callout>
 
 ## Under the hood, briefly
 
