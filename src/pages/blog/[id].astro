@@ -31,7 +31,10 @@ const { post, prevPost, nextPost } = Astro.props;
 const { title, publishDate, updatedDate, excerpt, tags, faq, seo } = post.data;
 const { Content } = await render(post);
 const readingTimeMinutes = getReadingTime(post.body ?? '');
-const ogImage = seo?.image ?? { src: `/og/${post.id}.png`, alt: title };
+// Only an image the post chose for itself. Without one, BaseHead points at the
+// card generated at build time - the old `/og/{id}.png` convention silently
+// shipped a broken preview for any post nobody had hand-made a file for.
+const ogImage = seo?.image;
 ---
 
 <BaseLayout title={seo?.title ?? title} description={seo?.description ?? excerpt ?? siteConfig.description} image={ogImage} pageType="article" publishDate={publishDate} updatedDate={updatedDate} faq={faq} showHeader={false}>

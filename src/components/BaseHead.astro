@@ -4,6 +4,7 @@ import newsreaderWoff2 from '@fontsource-variable/newsreader/files/newsreader-la
 import { getImage } from 'astro:assets';
 import siteConfig from '../data/site-config';
 import type { ImageInput } from '../types';
+import { ogEntries, ogSlugForPath } from '../utils/og-routes';
 
 import '../styles/global.css';
 
@@ -23,9 +24,23 @@ export type Props = {
 
 const { description = '', pageType = 'website', publishDate, updatedDate, faq, definedTerm } = Astro.props;
 const title = [Astro.props.title, siteConfig.title].filter(Boolean).join(' | ');
+
+// A card generated from the design tokens beats the stock image, but never
+// beats one the page chose for itself.
+const ogSlug = ogSlugForPath(new URL(Astro.request.url).pathname);
+const generatedOg = !Astro.props.image && (await ogEntries()).has(ogSlug) ? `/og/${ogSlug}.png` : undefined;
+
 const image = Astro.props.image ?? siteConfig.image;
 let resolvedImage: { src: string; alt?: string; width?: number; height?: number; type?: string } | undefined;
-if (image?.src) {
+if (generatedOg) {
+    resolvedImage = {
+        src: new URL(generatedOg, Astro.site).toString(),
+        alt: Astro.props.title ?? siteConfig.title,
+        width: 1200,
+        height: 630,
+        type: 'image/png'
+    };
+} else if (image?.src) {
     if (typeof image.src === 'string') {
         const srcLower = image.src.toLowerCase();
         const mime = srcLower.endsWith('.jpg') || srcLower.endsWith('.jpeg')
