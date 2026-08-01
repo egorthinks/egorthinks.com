@@ -2,6 +2,10 @@
 /**
  * Term / value rows joined by dot leaders. The spine of a project page:
  * problem → mechanism → demo → install → changelog, each answered in one line.
+ *
+ * One line only holds on a wide column. Narrow, the value drops below its term
+ * and the leader runs out to the right margin instead of between them, so the
+ * dotted line still does its job of tying the pair together.
  */
 type Props = {
     items: { term: string; value: string; href?: string }[];
@@ -14,10 +18,10 @@ const { items, class: className } = Astro.props;
 <dl class:list={['not-prose w-full', className]}>
     {
         items.map((item) => (
-            <div class="flex items-baseline gap-2 py-2 first:pt-0">
+            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 py-2.5 first:pt-0 sm:py-2">
                 <dt class="eyebrow shrink-0">{item.term}</dt>
                 <span class="leader" aria-hidden="true" />
-                <dd class="min-w-0 shrink-0 text-right text-sm">
+                <dd class="w-full min-w-0 text-sm text-pretty sm:w-auto sm:shrink-0 sm:text-right">
                     {item.href ? (
                         <a class="underline decoration-dashed underline-offset-2 hover:decoration-solid" href={item.href}>
                             {item.value}
