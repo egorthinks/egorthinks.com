@@ -21,7 +21,7 @@ type Props = {
 const { title, href, line, state, note, tags = [], class: className } = Astro.props;
 ---
 
-<a class:list={['group frame-dashed block px-5 py-5 transition-colors hover:bg-muted sm:px-6', className]} href={href}>
+<a class:list={['not-prose group frame-dashed block px-5 py-5 transition-colors hover:bg-muted sm:px-6', className]} href={href}>
     <div class="flex items-start justify-between gap-4">
         <h3 class="font-serif text-xl leading-snug font-medium group-hover:underline group-hover:decoration-dashed group-hover:underline-offset-4 sm:text-2xl">
             {title}

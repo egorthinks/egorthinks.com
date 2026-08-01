@@ -13,7 +13,7 @@ type Props = {
 const { value, label, note, class: className } = Astro.props;
 ---
 
-<div class:list={['tick-corners px-4 py-4 sm:px-5', className]}>
+<div class:list={['not-prose tick-corners px-4 py-4 sm:px-5', className]}>
     <div class="font-serif text-3xl leading-none font-medium tabular-nums sm:text-4xl">{value}</div>
     <div class="eyebrow mt-2.5">{label}</div>
     {note && <div class="text-main/55 mt-1 text-xs leading-snug">{note}</div>}

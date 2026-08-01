@@ -13,7 +13,7 @@ type Props = {
 const { items, class: className } = Astro.props;
 ---
 
-<ul class:list={['space-y-2.5', className]}>
+<ul class:list={['not-prose space-y-2.5', className]}>
     {
         items.map((item, i) => (
             <li class="flex items-start gap-3">

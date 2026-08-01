@@ -353,4 +353,79 @@ html.dark {
     .prose :where(img + em) {
         @apply -mt-6 mb-10 block text-center text-sm italic text-main/60;
     }
+
+    /* ---------------------------------------------------------------------
+       Code blocks. Shiki emits .astro-code with its own inline background and
+       a rounded box; both are replaced here so a code block is just another
+       dashed surface. Highlighting stays monochrome (see astro.config.mjs).
+       --------------------------------------------------------------------- */
+    /* The frame lives on the wrapper the Shiki transformer adds, so the label
+       tab and the code share one dashed box. */
+    .code-frame {
+        --c: var(--ink-45);
+        margin: 2rem 0;
+        background-image:
+            repeating-linear-gradient(90deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(90deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(0deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(0deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off)));
+        background-position:
+            0 0,
+            0 100%,
+            0 0,
+            100% 0;
+        background-size:
+            100% var(--stroke),
+            100% var(--stroke),
+            var(--stroke) 100%,
+            var(--stroke) 100%;
+        background-repeat: no-repeat;
+    }
+
+    .code-frame-head {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0;
+        padding: 0.6rem 1.15rem;
+        border-bottom: 1px dashed var(--ink-25);
+        font-size: 0.6875rem;
+        line-height: 1;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-70);
+        text-align: left;
+        font-style: normal;
+    }
+
+    .code-frame-dots {
+        letter-spacing: 0.2em;
+        color: var(--ink-25);
+    }
+
+    .code-frame-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .astro-code {
+        background-color: transparent !important;
+        border-radius: 0;
+        margin: 0;
+        padding: 1rem 1.15rem;
+        overflow-x: auto;
+        font-size: 0.8125rem;
+        line-height: 1.7;
+        tab-size: 2;
+    }
+
+    /* Shiki bakes the light theme into inline styles and parks the dark one in
+       custom properties. Swap when the page inverts. */
+    html.dark .astro-code,
+    html.dark .astro-code span {
+        color: var(--shiki-dark) !important;
+        font-style: var(--shiki-dark-font-style) !important;
+        font-weight: var(--shiki-dark-font-weight) !important;
+    }
 }

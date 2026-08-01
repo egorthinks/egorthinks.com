@@ -44,7 +44,7 @@ export function ogEntries(): Promise<Map<string, OgCard>> {
             ...posts.map((post) => ({
                 slug: `blog/${post.id}`,
                 card: {
-                    kind: 'Essay',
+                    kind: post.data.kind,
                     title: post.data.title,
                     description: clampDescription(post.data.excerpt),
                     meta: dateFmt.format(post.data.updatedDate ?? post.data.publishDate)

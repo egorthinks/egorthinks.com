@@ -11,7 +11,7 @@ type Props = {
 const { items, class: className } = Astro.props;
 ---
 
-<dl class:list={['w-full', className]}>
+<dl class:list={['not-prose w-full', className]}>
     {
         items.map((item) => (
             <div class="flex items-baseline gap-2 py-2 first:pt-0">

@@ -18,7 +18,7 @@ type Props = {
 const { track, part, total, prev, next, class: className } = Astro.props;
 ---
 
-<nav class:list={['frame-dashed px-5 py-5 sm:px-6', className]} aria-label={track ? `${track} series navigation` : 'Series navigation'}>
+<nav class:list={['not-prose frame-dashed px-5 py-5 sm:px-6', className]} aria-label={track ? `${track} series navigation` : 'Series navigation'}>
     <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <span class="eyebrow">{track ? `${track} - part ${part} of ${total}` : `Part ${part} of ${total}`}</span>
         <ol class="flex items-center gap-1.5" aria-hidden="true">

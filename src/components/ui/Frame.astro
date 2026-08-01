@@ -26,7 +26,7 @@ const frameClass = {
 }[variant];
 ---
 
-<Tag class:list={['relative', frameClass, { 'bg-muted': muted }, className]}>
+<Tag class:list={['not-prose relative', frameClass, { 'bg-muted': muted }, className]}>
     {
         label && (
             <span class:list={['eyebrow absolute -top-[0.4rem] left-4 px-2', muted ? 'bg-muted' : 'bg-main']}>

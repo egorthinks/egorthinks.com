@@ -32,7 +32,7 @@ const ceiling = max ?? Math.max(...rows.map((r) => r.score), 1);
 const ranked = [...rows].sort((a, b) => b.score - a.score);
 ---
 
-<figure class:list={['w-full', className]}>
+<figure class:list={['not-prose w-full', className]}>
     <div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <table class="table-dashed min-w-[34rem]">
             <thead>

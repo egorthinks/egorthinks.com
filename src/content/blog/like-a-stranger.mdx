@@ -1,5 +1,6 @@
 ---
 title: I read my own commits like a stranger
+kind: Essay
 publishDate: 'June 4 2026'
 excerpt: An MIT study found 83% of ChatGPT users could not quote their own essay. The same started happening with my code.
 tags:
@@ -10,6 +11,16 @@ seo:
   title: I read my own commits like a stranger
   description: '83% of ChatGPT users could not quote their own essay. The same started happening with my code - notes on cognitive debt from AI coding.'
 ---
+
+import Annotate from '../../components/ui/Annotate.astro';
+import Artifact from '../../components/ui/Artifact.astro';
+import Callout from '../../components/ui/Callout.astro';
+import ForgettingCurve from '../../components/artifacts/ForgettingCurve.astro';
+import Frame from '../../components/ui/Frame.astro';
+import Meter from '../../components/ui/Meter.astro';
+import SideNote from '../../components/ui/SideNote.astro';
+import SpecList from '../../components/ui/SpecList.astro';
+import Stat from '../../components/ui/Stat.astro';
 
 > When MIT researchers put EEG caps on people writing essays with ChatGPT, **83%** of the AI group could not quote a single sentence from the essay they had just finished. The number stayed abstract to me until I opened my own repo and did not recognize the code on screen.
 
@@ -23,26 +34,45 @@ I scrolled through this code and read it like, probably, authors of original boo
 
 Maybe you will say that I'm just a dumb vibecoder or something like that. I thought about myself the same way, because before AI this did not happen. I really thought the problem was in me, because nobody else from my friends and colleagues talked about it.
 
-Of course, as it turned out later, nobody said anything because, just like me, they thought the problem was in themselves. I found this out after a small survey of seven of my colleagues (4 confirmed, 2 more yes than no, and 1 denied it, but he really writes everything by hand and hates AI). It does not count as a scientific paper, but it lets me make a conclusion that the problem exists. And anyway, the scientific papers already exist.
-
+Of course, as it turned out later, nobody said anything because, just like me, they thought the problem was in themselves. I found this out after a small survey of seven of my colleagues.<SideNote>4 confirmed, 2 more yes than no, and 1 denied it, but he really writes everything by hand and hates AI.</SideNote> It does not count as a scientific paper, but it lets me make a conclusion that the problem exists. And anyway, the scientific papers already exist.
 
 ## What the MIT study found
 
 While researching this problem I came across a paper from June 2025 in which a team led by Natalia Kosmyna from MIT Media Lab put EEG helmets on 54 people and asked them to write an essay. They split them into three groups: the first group wrote without help, the second with Google, the third used ChatGPT. One specific number caught me in this work, 83%. **83% of people from the third group could not reproduce a single quote from the essay they wrote a few minutes ago**. From the same 17% who remembered at least something, they could not reproduce the text word for word. Meanwhile in the groups without AI the failure rate was only 11%.
 
+<Artifact
+    id="quote-failure"
+    kind="Finding"
+    title="Could not quote a single sentence"
+    lede="Same task, same few minutes, different tool. The gap is not subtle."
+    source="Kosmyna et al., MIT Media Lab, 2025. n = 54 across three groups. Self-report immediately after the writing task, not the EEG measure."
+    class="my-10"
+>
+    <div class="space-y-6">
+        <Meter value={0.83} label="Wrote with ChatGPT" readout="83%" ticks={40} />
+        <Meter value={0.11} label="Wrote without AI" readout="11%" ticks={40} />
+    </div>
+</Artifact>
+
 The electroencephalography data showed the same picture as the oral survey of the participants. The brain of the no-AI group showed the strongest and most branched neural networks while writing the essay. The Google group was in the middle. And the ChatGPT group had the weakest connectivity, especially in the alpha and beta ranges, which are especially connected to internal attention in the human brain.
 
-The paper is still a [preprint on arxiv](https://arxiv.org/abs/2506.08872), it (as of 27.05.2026) has not passed peer review yet. There is also criticism of the sample and of the methodology of the EEG research. But even with all the criticism of the paper and the problems with EEG research, you can take the results seriously just from the oral surveys alone. When almost everyone (83 percent) of the people using AI could not give an answer about their own text, this is exactly the problem that me and my friends saw on ourselves with coding.
+<Callout variant="warn" title="What this study cannot carry" class="my-8">
+    The paper is still a [preprint on arxiv](https://arxiv.org/abs/2506.08872) and, as of 27.05.2026, has not passed peer review. There is
+    criticism of both the sample and the EEG methodology.
 
+    I am leaning on the oral surveys rather than the brain imaging. When 83 percent of the people using AI could not answer a question about
+    their own text, that part needs no electrodes to be worth taking seriously.
+</Callout>
 
 ## So why is simply accepting changes not the same as writing them by hand?
 
 I think this happens on the lowest motor level. Our whole life we learned to write, on paper, on screen, no difference. Our thought always went into matter through our hands perfectly. When you write code you already remember the next lines of code in advance, because they were already there and you just reinforced this memory by pressing the keyboard keys, confirming the correctness of the action in your thoughts. You can ask *"but what about talking?"*. And I can ask back *"how many conversations from today do you remember compared to messages in the messenger?"*. I can't answer for you, but for myself I can answer for sure. Conversations I remember 50/50, but what I wrote I remember almost 9 out of 10.
 
-Meanwhile when writing code with AI, whether it's simple autocomplete or an agent like claude code, the motor part of the subconscious accepting and saving the code in the head does not work. It's a simple yes/no accept loop like when updating packages (does anyone even read what the terminal programs ask us to give our consent to?), only with your code.
-
+Meanwhile when writing code with AI, whether it's simple autocomplete or an agent like claude code, the motor part of the subconscious accepting and saving the code in the head does not work. It's a simple yes/no accept loop like when updating packages,<SideNote>Does anyone even read what the terminal programs ask us to give our consent to?</SideNote> only with your code.
 
 What I described above (you remember information stronger when you create something, than when you only recognize it) is called the generation effect. [Slamecka and Graf showed it on word pairs in 1978](https://doi.org/10.1037/0278-7393.4.6.592). It was not connected to code, but the shape of the result matches what me and my colleagues feel and what the researchers at MIT caught.
+
+<ForgettingCurve id="retention" class="my-10" />
 
 ![Two columns divided by a vertical line. Left column labeled 'typed by me': a brain with four arrows pointing down to a solid-bordered code block. Right column labeled 'accepted from Claude': a smaller brain with one thin arrow pointing down to a dashed-bordered code block.](../../assets/images/blog/stranger/1.png)
 *Same code, two different traces left in my head.*
@@ -53,27 +83,46 @@ After this kind of thinking I started to pay attention to which files I can move
 
 ## The taxi driver and the GPS
 
-Talking about this problem, I can't not mention a study, even if it's not about AI (which actually does not matter for the human brain, for it any simplification is a simplification). In 2000 a group led by [Maguire group from University College London](https://doi.org/10.1073/pnas.070039597) did brain scans of licensed London taxi drivers, who memorize around 26000 streets to get a license. Their posterior hippocampus (the brain area responsible for building spatial maps) was noticeably bigger than in the control group of non-taxi-drivers, and it noticeably grew with the years. Later studies on active GPS users showed roughly the opposite dependency: when you trust the route building to the device, your own route builder in the head stops working and developing. I will still note that the studies with the GPS group are not as clear as with the taxi drivers, but the direction stays the same. Almost every day we use different programs for building routes, everyone to their own taste and color, but we give up the more complex one at the start but more reliable one in our head. Same with code, and everything else when you delegate it to AI.
+Talking about this problem, I can't not mention a study, even if it's not about AI (which actually does not matter for the human brain, for it any simplification is a simplification). In 2000 a group led by [Maguire group from University College London](https://doi.org/10.1073/pnas.070039597) did brain scans of licensed London taxi drivers, who memorize around 26000 streets to get a license. Their posterior hippocampus (the brain area responsible for building spatial maps) was noticeably bigger than in the control group of non-taxi-drivers, and it noticeably grew with the years. Later studies on active GPS users showed roughly the opposite dependency: when you trust the route building to the device, your own route builder in the head stops working and developing.<SideNote>The GPS studies are not as clean as the taxi driver work. The direction holds; the effect size is the part I would not quote.</SideNote> Almost every day we use different programs for building routes, everyone to their own taste and color, but we give up the more complex one at the start but more reliable one in our head. Same with code, and everything else when you delegate it to AI.
 
 ## Main point that worries me
 
-But the main point that worries me the most is the habit of trusting AI and losing your own opinion. Before I did not notice this in myself, but now for any reason and without one I consult with claude or just delegate part of the routine tasks to him. I'm not saying delegating is bad, but mindless trust is bad. Every time you let AI work alone, even without copilot mode, it's another coin in the piggy bank of future problems, which can be either not scary (just longer to read the code) or simply getting banned on HN or simply delete an important component without the possibility of recovery *(anything can happen)*.
+But the main point that worries me the most is the habit of trusting AI and losing your own opinion. Before I did not notice this in myself, but now for any reason and without one I consult with claude or just delegate part of the routine tasks to him. I'm not saying delegating is bad, but <Annotate mark="underline">mindless trust is bad</Annotate>. Every time you let AI work alone, even without copilot mode, it's another coin in the piggy bank of future problems, which can be either not scary (just longer to read the code) or simply getting banned on HN or simply delete an important component without the possibility of recovery *(anything can happen)*.
 
 ## Learning less while finishing faster (Shen & Tamkin)
 
-In January 2026 researchers from anthropic (yes, trusting 100% the ones who sell us AI is not the best idea, but again, we are looking exactly at the vector of the result!), [Judy Hanwen Shen and Alex Tamkin](https://arxiv.org/abs/2601.20245), published their research in which they looked at the question from a different angle. They offered developers to learn a new asynchronous python library (trio) which they did not know yet, using AI or without it, and then tested them on understanding concepts, reading code and debugging. The group that used AI showed about **17 percent** lower results on the comprehension test. They finished the work faster but understood worse. The cornerstone moment for me in this paper is the 6 marked patterns of AI usage, and three of them, as the researchers note, preserved people's skills even with using an agent. These patterns assumed constant interaction with what the LLM put out instead of simply accepting the result. This is roughly how we should work with AI. (PS in the remaining usage patterns people just copied and pasted mindlessly, this is a bad option, don't do this)
+In January 2026 researchers from anthropic<SideNote>Trusting 100% the ones who sell us AI is not the best idea. Again, we are looking at the vector of the result.</SideNote> [Judy Hanwen Shen and Alex Tamkin](https://arxiv.org/abs/2601.20245), published their research in which they looked at the question from a different angle. They offered developers to learn a new asynchronous python library (trio) which they did not know yet, using AI or without it, and then tested them on understanding concepts, reading code and debugging. The group that used AI showed about **17 percent** lower results on the comprehension test. They finished the work faster but understood worse.
+
+<div class="not-prose my-8 grid gap-4 sm:grid-cols-2">
+    <Stat value="-17%" label="Comprehension" note="AI group vs. unassisted, after learning the same library" />
+    <Stat value="3 of 6" label="Patterns that kept the skill" note="All three involved arguing with the output, not accepting it" />
+</div>
+
+The cornerstone moment for me in this paper is the 6 marked patterns of AI usage, and three of them, as the researchers note, preserved people's skills even with using an agent. These patterns assumed constant interaction with what the LLM put out instead of simply accepting the result. This is roughly how we should work with AI.<SideNote>In the remaining usage patterns people just copied and pasted mindlessly. This is a bad option, don't do this.</SideNote>
 
 ## My thoughts on this.
 
-Right now I wrote down a rule that I have to follow on a napkin (*the only paper I had on the desk, and on the site make do with a work of AI, I was ashamed to post photos of my napkins on the web*): everything that touches the core logic is mine, don't give to any AI even if it's claude Mythos. The rest, templates, tests, glue, scripts, I give to the agent.
+Right now I wrote down a rule that I have to follow on a napkin<SideNote>The only paper I had on the desk. On the site, make do with a work of AI: I was ashamed to post photos of my napkins on the web.</SideNote>: everything that touches the core logic is mine, don't give to any AI even if it's claude Mythos. The rest, templates, tests, glue, scripts, I give to the agent.
+
+<Frame variant="ticks" label="the line, this month" class="not-prose my-8 px-5 py-6 sm:px-6">
+    <SpecList
+        items={[
+            { term: 'Core logic', value: 'I type it' },
+            { term: 'Data models', value: 'I type it' },
+            { term: 'Tests', value: 'Agent' },
+            { term: 'Glue', value: 'Agent' },
+            { term: 'Scripts', value: 'Agent' },
+            { term: 'Config', value: 'Agent' }
+        ]}
+    />
+</Frame>
 
 ![A circular hand-drawn diagram. Center circle labeled 'core logic - I type this'. Four outer circles connected by inward-pointing arrows along wavy lines: 'tests' top left, 'scripts' top right, 'glue' bottom left, 'config' bottom right.](../../assets/images/blog/stranger/2.png)
 *The line I am drawing this month. It might move.*
 
-
 ## To sum up.
 
-That pause with my "own" code, which made me write this article and start this blog in general, was not a small thing at all. The guys from MIT called it cognitive debt. The word debt describes it as well as possible. Debt first piles up, and only after that you get problems. Same here.
+That pause with my "own" code, which made me write this article and start this blog in general, was not a small thing at all. The guys from MIT called it <Annotate mark="circle">cognitive debt</Annotate>. The word debt describes it as well as possible. Debt first piles up, and only after that you get problems. Same here.
 
 I wrote this article so that both me and you-the-reader next time would notice this debt earlier and could pay it off. Of course I can't tell you what exactly to do, but I can try to give answers why this happens.
 
