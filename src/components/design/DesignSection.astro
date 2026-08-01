@@ -1,0 +1,24 @@
+---
+/** A numbered chapter of /design/. */
+import Rule from '../ui/Rule.astro';
+
+type Props = {
+    id: string;
+    n: string;
+    title: string;
+    lede?: string;
+    class?: string;
+};
+
+const { id, n, title, lede, class: className } = Astro.props;
+---
+
+<section id={id} class:list={['scroll-mt-8 pt-14 sm:pt-20', className]}>
+    <Rule variant="dashed" class="mb-8" />
+    <header class="mb-8 sm:mb-10">
+        <span class="text-main/40 font-serif text-sm tabular-nums">{n}</span>
+        <h2 class="mt-1 font-serif text-2xl leading-tight font-medium sm:text-3xl">{title}</h2>
+        {lede && <p class="text-main/70 mt-3 max-w-2xl leading-relaxed">{lede}</p>}
+    </header>
+    <slot />
+</section>

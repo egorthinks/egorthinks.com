@@ -1,0 +1,18 @@
+---
+/**
+ * Annotation marks - the strokes you'd add to a printed page with a pencil.
+ * Same drawing engine as <Arrow />, minus the tip.
+ *
+ *   <Mark variant="underline" class="w-40" />
+ *   <Mark variant="check" class="w-5" dash="fine" />
+ */
+import { MARKS, type MarkVariant, type SketchOptions } from '../../utils/sketch-paths';
+import Sketch from './Sketch.astro';
+
+type Props = SketchOptions & { variant?: MarkVariant };
+
+const { variant = 'underline', ...rest } = Astro.props;
+const glyph = MARKS[variant];
+---
+
+<Sketch w={glyph.w} h={glyph.h} paths={glyph.paths} {...rest} />

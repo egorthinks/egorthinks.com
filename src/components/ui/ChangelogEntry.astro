@@ -1,0 +1,31 @@
+---
+/** One dated row of a <Changelog />. */
+import FormattedDate from '../FormattedDate.astro';
+
+type Props = {
+    date: Date | string;
+    /** Version, release name, or the kind of change. */
+    tag?: string;
+    title?: string;
+    class?: string;
+};
+
+const { date, tag, title, class: className } = Astro.props;
+const parsed = date instanceof Date ? date : new Date(date);
+---
+
+<li class:list={['relative flex gap-4 pb-7 pl-7 last:pb-0', className]}>
+    <span class="border-main/60 bg-main absolute top-[0.45rem] left-0 h-[11px] w-[11px] rounded-full border" aria-hidden="true"></span>
+    <div class="min-w-0 grow">
+        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span class="text-main/55 text-xs tabular-nums">
+                <FormattedDate date={parsed} />
+            </span>
+            {tag && <span class="border-main/40 rounded-full border border-dashed px-2 py-0.5 text-[0.65rem] tracking-wide">{tag}</span>}
+        </div>
+        {title && <p class="mt-1.5 font-serif text-lg leading-snug font-medium">{title}</p>}
+        <div class="text-main/80 mt-1 text-sm leading-relaxed [&_a]:underline [&_a]:decoration-dashed [&_a]:underline-offset-2">
+            <slot />
+        </div>
+    </div>
+</li>

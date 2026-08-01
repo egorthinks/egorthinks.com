@@ -1,0 +1,42 @@
+---
+/**
+ * Dashed frame around a code block, with a filename tab. Pair it with a
+ * <Callout variant="repro"> so the reader leaves with something runnable.
+ */
+type Props = {
+    /** Filename or command context: "sketch-paths.ts", "$ npx git-bonsai". */
+    label?: string;
+    class?: string;
+};
+
+const { label, class: className } = Astro.props;
+---
+
+<div class:list={['frame-dashed relative', className]}>
+    {
+        label && (
+            <div class="border-main/45 flex items-center gap-2 border-b border-dashed px-4 py-2">
+                <span class="text-main/30 tracking-[0.2em]" aria-hidden="true">
+                    ···
+                </span>
+                <span class="eyebrow truncate">{label}</span>
+            </div>
+        )
+    }
+    <div class="code-frame overflow-x-auto px-4 py-3.5 text-[0.8125rem] leading-relaxed">
+        <slot />
+    </div>
+</div>
+
+<style>
+    .code-frame :global(pre) {
+        margin: 0;
+        padding: 0;
+        background: none;
+        font-size: inherit;
+    }
+
+    .code-frame :global(code) {
+        font-size: inherit;
+    }
+</style>

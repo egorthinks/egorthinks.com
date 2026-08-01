@@ -1,0 +1,18 @@
+---
+/**
+ * Dashed arrow. Twelve shapes, all of them drawn dash-by-dash on reveal.
+ *
+ *   <Arrow variant="s-loop" class="w-56" />
+ *   <Arrow variant="right" flip />
+ *   <Arrow variant="down" dash="fine" stroke={1.5} />
+ */
+import { ARROWS, type ArrowVariant, type SketchOptions } from '../../utils/sketch-paths';
+import Sketch from './Sketch.astro';
+
+type Props = SketchOptions & { variant?: ArrowVariant };
+
+const { variant = 'right', ...rest } = Astro.props;
+const glyph = ARROWS[variant];
+---
+
+<Sketch w={glyph.w} h={glyph.h} paths={glyph.paths} {...rest} />

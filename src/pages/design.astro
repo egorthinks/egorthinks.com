@@ -1,0 +1,813 @@
+---
+import DesignSection from '../components/design/DesignSection.astro';
+import Specimen from '../components/design/Specimen.astro';
+import Button from '../components/Button.astro';
+import Annotate from '../components/ui/Annotate.astro';
+import Arrow from '../components/ui/Arrow.astro';
+import Callout from '../components/ui/Callout.astro';
+import Changelog from '../components/ui/Changelog.astro';
+import ChangelogEntry from '../components/ui/ChangelogEntry.astro';
+import Checklist from '../components/ui/Checklist.astro';
+import CodeFrame from '../components/ui/CodeFrame.astro';
+import Frame from '../components/ui/Frame.astro';
+import Kbd from '../components/ui/Kbd.astro';
+import Leaderboard from '../components/ui/Leaderboard.astro';
+import Mark from '../components/ui/Mark.astro';
+import Meter from '../components/ui/Meter.astro';
+import ProjectCard from '../components/ui/ProjectCard.astro';
+import Rule from '../components/ui/Rule.astro';
+import SideNote from '../components/ui/SideNote.astro';
+import SpecList from '../components/ui/SpecList.astro';
+import Stat from '../components/ui/Stat.astro';
+import Status from '../components/ui/Status.astro';
+import Tag from '../components/ui/Tag.astro';
+import Track from '../components/ui/Track.astro';
+import TrackNav from '../components/ui/TrackNav.astro';
+import TrackStep from '../components/ui/TrackStep.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { ARROWS, ARROW_VARIANTS, MARKS, MARK_VARIANTS } from '../utils/sketch-paths';
+
+const contents = [
+    { term: '01', value: 'Principles', href: '#principles' },
+    { term: '02', value: 'Palette', href: '#palette' },
+    { term: '03', value: 'Type', href: '#type' },
+    { term: '04', value: 'The dash', href: '#dash' },
+    { term: '05', value: 'Arrows', href: '#arrows' },
+    { term: '06', value: 'Marks', href: '#marks' },
+    { term: '07', value: 'Surfaces', href: '#surfaces' },
+    { term: '08', value: 'Inline', href: '#inline' },
+    { term: '09', value: 'Signals', href: '#signals' },
+    { term: '10', value: 'Data', href: '#data' },
+    { term: '11', value: 'The track', href: '#track' },
+    { term: '12', value: 'Page patterns', href: '#patterns' },
+    { term: '13', value: 'Open', href: '#open' }
+];
+
+const principles = [
+    {
+        title: 'One palette, two directions',
+        body: 'Ink on paper, or paper on ink. There is no accent colour and there will not be one - every distinction has to be carried by weight, size, spacing or the dash. That constraint is why an artefact from this site is recognisable at thumbnail size.'
+    },
+    {
+        title: 'The dash is the brand',
+        body: 'Borders, rules, underlines, arrows, meters and bars are all the same interrupted line at different scales. A solid stroke means something is finished or filled; a dashed stroke means it is a container, a path, or a work in progress.'
+    },
+    {
+        title: 'Drawn, not rendered',
+        body: 'Curves have uneven control points, strokes carry a displacement filter, and lines arrive dash by dash rather than fading in. The page should look like someone worked it out on paper, because that is what the writing claims to be.'
+    },
+    {
+        title: 'Serif thinks, sans reports',
+        body: 'Newsreader carries voice: titles, pull quotes, section labels, buttons. Inter carries data: metadata, tables, tags, status, code context. If you cannot decide, the text is probably doing both jobs and should be split.'
+    },
+    {
+        title: 'Artefacts over posts',
+        body: 'Leaderboards, meters, tracks and changelogs exist because they earn repeat visits and survive the week a post does not. Every element here is built to be screenshotted on its own and still make sense.'
+    }
+];
+
+const inkLevels = [
+    { name: '--ink-100', use: 'body text, drawn strokes, filled ticks' },
+    { name: '--ink-70', use: 'eyebrows, secondary copy, metadata' },
+    { name: '--ink-45', use: 'dashed frames, rules, arrow strokes' },
+    { name: '--ink-25', use: 'dot leaders, table rules, empty checkboxes' },
+    { name: '--ink-12', use: 'unfilled meter and bar ticks' }
+];
+
+const typeScale = [
+    { name: 'Display', spec: 'Newsreader · 3xl → 5xl · medium', sample: 'I write about staying sharp while AI codes.', cls: 'font-serif text-3xl sm:text-5xl font-medium leading-tight' },
+    { name: 'Section', spec: 'Newsreader · 2xl → 3xl · medium', sample: 'What actually moves an audience', cls: 'font-serif text-2xl sm:text-3xl font-medium leading-snug' },
+    { name: 'Label', spec: 'Newsreader · xl → 2xl · italic', sample: 'Lab notes', cls: 'font-serif text-xl sm:text-2xl italic' },
+    { name: 'Body', spec: 'Inter · base · 1.8 leading', sample: 'Short essays, screenshots, occasional honest panic.', cls: 'text-base leading-[1.8]' },
+    { name: 'Small', spec: 'Inter · sm · metadata and captions', sample: '8 min read · updated 14 Jul 2026', cls: 'text-sm text-main/70' },
+    { name: 'Eyebrow', spec: 'Inter · 11px · 0.14em tracking', sample: 'Reproduce this', cls: 'eyebrow' }
+];
+
+const dashTokens = [
+    { name: 'hair', on: '2px', off: '3px', use: 'inline rules under dense metadata' },
+    { name: 'fine', on: '4px', off: '3px', use: 'small glyphs, checkmarks, nav arrows' },
+    { name: 'default', on: '7px', off: '5px', use: 'frames, rules, every connector arrow' },
+    { name: 'coarse', on: '12px', off: '7px', use: 'display marks, circled annotations' },
+    { name: 'solid', on: '-', off: '-', use: 'filled state only: arrow tips, ticks' }
+];
+
+const codeArrow = `<Arrow variant="s-loop" class="w-64" />
+<Arrow variant="right" flip dash="fine" stroke={1.5} />
+<Arrow variant="branch" duration={1200} delay={200} />`;
+
+const codeMark = `<Mark variant="underline" class="w-40" />
+<Mark variant="check" class="h-4 w-4" dash="solid" />   {* under 24px: solid *}
+<Mark variant="bracket-left" class="h-40" dash="coarse" />`;
+
+const codeFrame = `<Frame label="config" class="px-5 py-5">…</Frame>
+<Frame variant="ticks" class="p-6">…</Frame>`;
+
+const codeCallout = `<Callout variant="repro" title="Reproduce this">
+  Repo, notebook and the exact config are in <a href="…">git-bonsai</a>.
+</Callout>`;
+
+const codeSidenote = `Kosmyna measured EEG differences<SideNote>
+  MIT Media Lab, 2025. n = 54, four months.
+</SideNote> that persisted after the tool was removed.`;
+
+const codeTrack = `<Track title="Research track">
+  <TrackStep n="01" title="Read the literature" connector="s-loop">…</TrackStep>
+  <TrackStep n="02" title="Build the bench" connector="s-curve">…</TrackStep>
+  <TrackStep n="03" title="Publish the numbers" />
+</Track>`;
+
+const codeLeaderboard = `<Leaderboard
+  caption="bci-bench v0.3 - decoding accuracy, held-out subjects."
+  rows={[
+    { name: 'EEGNet-lite', score: 0.81, note: '2.1M params' },
+    { name: 'Ours', score: 0.74, note: '0.4M params', self: true }
+  ]}
+/>`;
+
+const codeChangelog = `<Changelog title="Build log">
+  <ChangelogEntry date="2026-07-14" tag="v1.0" title="Hall of Fame">
+    Public gallery of bonsai grown from real repos.
+  </ChangelogEntry>
+</Changelog>`;
+
+const codeMeter = `<Meter value={0.62} label="Retention" readout="0.62" />
+<Meter value={3} max={5} ticks={5} label="Confidence" readout="3 / 5" />`;
+
+const codeAnnotate = `The problem is not <Annotate>output</Annotate>, it is
+<Annotate mark="circle">what you retain</Annotate> afterwards.`;
+---
+
+<BaseLayout
+    title="Design system"
+    description="The full design code of egorthinks.com: one monochrome palette, a pencil-drawn dash motif, and every element built on top of it."
+    showHeader={false}
+>
+    <article class="mb-20 sm:mb-28">
+        <header class="mb-12 sm:mb-16">
+            <span class="eyebrow">Design system · v1</span>
+            <h1 class="mt-3 font-serif text-3xl leading-tight font-medium sm:text-5xl sm:leading-tight">
+                Ink, paper, and a
+                <Annotate mark="underline">dashed line</Annotate>.
+            </h1>
+            <p class="text-main/75 mt-5 max-w-2xl leading-relaxed">
+                Everything this site draws comes from one palette and one motif. This page is the source of truth for both: the tokens, the
+                pencil pack, and each element built on top of them, with the markup that produced it.
+            </p>
+            <div class="mt-6 flex flex-wrap items-center gap-2">
+                <Status state="building" note="grows with the site" />
+                <Tag size="sm">monochrome</Tag>
+                <Tag size="sm">dashed</Tag>
+                <Tag size="sm">Astro 5</Tag>
+            </div>
+        </header>
+
+        <Frame variant="ticks" class="px-5 py-5 sm:px-6">
+            <span class="eyebrow">Contents</span>
+            <div class="mt-3">
+                <SpecList items={contents} />
+            </div>
+        </Frame>
+
+        <!-- 01 ------------------------------------------------------------- -->
+        <DesignSection id="principles" n="01" title="Principles" lede="Five rules. Everything below is a consequence of one of them.">
+            <ol class="space-y-8">
+                {
+                    principles.map((p, i) => (
+                        <li class="flex gap-5">
+                            <span class="text-main/35 mt-1 font-serif text-sm tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+                            <div>
+                                <h3 class="font-serif text-lg leading-snug font-medium">{p.title}</h3>
+                                <p class="text-main/75 mt-1.5 text-sm leading-relaxed">{p.body}</p>
+                            </div>
+                        </li>
+                    ))
+                }
+            </ol>
+        </DesignSection>
+
+        <!-- 02 ------------------------------------------------------------- -->
+        <DesignSection
+            id="palette"
+            n="02"
+            title="Palette"
+            lede="Two surface tokens, two ink tokens, and five opacities derived from them. Dark mode swaps ink and paper - nothing else changes, which is why no component ever branches on theme."
+        >
+            <div class="grid gap-4 sm:grid-cols-2">
+                <Frame class="p-5">
+                    <span class="eyebrow">Light</span>
+                    <div class="mt-3 flex gap-3">
+                        <div class="grow">
+                            <div class="border-main/30 h-16 rounded-sm border" style="background:#f2f1ec"></div>
+                            <div class="text-main/60 mt-1.5 text-xs">--bg-main · #f2f1ec</div>
+                        </div>
+                        <div class="grow">
+                            <div class="border-main/30 h-16 rounded-sm border" style="background:#eae9e1"></div>
+                            <div class="text-main/60 mt-1.5 text-xs">--bg-muted · #eae9e1</div>
+                        </div>
+                        <div class="grow">
+                            <div class="h-16 rounded-sm" style="background:#171717"></div>
+                            <div class="text-main/60 mt-1.5 text-xs">--text-main · #171717</div>
+                        </div>
+                    </div>
+                </Frame>
+                <Frame class="p-5">
+                    <span class="eyebrow">Dark</span>
+                    <div class="mt-3 flex gap-3">
+                        <div class="grow">
+                            <div class="border-main/30 h-16 rounded-sm border" style="background:#171717"></div>
+                            <div class="text-main/60 mt-1.5 text-xs">--bg-main · #171717</div>
+                        </div>
+                        <div class="grow">
+                            <div class="border-main/30 h-16 rounded-sm border" style="background:#242424"></div>
+                            <div class="text-main/60 mt-1.5 text-xs">--bg-muted · #242424</div>
+                        </div>
+                        <div class="grow">
+                            <div class="h-16 rounded-sm" style="background:#f2f1ec"></div>
+                            <div class="text-main/60 mt-1.5 text-xs">--text-main · #f2f1ec</div>
+                        </div>
+                    </div>
+                </Frame>
+            </div>
+
+            <div class="mt-8">
+                <span class="eyebrow">Ink levels</span>
+                <ul class="mt-3 space-y-0">
+                    {
+                        inkLevels.map((level) => (
+                            <li class="border-main/20 flex items-center gap-4 border-b border-dashed py-2.5 last:border-0">
+                                <span class="h-5 w-16 shrink-0 rounded-[2px]" style={`background:var(${level.name})`} />
+                                <span class="w-24 shrink-0 text-sm">{level.name}</span>
+                                <span class="text-main/60 text-sm">{level.use}</span>
+                            </li>
+                        ))
+                    }
+                </ul>
+            </div>
+
+            <Callout variant="warn" title="Not allowed" class="mt-8">
+                Hue of any kind - including "just a subtle red for errors". If something needs to alarm, it gets a scribble mark, a coarser
+                dash, or more weight. The palette is the one thing on this site that does not get exceptions.
+            </Callout>
+        </DesignSection>
+
+        <!-- 03 ------------------------------------------------------------- -->
+        <DesignSection
+            id="type"
+            n="03"
+            title="Type"
+            lede="Newsreader for anything with a voice, Inter for anything with a number in it. Both variable, both self-hosted, both preloaded."
+        >
+            <ul class="space-y-7">
+                {
+                    typeScale.map((t) => (
+                        <li>
+                            <div class="mb-2 flex flex-wrap items-baseline gap-x-3">
+                                <span class="eyebrow">{t.name}</span>
+                                <span class="text-main/45 text-xs">{t.spec}</span>
+                            </div>
+                            <div class={t.cls}>{t.sample}</div>
+                        </li>
+                    ))
+                }
+            </ul>
+        </DesignSection>
+
+        <!-- 04 ------------------------------------------------------------- -->
+        <DesignSection
+            id="dash"
+            n="04"
+            title="The dash"
+            lede="Native dashed borders give you no control over dash length, so every framed surface here is painted with repeating gradients and every stroke is an SVG with an explicit dasharray. Five presets, in CSS pixels, shared by CSS and SVG alike."
+        >
+            <ul class="space-y-5">
+                {
+                    dashTokens.map((d) => (
+                        <li>
+                            <div class="mb-2 flex flex-wrap items-baseline gap-x-3">
+                                <span class="eyebrow">{d.name}</span>
+                                <span class="text-main/45 text-xs">
+                                    {d.on} on / {d.off} off - {d.use}
+                                </span>
+                            </div>
+                            <div
+                                class="rule-dashed w-full"
+                                style={d.name === 'solid' ? 'background-image:none;background:var(--ink-45)' : `--dash-on:${d.on};--dash-off:${d.off}`}
+                            />
+                        </li>
+                    ))
+                }
+            </ul>
+
+            <div class="mt-12">
+                <Specimen
+                    name="Scale independence"
+                    note="The same glyph at 16, 48 and 120 pixels. Stroke weight and dash rhythm are identical because every stroke carries vector-effect: non-scaling-stroke, which reads them as CSS pixels instead of viewBox units. Drop that and the small one dissolves into specks while the large one goes slab-thick."
+                >
+                    <div class="flex w-full items-center justify-center gap-10">
+                        <Mark variant="check" class="h-4 w-4" dash="fine" animate={false} />
+                        <Mark variant="check" class="h-12 w-12" dash="fine" animate={false} />
+                        <Mark variant="check" class="h-28 w-28" dash="fine" animate={false} />
+                    </div>
+                </Specimen>
+            </div>
+
+            <div class="mt-10 grid gap-6 sm:grid-cols-2">
+                <Specimen name="Texture off" note="The default. Hand-drawn quality comes from the authored control points, not a filter." center>
+                    <Arrow variant="right" class="w-full max-w-[16rem]" texture={false} animate={false} stroke={2} />
+                </Specimen>
+                <Specimen
+                    name="Texture on"
+                    note="feTurbulence displacement. Its scale is in viewBox units, so it only behaves on large glyphs - on a 40-unit mark it eats 4% of the shape and the stroke reads as crooked. Opt in, never default."
+                    center
+                >
+                    <Arrow variant="right" class="w-full max-w-[16rem]" texture={true} animate={false} stroke={2} />
+                </Specimen>
+            </div>
+        </DesignSection>
+
+        <!-- 05 ------------------------------------------------------------- -->
+        <DesignSection
+            id="arrows"
+            n="05"
+            title="Arrows"
+            lede="Twelve shapes, one engine. Each is a dashed stroke revealed by a solid stroke sweeping the same path, so the dashes appear one at a time instead of sliding into place. Tips fade in at 72% of the draw."
+        >
+            <div class="mb-6 flex flex-wrap items-center gap-3">
+                <button
+                    id="replay-arrows"
+                    class="border-main/45 hover:bg-muted cursor-pointer rounded-full border border-dashed px-4 py-1.5 font-serif text-sm italic transition-colors"
+                >
+                    Replay the pack
+                </button>
+                <span class="text-main/50 text-xs">Also redraws on scroll, once per element.</span>
+            </div>
+
+            <div id="arrow-pack" class="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3">
+                {
+                    ARROW_VARIANTS.map((variant, i) => {
+                        const glyph = ARROWS[variant];
+                        return (
+                            <figure>
+                                <div class="bg-muted/60 tick-corners flex h-28 items-center justify-center px-3 py-3">
+                                    <div class="max-w-full" style={`aspect-ratio:${glyph.w} / ${glyph.h};height:100%`}>
+                                        <Arrow variant={variant} class="h-full w-full" delay={i * 60} />
+                                    </div>
+                                </div>
+                                <figcaption class="text-main/70 mt-2 text-xs">{variant}</figcaption>
+                            </figure>
+                        );
+                    })
+                }
+            </div>
+
+            <div class="mt-10">
+                <Specimen
+                    name="Props"
+                    note="variant · stroke · dash · duration · delay · flip · flipY · rotate · headStyle · texture · animate · stretch · label"
+                    code={codeArrow}
+                >
+                    <div class="flex flex-wrap items-center justify-center gap-8">
+                        <Arrow variant="right" class="h-6 w-28" dash="hair" stroke={1} animate={false} />
+                        <Arrow variant="right" class="h-8 w-28" dash="fine" stroke={2} animate={false} />
+                        <Arrow variant="right" class="h-10 w-28" dash="coarse" stroke={3.5} animate={false} />
+                        <Arrow variant="right" class="h-8 w-28" flip stroke={2} animate={false} />
+                        <Arrow variant="right" class="h-8 w-28" headStyle="dashed" stroke={2} animate={false} />
+                    </div>
+                </Specimen>
+            </div>
+
+            <Callout variant="note" title="When to use which" class="mt-8">
+                <p><strong>s-loop</strong> is the signature connector - reserve it for the research track and long-form sequences where the reader needs a beat between stages.</p>
+                <p><strong>s-curve</strong> and <strong>elbow</strong> connect anything off-axis. <strong>branch</strong> and <strong>merge</strong> carry arguments, not layout. <strong>nudge</strong> and <strong>right</strong> annotate the thing next to them.</p>
+                <p>Never more than one <strong>swoop</strong> per page. It is a full stop, and a page with two full stops has no ending.</p>
+            </Callout>
+        </DesignSection>
+
+        <!-- 06 ------------------------------------------------------------- -->
+        <DesignSection
+            id="marks"
+            n="06"
+            title="Marks"
+            lede="The strokes you would add to a printed page. Same drawing engine as the arrows, no tip. Two underlines ship: the single pass is the default, and the double is a second lap for something you came back to - at body size it turns the first stroke into noise, which is why it is not the default."
+        >
+            <div class="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
+                {
+                    MARK_VARIANTS.map((variant, i) => {
+                        const glyph = MARKS[variant];
+                        return (
+                            <figure>
+                                <div class="bg-muted/60 tick-corners flex h-32 items-center justify-center px-3 py-3">
+                                    <div class="max-w-full" style={`aspect-ratio:${glyph.w} / ${glyph.h};height:100%`}>
+                                        <Mark variant={variant} class="h-full w-full" delay={i * 50} />
+                                    </div>
+                                </div>
+                                <figcaption class="text-main/70 mt-2 text-xs">{variant}</figcaption>
+                            </figure>
+                        );
+                    })
+                }
+            </div>
+
+            <Callout variant="warn" title="Below 24px, go solid" class="mt-10">
+                <p>
+                    Dashes are CSS pixels, so a short path gets few of them: a 16px tick with <code>fine</code> is barely three strokes and a
+                    gap where the corner should be. That is not a small dashed tick, it is a broken tick.
+                </p>
+                <p>
+                    Under roughly 24px, pass <code>dash="solid"</code>. The dash motif is carried by the frame the mark sits in, not by the
+                    mark itself. Callouts, checklists and the ornament rule all follow this.
+                </p>
+            </Callout>
+
+            <div class="mt-10">
+                <Specimen name="Usage" note="Marks carry meaning, not decoration. A tick means shipped; a cross means cut; a scribble means deprecated but kept for the record." code={codeMark}>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-center gap-3">
+                            <Mark variant="check" class="h-4 w-4 shrink-0" stroke={1.75} dash="solid" />
+                            <span>Hall of Fame shipped</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <Mark variant="cross" class="h-4 w-4 shrink-0" stroke={1.75} dash="solid" />
+                            <span>Real-time collaborative editing - cut, out of scope</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <Mark variant="star" class="h-4 w-4 shrink-0" stroke={1.75} dash="solid" />
+                            <span>Needs a second look before v1.1</span>
+                        </li>
+                    </ul>
+                </Specimen>
+            </div>
+        </DesignSection>
+
+        <!-- 07 ------------------------------------------------------------- -->
+        <DesignSection
+            id="surfaces"
+            n="07"
+            title="Surfaces"
+            lede="Rules, frames, callouts, code. Anything that encloses content is dashed; anything solid is filled data."
+        >
+            <div class="space-y-10">
+                <Specimen name="Rules" note="dashed · hair · coarse · double · wave · ornament. The wave and the ornament draw in; the rest are CSS gradients.">
+                    <div class="w-full space-y-7">
+                        <Rule variant="dashed" />
+                        <Rule variant="hair" />
+                        <Rule variant="coarse" />
+                        <Rule variant="double" />
+                        <Rule variant="wave" />
+                        <Rule variant="ornament" />
+                        <Rule variant="ornament">end of part one</Rule>
+                    </div>
+                </Specimen>
+
+                <div class="grid gap-6 sm:grid-cols-2">
+                    <Specimen name="Frame" note="Dashed on all four sides, with an optional label that punches through the top edge." code={codeFrame}>
+                        <Frame label="config" class="w-full px-5 py-5">
+                            <p class="text-main/75 text-sm leading-relaxed">
+                                A frame says "this is a thing you can lift out of the page". Use it for anything a reader might screenshot.
+                            </p>
+                        </Frame>
+                    </Specimen>
+
+                    <Specimen name="Frame - ticks" note="Corner ticks imply the box without drawing it. Default for cards, so a grid of them does not read as a cage.">
+                        <Frame variant="ticks" class="w-full px-5 py-5">
+                            <p class="text-main/75 text-sm leading-relaxed">
+                                Lighter than a full frame. Everything on the workbench homepage uses this.
+                            </p>
+                        </Frame>
+                    </Specimen>
+                </div>
+
+                <Specimen name="Callouts" note="note · aside · repro · source · warn. Each opens with its own mark." code={codeCallout}>
+                    <div class="w-full space-y-4">
+                        <Callout variant="repro">
+                            Repo, notebook and the exact config are in <a href="/blog/git-bonsai/">git-bonsai</a>. If a Build post does not
+                            leave you something runnable, it is not finished.
+                        </Callout>
+                        <Callout variant="source">
+                            Kosmyna et al., <em>Your Brain on ChatGPT</em>, MIT Media Lab, 2025.
+                        </Callout>
+                        <Callout variant="warn">
+                            Sample size is 54 and the follow-up window is four months. Treat the effect size as directional.
+                        </Callout>
+                    </div>
+                </Specimen>
+
+                <Specimen name="Code frame" note="Filename tab on a dashed border. The three dots are a nod at a window chrome the site otherwise refuses to draw.">
+                    <CodeFrame label="terminal" class="w-full">
+                        <pre><code>$ npx git-bonsai --repo . --season autumn
+  → reading 1,284 commits
+  → growing…
+  ✓ bonsai.svg written</code></pre>
+                    </CodeFrame>
+                </Specimen>
+            </div>
+        </DesignSection>
+
+        <!-- 08 ------------------------------------------------------------- -->
+        <DesignSection
+            id="inline"
+            n="08"
+            title="Inline"
+            lede="What happens inside a paragraph: annotations, margin notes, tags, keys."
+        >
+            <div class="space-y-10">
+                <Specimen name="Annotate" note="Draws a stretched mark over a run of text. Underline for emphasis, circle for the one claim of the paragraph, scribble for something being retracted." code={codeAnnotate}>
+                    <p class="text-main w-full leading-[2.2]">
+                        The problem is not <Annotate>output</Annotate>, it is
+                        <Annotate mark="circle" delay={300}>what you retain</Annotate> afterwards. The old advice -
+                        <Annotate mark="scribble" delay={600}>just read more carefully</Annotate> - does not survive contact with an agent
+                        that writes faster than you read.
+                    </p>
+                </Specimen>
+
+                <Specimen name="Side note" note="Replaces footnotes. Floats into the right margin above 1300px, folds inline below it. Numbering is a CSS counter, so inserting one mid-draft renumbers the rest for free." code={codeSidenote}>
+                    <div class="prose w-full max-w-none">
+                        <p class="text-sm leading-[1.9]">
+                            Kosmyna measured EEG differences<SideNote>MIT Media Lab, 2025. n = 54, four months, three cohorts.</SideNote> that
+                            persisted after the tool was taken away, which is the part everyone skips when they quote the study<SideNote
+                                >The press coverage almost universally reported the during-task result and stopped there.</SideNote
+                            >.
+                        </p>
+                    </div>
+                </Specimen>
+
+                <div class="grid gap-6 sm:grid-cols-2">
+                    <Specimen name="Tags" note="Five to seven in the whole vocabulary. Past that they stop working as navigation.">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <Tag href="/tags/cognition/" count={9}>cognition</Tag>
+                            <Tag href="/tags/tools/" count={4}>tools</Tag>
+                            <Tag active>lab notes</Tag>
+                            <Tag size="sm">builds</Tag>
+                        </div>
+                    </Specimen>
+
+                    <Specimen name="Keys" note="Dashed keycaps. Same border language as everything else.">
+                        <p class="text-sm leading-loose">
+                            Toggle the theme with <Kbd>⌘</Kbd> <Kbd>J</Kbd>, jump to search with <Kbd>/</Kbd>.
+                        </p>
+                    </Specimen>
+                </div>
+            </div>
+        </DesignSection>
+
+        <!-- 09 ------------------------------------------------------------- -->
+        <DesignSection
+            id="signals"
+            n="09"
+            title="Signals"
+            lede="Status, progress, magnitude. Solid ticks are filled data; empty ticks are the ink-12 ghost behind them."
+        >
+            <div class="space-y-10">
+                <Specimen name="Status" note="live · building · paused · shipped · archived. Only 'building' animates - everything else is at rest, which is what makes the moving one mean something.">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <Status state="live" note="v1.2" />
+                        <Status state="building" note="since Jun 2026" />
+                        <Status state="paused" />
+                        <Status state="shipped" note="24 keepers" />
+                        <Status state="archived" />
+                    </div>
+                </Specimen>
+
+                <Specimen name="Meter" note="The dash motif doing double duty as data. Few ticks read as a rating, many as a bar." code={codeMeter}>
+                    <div class="w-full max-w-md space-y-5">
+                        <Meter value={0.62} label="Retention after 30 days" readout="0.62" />
+                        <Meter value={0.88} label="Recall with spaced review" readout="0.88" />
+                        <Meter value={3} max={5} ticks={5} label="Confidence in the effect" readout="3 / 5" />
+                    </div>
+                </Specimen>
+
+                <Specimen name="Stats" note="One number worth stopping for. Serif, ticked corners, never more than three in a row.">
+                    <div class="grid w-full gap-4 sm:grid-cols-3">
+                        <Stat value="54" label="Participants" note="Kosmyna et al., 2025" />
+                        <Stat value="4 mo" label="Follow-up" />
+                        <Stat value="-17%" label="Recall delta" note="vs. unassisted cohort" />
+                    </div>
+                </Specimen>
+
+                <Specimen name="Checklist" note="Roadmaps and replication steps. Done items get a drawn tick, not a filled box.">
+                    <Checklist
+                        class="w-full"
+                        items={[
+                            { text: 'Ship the dashed pack', done: true },
+                            { text: 'Move footnotes to margin notes', done: true, note: 'above 1300px' },
+                            { text: 'Track navigation on series posts' },
+                            { text: 'Auto-generated OG images at build time', note: 'satori' }
+                        ]}
+                    />
+                </Specimen>
+            </div>
+        </DesignSection>
+
+        <!-- 10 ------------------------------------------------------------- -->
+        <DesignSection
+            id="data"
+            n="10"
+            title="Data"
+            lede="Leaderboards, spec lists, changelogs. These are the pages people come back to; a post is read once."
+        >
+            <div class="space-y-10">
+                <Specimen name="Leaderboard" note="Rows sort themselves by score. Tick bars make the ranking legible before you read a number, and `self` marks your own entry." code={codeLeaderboard}>
+                    <Leaderboard
+                        class="w-full"
+                        caption="bci-bench v0.3 - decoding accuracy on held-out subjects. Lower parameter counts break ties."
+                        rows={[
+                            { name: 'EEGNet-lite', score: 0.81, note: '2.1M params' },
+                            { name: 'Ours', score: 0.74, note: '0.4M params', self: true },
+                            { name: 'ShallowConvNet', score: 0.71, note: '1.4M params' },
+                            { name: 'Riemannian + LR', score: 0.68, note: 'no training' }
+                        ]}
+                    />
+                </Specimen>
+
+                <Specimen name="Spec list" note="Dot leaders. The spine of a project page: problem, mechanism, demo, install, changelog - each answered in one line.">
+                    <SpecList
+                        class="w-full"
+                        items={[
+                            { term: 'Problem', value: 'Commit history is unreadable' },
+                            { term: 'Mechanism', value: 'L-system over the commit graph' },
+                            { term: 'Demo', value: 'Hall of Fame', href: '/blog/git-bonsai/' },
+                            { term: 'Install', value: 'npx git-bonsai' },
+                            { term: 'Source', value: 'github.com/egorthinks', href: 'https://github.com/egorthinks' }
+                        ]}
+                    />
+                </Specimen>
+
+                <Specimen name="Changelog" note="Dated build log on a dashed spine. Cheap to write, shows movement, indexes well. Every project page ends with one." code={codeChangelog}>
+                    <Changelog class="w-full">
+                        <ChangelogEntry date="2026-07-14" tag="v1.0" title="Hall of Fame">
+                            Public gallery of bonsai grown from real repositories, with a permalink per tree.
+                        </ChangelogEntry>
+                        <ChangelogEntry date="2026-06-02" tag="v0.4" title="Seasons">
+                            Commit recency drives foliage; a repository that has gone quiet turns autumn.
+                        </ChangelogEntry>
+                        <ChangelogEntry date="2026-04-19" tag="v0.1" title="First tree">
+                            One branch per contributor, one leaf per commit. Everything since has been pruning.
+                        </ChangelogEntry>
+                    </Changelog>
+                </Specimen>
+            </div>
+        </DesignSection>
+
+        <!-- 11 ------------------------------------------------------------- -->
+        <DesignSection
+            id="track"
+            n="11"
+            title="The track"
+            lede="The one place the big connectors earn their size. Stages alternate sides, the loop gives the reader a beat between them, and each connector draws itself as it comes into view."
+        >
+            <Track class="mb-10">
+                <TrackStep n="01" title="Read the literature" meta="ongoing" connector="s-loop">
+                    Cognitive offloading, spaced repetition, metacognitive laziness. Everything that gets cited later starts as a note here.
+                </TrackStep>
+                <TrackStep n="02" title="Build the bench" meta="Q3 2026" connector="s-curve">
+                    A benchmark is the only honest way to argue about a claim. If a result cannot be scored, it does not go on the track.
+                </TrackStep>
+                <TrackStep n="03" title="Run the experiment" meta="Q4 2026" connector="elbow">
+                    Small n, pre-registered, published whether or not it works. The failure write-ups are the useful ones.
+                </TrackStep>
+                <TrackStep n="04" title="Publish the numbers" meta="continuous">
+                    Leaderboard first, essay second. The table is what people come back to.
+                </TrackStep>
+            </Track>
+
+            <Specimen name="Markup" note="Connector shape is per-step, so the rhythm of the track is authored, not automatic. The last step drops its connector." code={codeTrack} class="mb-10">
+                <div class="flex w-full items-center justify-center gap-6">
+                    <Arrow variant="s-loop" class="text-main/50 h-24 w-auto" animate={false} />
+                    <Arrow variant="s-curve" class="text-main/50 h-24 w-auto" animate={false} />
+                    <Arrow variant="elbow" class="text-main/50 h-24 w-auto" animate={false} />
+                </div>
+            </Specimen>
+
+            <Specimen name="Track navigation" note="Goes at the foot of every post in a series. Turns scattered posts into something readers finish.">
+                <TrackNav
+                    class="w-full"
+                    track="Cognitive debt"
+                    part={2}
+                    total={5}
+                    prev={{ href: '/blog/like-a-stranger/', text: 'Reading your own code like a stranger' }}
+                    next={{ href: '/blog/git-bonsai/', text: 'Growing a bonsai from a commit history' }}
+                />
+            </Specimen>
+        </DesignSection>
+
+        <!-- 12 ------------------------------------------------------------- -->
+        <DesignSection
+            id="patterns"
+            n="12"
+            title="Page patterns"
+            lede="How the elements compose. Two layouts carry most of the site."
+        >
+            <div class="space-y-10">
+                <Specimen name="Workbench - the homepage" note="Not a chronological feed. One line of thesis, three tracks, the current project's status. The feed moves to /archive/, where it belongs.">
+                    <div class="w-full">
+                        <p class="font-serif text-xl leading-snug font-medium sm:text-2xl">
+                            I write about staying sharp while AI codes.
+                        </p>
+
+                        <div class="mt-7 grid gap-3 sm:grid-cols-3">
+                            <Frame variant="ticks" class="px-4 py-4">
+                                <span class="eyebrow">Essays</span>
+                                <p class="text-main/70 mt-2 text-xs leading-relaxed">Slow, cited, one every six weeks.</p>
+                            </Frame>
+                            <Frame variant="ticks" class="px-4 py-4">
+                                <span class="eyebrow">Builds</span>
+                                <p class="text-main/70 mt-2 text-xs leading-relaxed">How it works inside, and why that way.</p>
+                            </Frame>
+                            <Frame variant="ticks" class="px-4 py-4">
+                                <span class="eyebrow">Lab notes</span>
+                                <p class="text-main/70 mt-2 text-xs leading-relaxed">200-400 words. These keep the cadence.</p>
+                            </Frame>
+                        </div>
+
+                        <div class="mt-4">
+                            <ProjectCard
+                                title="git-bonsai"
+                                href="/blog/git-bonsai/"
+                                line="Grows a bonsai from a repository's commit history. Upload a profile, get a picture, post it."
+                                state="live"
+                                note="v1.0"
+                                tags={['generative', 'CLI']}
+                            />
+                        </div>
+                    </div>
+                </Specimen>
+
+                <Specimen name="Project page - the living document" note="Problem → mechanism → demo → install → changelog. Posts link here, not the other way round: this page accumulates weight over years while a post dies a week after publication.">
+                    <div class="w-full">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <h4 class="font-serif text-2xl leading-tight font-medium">git-bonsai</h4>
+                            <Status state="live" note="v1.0" />
+                        </div>
+                        <p class="text-main/75 mt-2 text-sm leading-relaxed">
+                            A repository's history, drawn as a tree that grew that way.
+                        </p>
+
+                        <Rule variant="dashed" class="my-6" />
+
+                        <SpecList
+                            items={[
+                                { term: 'Problem', value: 'Commit history is unreadable' },
+                                { term: 'Mechanism', value: 'L-system over the commit graph' },
+                                { term: 'Demo', value: 'Hall of Fame', href: '/blog/git-bonsai/' },
+                                { term: 'Install', value: 'npx git-bonsai' }
+                            ]}
+                        />
+
+                        <div class="mt-6 flex flex-wrap gap-3">
+                            <Button href="/blog/git-bonsai/">Read the build</Button>
+                        </div>
+                    </div>
+                </Specimen>
+            </div>
+        </DesignSection>
+
+        <!-- 13 ------------------------------------------------------------- -->
+        <DesignSection
+            id="open"
+            n="13"
+            title="Open"
+            lede="What this system does not cover yet. Listed here so it stays visible rather than becoming folklore."
+        >
+            <Checklist
+                items={[
+                    { text: 'OG images generated at build time from the same tokens', note: 'satori - needs a dependency' },
+                    { text: 'MDX islands: a spaced-repetition widget, an AST-diff viewer', note: 'one good widget beats five essays' },
+                    { text: '/archive/ as the chronological feed, homepage as workbench' },
+                    { text: '/projects/<slug>/ content collection with a changelog schema' },
+                    { text: 'Series metadata in frontmatter so TrackNav derives itself' }
+                ]}
+            />
+
+            <Callout variant="aside" title="Adding to this page" class="mt-8">
+                <p>
+                    New elements live in <code>src/components/ui/</code> and get a <code>&lt;Specimen&gt;</code> here in the same commit. New
+                    glyphs go in <code>src/utils/sketch-paths.ts</code> and appear in the grids above automatically.
+                </p>
+                <p>
+                    If an element cannot be built from the palette and the dash, it does not belong on the site - the answer is a different
+                    element, not a new token.
+                </p>
+            </Callout>
+        </DesignSection>
+    </article>
+</BaseLayout>
+
+<script>
+    // Re-run the draw animation for the arrow pack on demand.
+    function initReplay() {
+        const button = document.getElementById('replay-arrows');
+        const pack = document.getElementById('arrow-pack');
+        if (!button || !pack) return;
+
+        button.addEventListener('click', () => {
+            const glyphs = pack.querySelectorAll<SVGElement>('[data-draw]');
+            glyphs.forEach((el) => el.classList.remove('is-drawn'));
+            // Force a reflow so the animation restarts rather than being ignored.
+            void (pack as HTMLElement).offsetWidth;
+            glyphs.forEach((el) => el.classList.add('is-drawn'));
+        });
+    }
+
+    initReplay();
+    document.addEventListener('astro:after-swap', initReplay);
+</script>

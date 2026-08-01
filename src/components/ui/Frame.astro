@@ -1,0 +1,38 @@
+---
+/**
+ * A dashed box. Every enclosed surface on the site is one of these.
+ *
+ *   <Frame label="config">…</Frame>
+ *   <Frame variant="ticks">…</Frame>     corner ticks only
+ */
+type Props = {
+    /** Sits on the top edge, interrupting the dashes. */
+    label?: string;
+    variant?: 'dashed' | 'fine' | 'coarse' | 'ticks';
+    /** Fills with --bg-muted. Use sparingly; the paper should show through. */
+    muted?: boolean;
+    class?: string;
+    /** Element to render. `figure`, `aside` and `li` all come up. */
+    as?: string;
+};
+
+const { label, variant = 'dashed', muted = false, class: className, as: Tag = 'div' } = Astro.props;
+
+const frameClass = {
+    dashed: 'frame-dashed',
+    fine: 'frame-dashed frame-dashed-fine',
+    coarse: 'frame-dashed frame-dashed-coarse',
+    ticks: 'tick-corners'
+}[variant];
+---
+
+<Tag class:list={['relative', frameClass, { 'bg-muted': muted }, className]}>
+    {
+        label && (
+            <span class:list={['eyebrow absolute -top-[0.4rem] left-4 px-2', muted ? 'bg-muted' : 'bg-main']}>
+                {label}
+            </span>
+        )
+    }
+    <slot />
+</Tag>

@@ -1,0 +1,38 @@
+---
+/**
+ * A framed aside with a stated job. `repro` is the important one: the rule is
+ * that a Build post must leave the reader something they can run.
+ *
+ *   <Callout variant="repro" title="Reproduce this">…</Callout>
+ */
+import Mark from './Mark.astro';
+
+type Props = {
+    variant?: 'note' | 'aside' | 'repro' | 'source' | 'warn';
+    title?: string;
+    class?: string;
+};
+
+const { variant = 'note', title, class: className } = Astro.props;
+
+const DEFAULTS = {
+    note: { title: 'Note', mark: 'star' },
+    aside: { title: 'Aside', mark: 'bracket-left' },
+    repro: { title: 'Reproduce this', mark: 'check' },
+    source: { title: 'Source', mark: 'corner' },
+    warn: { title: 'Caveat', mark: 'cross' }
+} as const;
+
+const preset = DEFAULTS[variant];
+const heading = title ?? preset.title;
+---
+
+<aside class:list={['frame-dashed relative px-5 py-4 sm:px-6 sm:py-5', className]}>
+    <div class="mb-2 flex items-center gap-2">
+        <Mark variant={preset.mark} class="text-main/60 h-4 w-4 shrink-0" stroke={1.5} dash="solid" duration={450} />
+        <span class="eyebrow">{heading}</span>
+    </div>
+    <div class="text-main/85 text-sm leading-relaxed [&>*+*]:mt-3 [&_a]:underline [&_a]:decoration-dashed [&_a]:underline-offset-2">
+        <slot />
+    </div>
+</aside>

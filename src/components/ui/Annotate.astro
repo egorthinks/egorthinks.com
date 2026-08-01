@@ -1,0 +1,73 @@
+---
+/**
+ * Inline pencil annotation. Wraps a run of text and draws a mark over it that
+ * stretches to whatever width the text ends up being.
+ *
+ *   <Annotate>this phrase</Annotate>
+ *   <Annotate mark="circle">this one matters</Annotate>
+ */
+import type { MarkVariant } from '../../utils/sketch-paths';
+import Mark from './Mark.astro';
+
+type Props = {
+    mark?: Extract<MarkVariant, 'underline' | 'circle' | 'scribble'>;
+    class?: string;
+    delay?: number;
+};
+
+const { mark = 'underline', class: className, delay = 0 } = Astro.props;
+---
+
+<span class:list={['annotate', `is-${mark}`, className]}><slot /><Mark
+        variant={mark}
+        class="annotate-mark"
+        stretch
+        stroke={1.5}
+        dash={mark === 'circle' ? 'coarse' : 'default'}
+        duration={700}
+        delay={delay}
+    /></span>
+
+<style>
+    /* Inline, not inline-block: the containing block for the mark is then the
+       text's own em box rather than the whole line box, so the stroke sits on
+       the letters instead of drifting toward the next line. */
+    .annotate {
+        position: relative;
+        display: inline;
+        white-space: nowrap;
+    }
+
+    .annotate :global(.annotate-mark) {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        pointer-events: none;
+        color: var(--ink-70);
+    }
+
+    .annotate.is-underline :global(.annotate-mark) {
+        top: 100%;
+        height: 0.3em;
+        margin-top: -0.14em;
+    }
+
+    .annotate.is-scribble :global(.annotate-mark) {
+        top: 50%;
+        height: 0.5em;
+        transform: translateY(-50%);
+    }
+
+    /* The circle has to swallow the text, so it overhangs on every side. The
+       padding widens the containing block, which is what the stretched ellipse
+       is sized against - without it the loop cuts through the first and last
+       letters instead of going round them. */
+    .annotate.is-circle {
+        padding: 0 0.6em;
+    }
+
+    .annotate.is-circle :global(.annotate-mark) {
+        top: -0.3em;
+        height: calc(100% + 0.6em);
+    }
+</style>

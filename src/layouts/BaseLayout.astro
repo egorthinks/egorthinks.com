@@ -4,6 +4,7 @@ import BaseHead, { type Props as HeadProps } from '../components/BaseHead.astro'
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import Nav from '../components/Nav.astro';
+import SketchDefs from '../components/ui/SketchDefs.astro';
 
 export type Props = HeadProps & { showHeader?: boolean };
 
@@ -23,6 +24,7 @@ const { showHeader = true, ...head } = Astro.props;
         <script is:inline src="/theme-toggle.js"></script>
     </head>
     <body class="bg-main text-main">
+        <SketchDefs />
         <div class="flex min-h-screen flex-col px-4 md:px-8">
             <Nav />
             {showHeader && <Header />}
@@ -31,5 +33,34 @@ const { showHeader = true, ...head } = Astro.props;
             </main>
             <Footer />
         </div>
+
+        <script>
+            // Dashed glyphs draw themselves the first time they scroll into view.
+            function initSketchDraw() {
+                const els = document.querySelectorAll<SVGElement>('[data-draw]:not(.is-drawn)');
+                if (!els.length) return;
+
+                if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    els.forEach((el) => el.classList.add('is-drawn'));
+                    return;
+                }
+
+                const observer = new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach((entry) => {
+                            if (!entry.isIntersecting) return;
+                            entry.target.classList.add('is-drawn');
+                            observer.unobserve(entry.target);
+                        });
+                    },
+                    { rootMargin: '0px 0px -8% 0px', threshold: 0.2 }
+                );
+
+                els.forEach((el) => observer.observe(el));
+            }
+
+            initSketchDraw();
+            document.addEventListener('astro:after-swap', initSketchDraw);
+        </script>
     </body>
 </html>

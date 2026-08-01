@@ -1,0 +1,41 @@
+---
+/** One stage of a <Track />, plus the connector that leads to the next one. */
+import type { ArrowVariant } from '../../utils/sketch-paths';
+import Arrow from './Arrow.astro';
+
+type Props = {
+    /** Stage number or short code: "01", "S2", "∞". */
+    n?: string;
+    title: string;
+    /** Dates, duration, status - anything that belongs above the title. */
+    meta?: string;
+    href?: string;
+    /** Shape of the line to the next stage. 's-loop' is the signature one. */
+    connector?: ArrowVariant;
+    class?: string;
+};
+
+const { n, title, meta, href, connector = 's-curve', class: className } = Astro.props;
+const TitleEl = href ? 'a' : 'span';
+---
+
+<li class:list={['relative', className]}>
+    <div class="track-card tick-corners w-full px-5 py-5 sm:w-[74%] sm:px-6">
+        <div class="flex items-baseline gap-3">
+            {n && <span class="text-main/45 font-serif text-sm tabular-nums">{n}</span>}
+            {meta && <span class="eyebrow">{meta}</span>}
+        </div>
+        <h3 class="mt-2 font-serif text-xl leading-snug font-medium sm:text-2xl">
+            <TitleEl href={href} class:list={[{ 'hover:underline hover:decoration-dashed hover:underline-offset-4': href }]}>
+                {title}
+            </TitleEl>
+        </h3>
+        <div class="text-main/80 mt-2 text-sm leading-relaxed">
+            <slot />
+        </div>
+    </div>
+
+    <div class="track-link text-main/55 mx-auto w-[62%] max-w-[15rem] py-2 sm:w-[45%]" aria-hidden="true">
+        <Arrow variant={connector} class="h-auto w-full" stroke={2} dash="default" duration={1100} />
+    </div>
+</li>

@@ -1,0 +1,198 @@
+---
+/**
+ * Low-level renderer for every hand-drawn glyph on the site.
+ *
+ * Two things make this work at any size:
+ *
+ * 1. `vector-effect: non-scaling-stroke` on every stroke. Stroke width and dash
+ *    array are then CSS pixels rather than viewBox units, so a tick at 16px and
+ *    the same tick at 120px have identical weight and dash rhythm. Without it,
+ *    small glyphs dissolve into sub-pixel specks and large ones go slab-thick.
+ *    It also survives `stretch` (preserveAspectRatio="none"), which would
+ *    otherwise squash the stroke along one axis.
+ *
+ * 2. The dashes are the drawing; the animation is a solid stroke used as a mask
+ *    that sweeps the same path, so dashes appear one by one instead of a dashed
+ *    line sliding into place.
+ */
+import { DASH, type DashPreset, type SketchOptions, type SketchPath } from '../../utils/sketch-paths';
+
+type Props = SketchOptions & {
+    w: number;
+    h: number;
+    paths: SketchPath[];
+};
+
+const {
+    w,
+    h,
+    paths,
+    class: className,
+    stroke = 1.5,
+    dash = 'default',
+    animate = true,
+    duration = 900,
+    delay = 0,
+    headStyle = 'solid',
+    headSize = 1,
+    flip = false,
+    flipY = false,
+    rotate = 0,
+    stretch = false,
+    texture = false,
+    label
+} = Astro.props;
+
+const uid = Math.random().toString(36).slice(2, 9);
+const dasharray = dash in DASH ? DASH[dash as DashPreset] : dash;
+
+/**
+ * The mask brush, in viewBox units - deliberately NOT non-scaling-stroke.
+ * On the mask, `stroke-dasharray: 100` is the whole path only because
+ * `pathLength="100"` normalises it; non-scaling-stroke re-reads that 100 as
+ * screen pixels, which shatters any glyph drawn larger than its viewBox.
+ *
+ * So the brush scales with the glyph, and the clamp keeps it both wide enough
+ * to clear a 2px stroke's round caps when a mark is drawn at 16px, and narrow
+ * enough that a loop does not uncover its own far side on the way past.
+ */
+const maskStroke = Math.min(Math.max(Math.max(w, h) * 0.16, 6), 14);
+const heads = paths.map((p) => p.head).filter((head): head is NonNullable<typeof head> => Boolean(head));
+
+const transforms = [flip ? 'scaleX(-1)' : '', flipY ? 'scaleY(-1)' : '', rotate ? `rotate(${rotate}deg)` : ''].filter(Boolean);
+
+const style = [
+    `--sk-duration:${duration}ms`,
+    `--sk-delay:${delay}ms`,
+    `--sk-head-delay:${delay + Math.round(duration * 0.72)}ms`,
+    transforms.length ? `transform:${transforms.join(' ')}` : ''
+]
+    .filter(Boolean)
+    .join(';');
+
+/** Tip is a chevron drawn at the origin and moved onto the path end. */
+const headPath = 'M -11 -6.5 L 0 0 L -10 6.5';
+---
+
+<svg
+    class:list={['sketch', className]}
+    viewBox={`0 0 ${w} ${h}`}
+    preserveAspectRatio={stretch ? 'none' : undefined}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={style}
+    data-draw={animate ? '' : undefined}
+    role={label ? 'img' : undefined}
+    aria-label={label}
+    aria-hidden={label ? undefined : 'true'}
+>
+    {
+        animate && (
+            <defs>
+                <mask id={`sk-${uid}`} maskUnits="userSpaceOnUse" x="0" y="0" width={w} height={h}>
+                    {paths.map((p, i) => (
+                        <path
+                            class="sketch-reveal"
+                            style={`--sk-i:${i}`}
+                            d={p.d}
+                            pathLength="100"
+                            stroke="#fff"
+                            stroke-width={maskStroke}
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            fill="none"
+                        />
+                    ))}
+                </mask>
+            </defs>
+        )
+    }
+    <g
+        mask={animate ? `url(#sk-${uid})` : undefined}
+        filter={texture ? 'url(#sketch-pencil)' : undefined}
+        stroke="currentColor"
+        stroke-width={stroke}
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    >
+        {paths.map((p) => <path d={p.d} vector-effect="non-scaling-stroke" stroke-dasharray={dasharray} />)}
+    </g>
+    {
+        heads.length > 0 && (
+            <g
+                class="sketch-head"
+                filter={texture ? 'url(#sketch-pencil)' : undefined}
+                stroke="currentColor"
+                stroke-width={stroke}
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                {heads.map((head) => (
+                    <path
+                        d={headPath}
+                        vector-effect="non-scaling-stroke"
+                        stroke-dasharray={headStyle === 'dashed' ? DASH.fine : undefined}
+                        transform={`translate(${head.x} ${head.y}) rotate(${head.a}) scale(${headSize})`}
+                    />
+                ))}
+            </g>
+        )
+    }
+</svg>
+
+<style>
+    .sketch {
+        display: block;
+        overflow: visible;
+        color: inherit;
+    }
+
+    /* Un-drawn state. The mask hides everything until the sweep runs. */
+    .sketch[data-draw] .sketch-reveal {
+        stroke-dasharray: 100;
+        stroke-dashoffset: 100;
+    }
+
+    .sketch[data-draw] .sketch-head {
+        opacity: 0;
+    }
+
+    .sketch[data-draw].is-drawn .sketch-reveal {
+        animation: sketch-draw var(--sk-duration, 900ms) cubic-bezier(0.32, 0.06, 0.28, 1) forwards;
+        animation-delay: calc(var(--sk-delay, 0ms) + var(--sk-i, 0) * 120ms);
+    }
+
+    .sketch[data-draw].is-drawn .sketch-head {
+        animation: sketch-ink-in 260ms ease-out var(--sk-head-delay, 600ms) forwards;
+    }
+
+    @keyframes sketch-draw {
+        to {
+            stroke-dashoffset: 0;
+        }
+    }
+
+    @keyframes sketch-ink-in {
+        from {
+            opacity: 0;
+            transform: translateY(1px);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .sketch[data-draw] .sketch-reveal {
+            stroke-dashoffset: 0;
+        }
+        .sketch[data-draw] .sketch-head {
+            opacity: 1;
+        }
+        .sketch[data-draw].is-drawn .sketch-reveal,
+        .sketch[data-draw].is-drawn .sketch-head {
+            animation: none;
+        }
+    }
+</style>

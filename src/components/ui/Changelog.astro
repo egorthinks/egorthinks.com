@@ -1,0 +1,21 @@
+---
+/**
+ * Dated build log on a dashed spine. Cheap to write, shows movement, indexes
+ * well. Lives at the bottom of every project page.
+ *
+ *   <Changelog>
+ *     <ChangelogEntry date="2026-07-14" tag="v1.0">Hall of Fame shipped.</ChangelogEntry>
+ *   </Changelog>
+ */
+type Props = { title?: string; class?: string };
+
+const { title, class: className } = Astro.props;
+---
+
+<section class:list={[className]}>
+    {title && <h2 class="mb-8 font-serif text-xl italic sm:text-2xl">{title}</h2>}
+    <ol class="changelog relative">
+        <span class="spine-dashed absolute top-1 bottom-1 left-[5px]" aria-hidden="true"></span>
+        <slot />
+    </ol>
+</section>

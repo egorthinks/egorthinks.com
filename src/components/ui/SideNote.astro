@@ -1,0 +1,82 @@
+---
+/**
+ * Margin note. Replaces footnotes: a citation you have to jump to is a citation
+ * nobody reads. Floats into the right margin on wide screens, folds inline below
+ * the paragraph everywhere else. Markers are numbered by CSS counter, so you
+ * never renumber by hand when you insert one mid-draft.
+ *
+ *   Kosmyna found measurable EEG differences<SideNote>MIT Media Lab, 2025.</SideNote>
+ *   after four months.
+ */
+type Props = {
+    /** Override the auto number with a symbol, e.g. "*" for an unnumbered aside. */
+    marker?: string;
+    class?: string;
+};
+
+const { marker, class: className } = Astro.props;
+---
+
+<span class:list={['sidenote', className]}>
+    <span class="sidenote-marker" aria-hidden="true">{marker}</span>
+    <span class="sidenote-body">
+        {marker && <span class="sidenote-body-marker" aria-hidden="true">{marker}</span>}
+        <slot />
+    </span>
+</span>
+
+<style>
+    .sidenote {
+        counter-increment: sidenote;
+    }
+
+    .sidenote-marker {
+        font-size: 0.7em;
+        line-height: 1;
+        vertical-align: super;
+        margin-left: 0.1em;
+        color: var(--ink-70);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .sidenote-marker:empty::after {
+        content: counter(sidenote);
+    }
+
+    .sidenote-body {
+        display: block;
+        margin: 0.9rem 0;
+        padding-left: 0.9rem;
+        border-left: 1px dashed var(--ink-25);
+        font-size: 0.8125rem;
+        line-height: 1.65;
+        color: var(--ink-70);
+    }
+
+    .sidenote-body-marker {
+        margin-right: 0.35em;
+    }
+
+    .sidenote-body::before {
+        content: counter(sidenote) ' ';
+        margin-right: 0.15em;
+        color: var(--ink-45);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .sidenote-body:has(.sidenote-body-marker)::before {
+        content: none;
+    }
+
+    /* Once the viewport can hold 48rem of text plus a real margin, use the margin.
+       48rem column + 4rem page padding + 2 × 13.5rem of gutter = 1264px. */
+    @media (min-width: 1300px) {
+        .sidenote-body {
+            float: right;
+            clear: right;
+            width: 12rem;
+            margin: 0.35rem -13.5rem 1rem 0;
+            padding-left: 0.75rem;
+        }
+    }
+</style>

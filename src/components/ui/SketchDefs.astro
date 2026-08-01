@@ -1,0 +1,22 @@
+---
+/**
+ * One hidden <svg> per document holding filters that every <Sketch /> shares.
+ * Lives in BaseLayout so any page can draw without shipping its own defs.
+ */
+---
+
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+        <!-- Graphite wobble: nudges the stroke off its mathematically perfect path. -->
+        <filter id="sketch-pencil" x="-10%" y="-10%" width="120%" height="120%" filterUnits="objectBoundingBox">
+            <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="7" result="noise"></feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.6" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+        </filter>
+
+        <!-- Heavier hand. For display-size marks where the grain should read. -->
+        <filter id="sketch-pencil-soft" x="-12%" y="-12%" width="124%" height="124%" filterUnits="objectBoundingBox">
+            <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="4" seed="3" result="noise"></feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+        </filter>
+    </defs>
+</svg>

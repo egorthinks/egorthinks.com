@@ -1,0 +1,48 @@
+---
+/**
+ * A project on the workbench. One line of what it is, its current state, and
+ * where it lives - enough for someone off Hacker News to decide in five seconds.
+ */
+import Arrow from './Arrow.astro';
+import Status from './Status.astro';
+import Tag from './Tag.astro';
+
+type Props = {
+    title: string;
+    href: string;
+    /** One sentence. If it needs two, the project isn't clear yet. */
+    line: string;
+    state?: 'live' | 'building' | 'paused' | 'shipped' | 'archived';
+    note?: string;
+    tags?: string[];
+    class?: string;
+};
+
+const { title, href, line, state, note, tags = [], class: className } = Astro.props;
+---
+
+<a class:list={['group frame-dashed block px-5 py-5 transition-colors hover:bg-muted sm:px-6', className]} href={href}>
+    <div class="flex items-start justify-between gap-4">
+        <h3 class="font-serif text-xl leading-snug font-medium group-hover:underline group-hover:decoration-dashed group-hover:underline-offset-4 sm:text-2xl">
+            {title}
+        </h3>
+        <Arrow
+            variant="right"
+            class="text-main/35 group-hover:text-main mt-2 h-4 w-10 shrink-0 transition-colors"
+            stroke={1.5}
+            dash="fine"
+            animate={false}
+        />
+    </div>
+    <p class="text-main/80 mt-2 text-sm leading-relaxed">{line}</p>
+    {
+        (state || tags.length > 0) && (
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+                {state && <Status state={state} note={note} />}
+                {tags.map((t) => (
+                    <Tag size="sm">{t}</Tag>
+                ))}
+            </div>
+        )
+    }
+</a>

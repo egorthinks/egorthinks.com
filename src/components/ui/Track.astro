@@ -1,0 +1,48 @@
+---
+/**
+ * The research / education track: a sequence of stages wired together by the
+ * big dashed connectors. Steps alternate sides so the S-curves have somewhere
+ * to go, and each connector draws itself as it scrolls into view.
+ *
+ *   <Track>
+ *     <TrackStep n="01" title="Read the literature" connector="s-loop">…</TrackStep>
+ *     <TrackStep n="02" title="Build the bench" connector="s-curve">…</TrackStep>
+ *     <TrackStep n="03" title="Publish" />
+ *   </Track>
+ */
+type Props = { title?: string; class?: string };
+
+const { title, class: className } = Astro.props;
+---
+
+<section class:list={[className]}>
+    {title && <h2 class="mb-10 font-serif text-xl italic sm:text-2xl">{title}</h2>}
+    <ol class="track">
+        <slot />
+    </ol>
+</section>
+
+<style>
+    .track {
+        display: block;
+    }
+
+    /* Odd steps sit left, even steps right; the connector mirrors to match. */
+    .track > :global(li:nth-child(even) .track-card) {
+        margin-left: auto;
+    }
+
+    .track > :global(li:nth-child(even) .track-link) {
+        transform: scaleX(-1);
+    }
+
+    .track > :global(li:last-child .track-link) {
+        display: none;
+    }
+
+    @media (max-width: 639px) {
+        .track > :global(li .track-card) {
+            margin-left: 0;
+        }
+    }
+</style>

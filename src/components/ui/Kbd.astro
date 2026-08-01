@@ -1,0 +1,15 @@
+---
+/** A key. <Kbd>⌘</Kbd><Kbd>K</Kbd> */
+type Props = { class?: string };
+
+const { class: className } = Astro.props;
+---
+
+<kbd
+    class:list={[
+        'border-main/45 text-main/85 inline-flex min-w-[1.6em] items-center justify-center rounded-[3px] border border-dashed px-1.5 py-0.5 font-sans text-[0.75em] leading-none',
+        className
+    ]}
+>
+    <slot />
+</kbd>

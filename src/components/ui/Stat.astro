@@ -1,0 +1,20 @@
+---
+/**
+ * A single number worth stopping for. Serif, large, ticked corners rather than
+ * a full box so a row of them doesn't turn into a grid of cages.
+ */
+type Props = {
+    value: string;
+    label: string;
+    note?: string;
+    class?: string;
+};
+
+const { value, label, note, class: className } = Astro.props;
+---
+
+<div class:list={['tick-corners px-4 py-4 sm:px-5', className]}>
+    <div class="font-serif text-3xl leading-none font-medium tabular-nums sm:text-4xl">{value}</div>
+    <div class="eyebrow mt-2.5">{label}</div>
+    {note && <div class="text-main/55 mt-1 text-xs leading-snug">{note}</div>}
+</div>

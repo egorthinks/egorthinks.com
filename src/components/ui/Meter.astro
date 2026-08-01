@@ -1,0 +1,55 @@
+---
+/**
+ * Segmented meter. The ticks are the dash motif doing double duty as data -
+ * used for benchmark bars, confidence levels and "part 3 of 5" progress.
+ */
+type Props = {
+    /** 0-1, or 0-100 if you pass max={100}. */
+    value: number;
+    max?: number;
+    /** Number of ticks. Fewer ticks read as a rating, more as a bar. */
+    ticks?: number;
+    label?: string;
+    /** Right-aligned readout, e.g. "0.72" or "3 / 5". */
+    readout?: string;
+    class?: string;
+};
+
+const { value, max = 1, ticks = 24, label, readout, class: className } = Astro.props;
+
+const ratio = Math.max(0, Math.min(1, value / max));
+const filled = Math.round(ratio * ticks);
+---
+
+<div class:list={['w-full', className]}>
+    {
+        (label || readout) && (
+            <div class="mb-1.5 flex items-baseline justify-between gap-4">
+                {label && <span class="eyebrow">{label}</span>}
+                {readout && <span class="text-main/70 text-xs tabular-nums">{readout}</span>}
+            </div>
+        )
+    }
+    <div
+        class="meter flex h-3 items-stretch gap-[3px]"
+        role="meter"
+        aria-valuenow={value}
+        aria-valuemin="0"
+        aria-valuemax={max}
+        aria-label={label}
+    >
+        {Array.from({ length: ticks }, (_, i) => <span class:list={['meter-tick', { 'is-on': i < filled }]} />)}
+    </div>
+</div>
+
+<style>
+    .meter-tick {
+        flex: 1 1 0;
+        background: var(--ink-12);
+        border-radius: 1px;
+    }
+
+    .meter-tick.is-on {
+        background: currentColor;
+    }
+</style>
