@@ -185,6 +185,74 @@ html.dark {
         color: var(--ink-70);
     }
 
+    /* ---------------------------------------------------------------------
+       Hatching. The only way this palette can fill an area: not tint, but
+       texture. Direction separates categories, spacing and weight separate
+       magnitudes, and all of it stays inside black and white.
+       --------------------------------------------------------------------- */
+    .hatch {
+        --hatch-angle: 45deg;
+        --hatch-gap: 7px;
+        --hatch-w: 1px;
+        --hatch-c: var(--ink-25);
+        background-image: repeating-linear-gradient(
+            var(--hatch-angle),
+            var(--hatch-c) 0 var(--hatch-w),
+            transparent 0 var(--hatch-gap)
+        );
+    }
+
+    /* Direction. Two series in one figure should never share an angle. */
+    .hatch-up {
+        --hatch-angle: 45deg;
+    }
+    .hatch-down {
+        --hatch-angle: -45deg;
+    }
+    .hatch-vertical {
+        --hatch-angle: 90deg;
+    }
+    .hatch-horizontal {
+        --hatch-angle: 0deg;
+    }
+
+    /* Density. Reads as magnitude: denser is more. */
+    .hatch-dense {
+        --hatch-gap: 4px;
+    }
+    .hatch-wide {
+        --hatch-gap: 13px;
+    }
+
+    /* Weight. The only "darker" this palette has. */
+    .hatch-bold {
+        --hatch-w: 2px;
+        --hatch-c: var(--ink-45);
+    }
+    .hatch-faint {
+        --hatch-c: var(--ink-12);
+    }
+
+    /* Cross-hatch: the heaviest fill before something becomes solid. */
+    .hatch-cross {
+        background-image:
+            repeating-linear-gradient(45deg, var(--hatch-c) 0 var(--hatch-w), transparent 0 var(--hatch-gap)),
+            repeating-linear-gradient(-45deg, var(--hatch-c) 0 var(--hatch-w), transparent 0 var(--hatch-gap));
+    }
+
+    /* Grid and dots, for a fill that should read as empty or provisional. */
+    .hatch-grid {
+        background-image:
+            repeating-linear-gradient(0deg, var(--hatch-c) 0 var(--hatch-w), transparent 0 var(--hatch-gap)),
+            repeating-linear-gradient(90deg, var(--hatch-c) 0 var(--hatch-w), transparent 0 var(--hatch-gap));
+    }
+
+    .hatch-dots {
+        --hatch-gap: 8px;
+        background-image: radial-gradient(var(--hatch-c) 0.9px, transparent 0.9px);
+        background-size: var(--hatch-gap) var(--hatch-gap);
+    }
+
     /* Data tables inside prose, restyled onto the dash grid. */
     .table-dashed {
         width: 100%;

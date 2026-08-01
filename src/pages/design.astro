@@ -4,6 +4,12 @@ import Specimen from '../components/design/Specimen.astro';
 import Button from '../components/Button.astro';
 import Annotate from '../components/ui/Annotate.astro';
 import Arrow from '../components/ui/Arrow.astro';
+import Artifact from '../components/ui/Artifact.astro';
+import ForgettingCurve from '../components/artifacts/ForgettingCurve.astro';
+import Plot from '../components/ui/Plot.astro';
+import Segmented from '../components/ui/controls/Segmented.astro';
+import Slider from '../components/ui/controls/Slider.astro';
+import Toggle from '../components/ui/controls/Toggle.astro';
 import Callout from '../components/ui/Callout.astro';
 import Changelog from '../components/ui/Changelog.astro';
 import ChangelogEntry from '../components/ui/ChangelogEntry.astro';
@@ -26,6 +32,7 @@ import TrackNav from '../components/ui/TrackNav.astro';
 import TrackStep from '../components/ui/TrackStep.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { ARROWS, ARROW_VARIANTS, MARKS, MARK_VARIANTS } from '../utils/sketch-paths';
+import { HATCHES } from '../utils/plot';
 
 const contents = [
     { term: '01', value: 'Principles', href: '#principles' },
@@ -39,8 +46,9 @@ const contents = [
     { term: '09', value: 'Signals', href: '#signals' },
     { term: '10', value: 'Data', href: '#data' },
     { term: '11', value: 'The track', href: '#track' },
-    { term: '12', value: 'Page patterns', href: '#patterns' },
-    { term: '13', value: 'Open', href: '#open' }
+    { term: '12', value: 'Artifacts', href: '#artifacts' },
+    { term: '13', value: 'Page patterns', href: '#patterns' },
+    { term: '14', value: 'Open', href: '#open' }
 ];
 
 const principles = [
@@ -135,6 +143,43 @@ const codeMeter = `<Meter value={0.62} label="Retention" readout="0.62" />
 
 const codeAnnotate = `The problem is not <Annotate>output</Annotate>, it is
 <Annotate mark="circle">what you retain</Annotate> afterwards.`;
+
+const codePlot = `<Plot
+  height={220}
+  x={{ min: 0, max: 12, ticks: [0, 6, 12], label: 'Week' }}
+  y={{ min: 0, max: 100, ticks: [0, 50, 100], label: 'Score' }}
+  series={[
+    { name: 'Measured',  points: [[0, 12], [12, 71]], style: 'solid', fill: 'hatch-up' },
+    { name: 'Projected', points: [[0, 12], [12, 86]], style: 'dashed' },
+    { name: 'Baseline',  points: [[0, 40], [12, 40]], style: 'hair', muted: true }
+  ]}
+/>`;
+
+const codeHatch = `{* anywhere, not just plots *}
+<div class="hatch hatch-down hatch-dense" />
+<div class="hatch hatch-cross hatch-bold" />
+
+{* as a plot fill *}
+series={[{ name: 'Measured', points, style: 'solid', fill: 'hatch-up' }]}`;
+
+const codeControls = `<Slider name="weight" label="Weight" min={0} max={100} value={35} ends={['0', '100']} />
+<Segmented name="mode" label="Mode" value="smoothed" options={[
+  { value: 'raw', label: 'Raw' },
+  { value: 'smoothed', label: 'Smoothed' }
+]} />
+<Toggle name="projection" label="Show the projection" checked />`;
+
+const codeArtifact = `<Artifact
+  id="bci-bench"
+  kind="Benchmark"
+  title="bci-bench v0.3"
+  lede="Decoding accuracy on held-out subjects."
+  source="Four runs per model, median reported."
+  resettable
+>
+  <div slot="controls">…</div>
+  <Leaderboard rows={rows} />
+</Artifact>`;
 ---
 
 <BaseLayout
@@ -692,8 +737,117 @@ const codeAnnotate = `The problem is not <Annotate>output</Annotate>, it is
 
         <!-- 12 ------------------------------------------------------------- -->
         <DesignSection
-            id="patterns"
+            id="artifacts"
             n="12"
+            title="Artifacts"
+            lede="Things that travel without the post around them: widgets, plots, generated images. One of these is worth more than five good essays, so they get their own chrome, their own controls and their own permalink."
+        >
+            <Callout variant="note" title="The rule that makes a plot honest" class="mb-10">
+                <p>
+                    <strong>A solid line is measured. A dashed line is modelled.</strong> It is the same distinction the frames make - solid
+                    is filled and finished, dashed is a container or a projection - applied to data, and it lets a reader tell what you
+                    actually know from across the room.
+                </p>
+                <p>Anything modelled says so in the source line too. A widget that looks like evidence and is not is worse than no widget.</p>
+            </Callout>
+
+            <div class="space-y-10">
+                <div>
+                    <h3 class="mb-1 font-serif text-base leading-snug font-medium">Live artifact</h3>
+                    <p class="text-main/60 mb-4 text-sm leading-relaxed">
+                        Chrome, controls, plot and readouts together. Server-rendered complete, then enhanced - without JS it is still a
+                        correct figure at the default settings.
+                    </p>
+                    <ForgettingCurve id="design-forgetting-curve" />
+                </div>
+
+                <Specimen
+                    name="Plot"
+                    note="The drawing area is a normalised 1000x1000 box that CSS stretches to the container, so the curve is responsive; strokes hold their weight through vector-effect and the tick labels are HTML, so they stay readable on a phone instead of shrinking to 6px."
+                    code={codePlot}
+                >
+                    <Plot
+                        class="w-full"
+                        height={220}
+                        x={{ min: 0, max: 12, ticks: [0, 3, 6, 9, 12], label: 'Week', format: 'number' }}
+                        y={{ min: 0, max: 100, ticks: [0, 50, 100], label: 'Score', format: 'compact' }}
+                        series={[
+                            {
+                                name: 'Measured',
+                                points: [[0, 12], [2, 28], [4, 31], [6, 52], [8, 61], [10, 66], [12, 71]],
+                                style: 'solid',
+                                fill: 'hatch-up'
+                            },
+                            {
+                                name: 'Projected',
+                                points: [[0, 12], [3, 34], [6, 55], [9, 72], [12, 86]],
+                                style: 'dashed'
+                            },
+                            { name: 'Baseline', points: [[0, 40], [12, 40]], style: 'hair', muted: true }
+                        ]}
+                    />
+                </Specimen>
+
+                <Specimen
+                    name="Hatching"
+                    note="The only fill this palette has. Direction separates categories, spacing and weight separate magnitudes - two series in one figure should never share an angle. These are CSS gradients, so they hold their angle when the plot stretches; an SVG pattern inside the stretched box would shear to 30 degrees at one window width and 50 at another."
+                    code={codeHatch}
+                >
+                    <div class="grid w-full grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-4">
+                        {
+                            HATCHES.map((name) => (
+                                <figure>
+                                    <div class:list={['border-main/25 h-16 w-full border border-dashed hatch', name]} />
+                                    <figcaption class="text-main/60 mt-1.5 text-[0.7rem]">{name.replace('hatch-', '')}</figcaption>
+                                </figure>
+                            ))
+                        }
+                    </div>
+                </Specimen>
+
+                <Specimen name="Controls" note="Native inputs underneath, so they work with the keyboard and without JS. The slider track is solid up to the value and dashed past it - value versus the space it could occupy." code={codeControls}>
+                    <div class="grid w-full gap-6 sm:grid-cols-2">
+                        <Slider name="demo-weight" label="Weight" min={0} max={100} step={5} value={35} readout="35" ends={['0', '100']} />
+                        <Segmented
+                            name="demo-mode"
+                            label="Mode"
+                            options={[
+                                { value: 'raw', label: 'Raw' },
+                                { value: 'smoothed', label: 'Smoothed' },
+                                { value: 'delta', label: 'Delta' }
+                            ]}
+                            value="smoothed"
+                        />
+                        <Toggle name="demo-toggle" label="Show the projection" hint="Dashed series are modelled, never measured." checked />
+                        <Toggle name="demo-toggle-2" label="Log scale" />
+                    </div>
+                </Specimen>
+
+                <Specimen name="Artifact chrome" note="Wraps anything embeddable. The permalink and the source line are not decoration: an artifact is meant to be screenshotted alone, and it has to survive being separated from the paragraph that introduced it." code={codeArtifact}>
+                    <Artifact
+                        class="w-full"
+                        kind="Benchmark"
+                        title="bci-bench v0.3"
+                        lede="Decoding accuracy on held-out subjects."
+                        source="Four runs per model, median reported. Full protocol and seeds in the repo."
+                        id="design-artifact-demo"
+                    >
+                        <Leaderboard
+                            rows={[
+                                { name: 'EEGNet-lite', score: 0.81, note: '2.1M params' },
+                                { name: 'Ours', score: 0.74, note: '0.4M params', self: true },
+                                { name: 'Riemannian + LR', score: 0.68, note: 'no training' }
+                            ]}
+                        />
+                    </Artifact>
+                </Specimen>
+            </div>
+        </DesignSection>
+
+        <!-- 13 ------------------------------------------------------------- -->
+        <DesignSection
+            id="patterns"
+            n="13"
             title="Page patterns"
             lede="How the elements compose. Two layouts carry most of the site."
         >
@@ -761,10 +915,10 @@ const codeAnnotate = `The problem is not <Annotate>output</Annotate>, it is
             </div>
         </DesignSection>
 
-        <!-- 13 ------------------------------------------------------------- -->
+        <!-- 14 ------------------------------------------------------------- -->
         <DesignSection
             id="open"
-            n="13"
+            n="14"
             title="Open"
             lede="What this system does not cover yet. Listed here so it stays visible rather than becoming folklore."
         >

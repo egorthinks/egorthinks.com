@@ -1,0 +1,365 @@
+---
+/**
+ * Line plot in the pencil style.
+ *
+ * The one rule worth remembering: a solid series is measured, a dashed series
+ * is modelled or projected. It is the same distinction the frames make, applied
+ * to data, and it means a reader can tell what you actually know from across
+ * the room.
+ *
+ *   <Plot
+ *     x={{ min: 0, max: 30, ticks: [0, 10, 20, 30], label: 'Days', format: 'day' }}
+ *     y={{ min: 0, max: 1, ticks: [0, 0.5, 1], label: 'Recall', format: 'percent' }}
+ *     series={[{ name: 'Measured', points: [[0, 1], [30, 0.2]], style: 'solid' }]}
+ *   />
+ */
+import { areaPath, BOX, curvePath, formatTick, fx, fy, type Axis, type Hatch } from '../../utils/plot';
+
+export type PlotSeries = {
+    name: string;
+    points: [number, number][];
+    /** solid = measured, dashed = modelled, hair = reference or baseline. */
+    style?: 'solid' | 'dashed' | 'hair';
+    /** Fills the area under the curve with a hatch. Direction separates series. */
+    fill?: Hatch;
+    /** Dims the series without hiding it. For context lines. */
+    muted?: boolean;
+};
+
+type Props = {
+    x: Axis;
+    y: Axis;
+    series: PlotSeries[];
+    /** Drawing height in pixels. Width always fills the container. */
+    height?: number;
+    grid?: boolean;
+    legend?: boolean;
+    /** Draw the curves in on reveal. Turn off for interactive plots. */
+    animate?: boolean;
+    class?: string;
+};
+
+const { x, y, series, height = 260, grid = true, legend = true, animate = true, class: className } = Astro.props;
+
+const uid = Math.random().toString(36).slice(2, 9);
+const xTicks = x.ticks ?? [];
+const yTicks = y.ticks ?? [];
+const filled = series.filter((s) => Boolean(s.fill));
+
+const DASHES = { solid: undefined, dashed: '7 5', hair: '2 3' } as const;
+---
+
+<div class:list={['plot', className]} style={`--plot-h:${height}px`} data-draw={animate ? '' : undefined}>
+    <div class="plot-grid">
+        {/* y tick labels, in the left gutter */}
+        <div class="plot-ygutter">
+            {
+                yTicks.map((t) => (
+                    <span class="plot-ytick" style={`top:${fy(t, y) * 100}%`}>
+                        {formatTick(t, y.format)}
+                    </span>
+                ))
+            }
+        </div>
+
+        <div class="plot-area">
+            {/* Hatch layers: CSS gradients clipped to the area path, so the angle
+                survives the horizontal stretch that makes the plot responsive. */}
+            <svg class="plot-clips" width="0" height="0" aria-hidden="true">
+                <defs>
+                    {
+                        filled.map((s, i) => (
+                            <clipPath id={`clip-${uid}-${i}`} clipPathUnits="objectBoundingBox">
+                                <path d={areaPath(s.points, x, y, 1)} data-series-clip={s.name} />
+                            </clipPath>
+                        ))
+                    }
+                </defs>
+            </svg>
+            {
+                filled.map((s, i) => (
+                    <span
+                        class:list={['plot-hatch hatch', s.fill]}
+                        style={`clip-path:url(#clip-${uid}-${i})`}
+                        data-series-fill={s.name}
+                        aria-hidden="true"
+                    />
+                ))
+            }
+
+            <svg class="plot-svg" viewBox={`0 0 ${BOX} ${BOX}`} preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                {
+                    animate && (
+                        <defs>
+                            <mask id={`plot-mask-${uid}`} maskUnits="userSpaceOnUse" x="0" y="0" width={BOX} height={BOX}>
+                                <rect class="plot-wipe" x="0" y="0" width={BOX} height={BOX} fill="#fff" />
+                            </mask>
+                        </defs>
+                    )
+                }
+
+                {
+                    grid &&
+                        yTicks.map((t) => (
+                            <line
+                                class="plot-gridline"
+                                x1="0"
+                                x2={BOX}
+                                y1={fy(t, y) * BOX}
+                                y2={fy(t, y) * BOX}
+                                vector-effect="non-scaling-stroke"
+                            />
+                        ))
+                }
+
+                <g mask={animate ? `url(#plot-mask-${uid})` : undefined}>
+                    {
+                        series.map((s) => (
+                            <path
+                                class:list={['plot-line', { 'is-muted': s.muted }]}
+                                d={curvePath(s.points, x, y)}
+                                vector-effect="non-scaling-stroke"
+                                stroke="currentColor"
+                                stroke-width={s.style === 'hair' ? 1 : 1.75}
+                                stroke-dasharray={DASHES[s.style ?? 'solid']}
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                data-series={s.name}
+                            />
+                        ))
+                    }
+                </g>
+            </svg>
+
+            {/* Axes sit on top of the drawing, in the dash language of the frames. */}
+            <span class="plot-axis-y" aria-hidden="true"></span>
+            <span class="plot-axis-x" aria-hidden="true"></span>
+        </div>
+
+        <div class="plot-ylabel">{y.label}</div>
+
+        <div class="plot-xgutter">
+            {
+                xTicks.map((t) => (
+                    <span class="plot-xtick" style={`left:${fx(t, x) * 100}%`}>
+                        {formatTick(t, x.format)}
+                    </span>
+                ))
+            }
+        </div>
+        <div class="plot-xlabel">{x.label}</div>
+    </div>
+
+    {
+        legend && (
+            <ul class="plot-legend">
+                {series.map((s) => (
+                    <li class="plot-legend-item">
+                        <span class="plot-legend-key" aria-hidden="true">
+                            {s.fill && <span class:list={['plot-legend-hatch hatch', s.fill]} />}
+                            <span class:list={['plot-swatch', `is-${s.style ?? 'solid'}`, { 'is-muted': s.muted }]} />
+                        </span>
+                        <span>{s.name}</span>
+                    </li>
+                ))}
+            </ul>
+        )
+    }
+</div>
+
+<style>
+    .plot {
+        width: 100%;
+    }
+
+    .plot-grid {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: var(--plot-h, 260px) auto auto;
+        grid-template-areas:
+            'ygutter area'
+            '.       xgutter'
+            'ylabel  xlabel';
+        column-gap: 0.6rem;
+    }
+
+    .plot-ygutter {
+        grid-area: ygutter;
+        position: relative;
+        width: 2.6rem;
+    }
+
+    .plot-ytick {
+        position: absolute;
+        right: 0;
+        transform: translateY(-50%);
+        font-size: 0.6875rem;
+        line-height: 1;
+        color: var(--ink-45);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .plot-area {
+        grid-area: area;
+        position: relative;
+    }
+
+    .plot-svg {
+        display: block;
+        width: 100%;
+        height: var(--plot-h, 260px);
+        overflow: visible;
+    }
+
+    .plot-gridline {
+        stroke: var(--ink-12);
+        stroke-width: 1;
+        stroke-dasharray: 2 4;
+    }
+
+    .plot-line {
+        color: var(--ink-100);
+    }
+
+    .plot-line.is-muted {
+        color: var(--ink-45);
+    }
+
+    .plot-clips {
+        position: absolute;
+        width: 0;
+        height: 0;
+    }
+
+    .plot-hatch {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    /* Axes as dashed rules, matching .rule-dashed / .spine-dashed exactly. */
+    .plot-axis-y {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: var(--stroke);
+        background-image: repeating-linear-gradient(180deg, var(--ink-45) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off)));
+    }
+
+    .plot-axis-x {
+        position: absolute;
+        inset: auto 0 0 0;
+        height: var(--stroke);
+        background-image: repeating-linear-gradient(90deg, var(--ink-45) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off)));
+    }
+
+    .plot-xgutter {
+        grid-area: xgutter;
+        position: relative;
+        height: 1.4rem;
+    }
+
+    .plot-xtick {
+        position: absolute;
+        top: 0.4rem;
+        transform: translateX(-50%);
+        font-size: 0.6875rem;
+        line-height: 1;
+        color: var(--ink-45);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .plot-ylabel {
+        grid-area: ylabel;
+        font-size: 0.6875rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-70);
+        white-space: nowrap;
+    }
+
+    .plot-xlabel {
+        grid-area: xlabel;
+        text-align: right;
+        font-size: 0.6875rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-70);
+    }
+
+    .plot-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem 1.25rem;
+        margin-top: 1rem;
+    }
+
+    .plot-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-size: 0.75rem;
+        color: var(--ink-70);
+    }
+
+    .plot-legend-key {
+        position: relative;
+        display: flex;
+        width: 26px;
+        height: 14px;
+        align-items: center;
+    }
+
+    .plot-legend-hatch {
+        position: absolute;
+        inset: 2px 0 0 0;
+        border: 1px solid var(--ink-12);
+        border-top: 0;
+    }
+
+    .plot-swatch {
+        position: relative;
+        width: 26px;
+        height: 0;
+        border-top: 2px solid var(--ink-100);
+    }
+
+    .plot-swatch.is-dashed {
+        border-top-style: dashed;
+    }
+
+    .plot-swatch.is-hair {
+        border-top-width: 1px;
+    }
+
+    .plot-swatch.is-muted {
+        border-top-color: var(--ink-45);
+    }
+
+    /* Wipe reveal: left to right, in step with the arrows drawing themselves. */
+    .plot-wipe {
+        transform-box: fill-box;
+        transform-origin: left center;
+        transform: scaleX(0);
+    }
+
+    .plot.is-drawn .plot-wipe {
+        animation: plot-wipe 1100ms cubic-bezier(0.32, 0.06, 0.28, 1) forwards;
+    }
+
+    @keyframes plot-wipe {
+        to {
+            transform: scaleX(1);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .plot-wipe {
+            transform: scaleX(1);
+        }
+        .plot.is-drawn .plot-wipe {
+            animation: none;
+        }
+    }
+</style>
