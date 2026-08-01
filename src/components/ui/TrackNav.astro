@@ -1,0 +1,78 @@
+---
+/**
+ * Series navigation. Turns scattered posts into something readers finish:
+ * where you are, what came before, what comes next.
+ */
+import Arrow from './Arrow.astro';
+
+type Props = {
+    /** Name of the series, e.g. "Cognitive debt". */
+    track?: string;
+    part: number;
+    total: number;
+    prev?: { href: string; text: string };
+    next?: { href: string; text: string };
+    class?: string;
+};
+
+const { track, part, total, prev, next, class: className } = Astro.props;
+---
+
+<nav class:list={['frame-dashed px-5 py-5 sm:px-6', className]} aria-label={track ? `${track} series navigation` : 'Series navigation'}>
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <span class="eyebrow">{track ? `${track} - part ${part} of ${total}` : `Part ${part} of ${total}`}</span>
+        <ol class="flex items-center gap-1.5" aria-hidden="true">
+            {
+                Array.from({ length: total }, (_, i) => (
+                    <li class:list={['track-pip', { 'is-done': i < part - 1, 'is-here': i === part - 1 }]} />
+                ))
+            }
+        </ol>
+    </div>
+
+    <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-stretch sm:gap-8">
+        {
+            prev && (
+                <a class="group flex min-w-0 grow basis-0 items-center gap-3" href={prev.href} rel="prev">
+                    <Arrow variant="right" flip class="text-main/45 group-hover:text-main h-5 w-9 shrink-0 transition-colors" stroke={1.5} dash="fine" duration={500} />
+                    <span class="min-w-0">
+                        <span class="eyebrow block">Previous</span>
+                        <span class="mt-0.5 block font-serif leading-snug group-hover:underline group-hover:decoration-dashed group-hover:underline-offset-4">
+                            {prev.text}
+                        </span>
+                    </span>
+                </a>
+            )
+        }
+        {
+            next && (
+                <a class="group flex min-w-0 grow basis-0 items-center justify-end gap-3 text-right" href={next.href} rel="next">
+                    <span class="min-w-0">
+                        <span class="eyebrow block">Next</span>
+                        <span class="mt-0.5 block font-serif leading-snug group-hover:underline group-hover:decoration-dashed group-hover:underline-offset-4">
+                            {next.text}
+                        </span>
+                    </span>
+                    <Arrow variant="right" class="text-main/45 group-hover:text-main h-5 w-9 shrink-0 transition-colors" stroke={1.5} dash="fine" duration={500} />
+                </a>
+            )
+        }
+    </div>
+</nav>
+
+<style>
+    .track-pip {
+        width: 14px;
+        height: 2px;
+        background: var(--ink-12);
+    }
+
+    .track-pip.is-done {
+        background: var(--ink-45);
+    }
+
+    .track-pip.is-here {
+        background: currentColor;
+        width: 22px;
+    }
+</style>

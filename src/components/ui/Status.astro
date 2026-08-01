@@ -1,0 +1,82 @@
+---
+/**
+ * Project status. A project page that never changes its status is a dead page,
+ * and the homepage leans on this to show the workbench is occupied.
+ */
+type Props = {
+    state: 'live' | 'building' | 'paused' | 'shipped' | 'archived';
+    /** Overrides the default word. */
+    label?: string;
+    /** Free text after the dot: "since Jun 2026", "v1.2", "24 keepers". */
+    note?: string;
+    class?: string;
+};
+
+const { state, label, note, class: className } = Astro.props;
+
+const LABELS = {
+    live: 'Live',
+    building: 'Building',
+    paused: 'Paused',
+    shipped: 'Shipped',
+    archived: 'Archived'
+} as const;
+---
+
+<span
+    class:list={[
+        'border-main/45 inline-flex items-center gap-2 rounded-full border border-dashed py-1 pr-3.5 pl-3 text-xs',
+        className
+    ]}
+>
+    <span class:list={['status-dot', `is-${state}`]} aria-hidden="true"></span>
+    <span class="eyebrow text-main">{label ?? LABELS[state]}</span>
+    {note && <span class="text-main/55">{note}</span>}
+</span>
+
+<style>
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: currentColor;
+        flex: none;
+    }
+
+    /* Building is the only state that moves. Everything else is at rest. */
+    .status-dot.is-building {
+        animation: status-pulse 2.4s ease-in-out infinite;
+    }
+
+    .status-dot.is-paused {
+        opacity: 0.4;
+    }
+
+    .status-dot.is-archived,
+    .status-dot.is-shipped {
+        background: transparent;
+        box-shadow: inset 0 0 0 1px currentColor;
+    }
+
+    .status-dot.is-archived {
+        opacity: 0.4;
+    }
+
+    @keyframes status-pulse {
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.35;
+            transform: scale(0.8);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .status-dot.is-building {
+            animation: none;
+        }
+    }
+</style>

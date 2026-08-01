@@ -1,0 +1,101 @@
+---
+/**
+ * Benchmark table. This is the repeat-traffic machine: people come back to look
+ * at a table, which is more than any single post gets. Scores render as tick
+ * bars so the ranking is legible before you read a number.
+ */
+type Row = {
+    name: string;
+    score: number;
+    /** Model size, date, link - whatever the second column should say. */
+    note?: string;
+    href?: string;
+    /** Marks your own entry so readers can find the baseline. */
+    self?: boolean;
+};
+
+type Props = {
+    rows: Row[];
+    /** Column headings: rank / entry / note / score. */
+    heads?: [string, string, string, string];
+    /** Denominator for the bars. Defaults to the top score. */
+    max?: number;
+    caption?: string;
+    /** Ticks per bar. */
+    ticks?: number;
+    class?: string;
+};
+
+const { rows, heads = ['#', 'Entry', '', 'Score'], max, caption, ticks = 18, class: className } = Astro.props;
+
+const ceiling = max ?? Math.max(...rows.map((r) => r.score), 1);
+const ranked = [...rows].sort((a, b) => b.score - a.score);
+---
+
+<figure class:list={['w-full', className]}>
+    <div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <table class="table-dashed min-w-[34rem]">
+            <thead>
+                <tr>
+                    <th class="w-8">{heads[0]}</th>
+                    <th>{heads[1]}</th>
+                    <th class="w-28">{heads[2]}</th>
+                    <th class="w-48 text-right">{heads[3]}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {
+                    ranked.map((row, i) => {
+                        const filled = Math.round((row.score / ceiling) * ticks);
+                        return (
+                            <tr class:list={[{ 'font-medium': row.self }]}>
+                                <td class="text-main/45 tabular-nums">{i + 1}</td>
+                                <td class="whitespace-nowrap">
+                                    {row.href ? (
+                                        <a class="underline decoration-dashed underline-offset-2 hover:decoration-solid" href={row.href}>
+                                            {row.name}
+                                        </a>
+                                    ) : (
+                                        row.name
+                                    )}
+                                    {row.self && <span class="text-main/45 ml-2 text-xs">- ours</span>}
+                                </td>
+                                <td class="text-main/55 text-xs">{row.note}</td>
+                                <td>
+                                    <div class="flex items-center justify-end gap-3">
+                                        <span class="bench-bar" aria-hidden="true">
+                                            {Array.from({ length: ticks }, (_, t) => (
+                                                <span class:list={['bench-tick', { 'is-on': t < filled }]} />
+                                            ))}
+                                        </span>
+                                        <span class="w-12 text-right tabular-nums">{row.score}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        );
+                    })
+                }
+            </tbody>
+        </table>
+    </div>
+    {caption && <figcaption class="text-main/55 mt-3 text-xs leading-relaxed">{caption}</figcaption>}
+</figure>
+
+<style>
+    .bench-bar {
+        display: inline-flex;
+        gap: 2px;
+        height: 10px;
+        align-items: stretch;
+    }
+
+    .bench-tick {
+        width: 3px;
+        background: var(--ink-12);
+        border-radius: 1px;
+    }
+
+    .bench-tick.is-on {
+        background: currentColor;
+    }
+</style>

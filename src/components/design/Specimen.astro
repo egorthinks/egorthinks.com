@@ -1,0 +1,49 @@
+---
+/**
+ * One entry in the design system: the thing itself, what it's for, and the
+ * markup that produced it. Used only by /design/.
+ */
+type Props = {
+    name: string;
+    /** What this is for and when not to reach for it. */
+    note?: string;
+    /** Markup shown in the disclosure below the specimen. */
+    code?: string;
+    /** Centre the demo - right for glyphs, wrong for full-width blocks. */
+    center?: boolean;
+    class?: string;
+};
+
+const { name, note, code, center = false, class: className } = Astro.props;
+---
+
+<div class:list={['w-full', className]}>
+    <div class="mb-3">
+        <h3 class="font-serif text-base leading-snug font-medium">{name}</h3>
+        {note && <p class="text-main/60 mt-1 text-sm leading-relaxed">{note}</p>}
+    </div>
+
+    <div class:list={['bg-muted/60 tick-corners px-5 py-6 sm:px-6', { 'flex items-center justify-center': center }]}>
+        <slot />
+    </div>
+
+    {
+        code && (
+            <details class="specimen-code group mt-2">
+                <summary class="text-main/50 hover:text-main flex cursor-pointer list-none items-center gap-2 py-1 text-xs transition-colors">
+                    <span class="inline-block w-3 transition-transform group-open:rotate-90" aria-hidden="true">
+                        ›
+                    </span>
+                    Markup
+                </summary>
+                <pre class="border-main/25 mt-1 overflow-x-auto border border-dashed px-4 py-3 text-[0.75rem] leading-relaxed"><code>{code}</code></pre>
+            </details>
+        )
+    }
+</div>
+
+<style>
+    .specimen-code summary::-webkit-details-marker {
+        display: none;
+    }
+</style>

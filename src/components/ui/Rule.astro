@@ -1,0 +1,57 @@
+---
+/**
+ * Horizontal dividers. Six weights of "the thought ends here".
+ *
+ *   <Rule />                  dashed, the default separator
+ *   <Rule variant="wave" />   drawn, animates in
+ *   <Rule variant="ornament">end of part one</Rule>
+ */
+import Mark from './Mark.astro';
+
+type Props = {
+    variant?: 'dashed' | 'hair' | 'coarse' | 'double' | 'wave' | 'ornament';
+    class?: string;
+};
+
+const { variant = 'dashed', class: className } = Astro.props;
+const hasLabel = Astro.slots.has('default');
+---
+
+{variant === 'dashed' && <div class:list={['rule-dashed w-full', className]} role="separator" />}
+
+{variant === 'hair' && <div class:list={['rule-dashed frame-dashed-fine w-full', className]} role="separator" />}
+
+{variant === 'coarse' && <div class:list={['rule-dashed frame-dashed-coarse w-full', className]} role="separator" />}
+
+{
+    variant === 'double' && (
+        <div class:list={['w-full space-y-1', className]} role="separator">
+            <div class="rule-dashed w-full" />
+            <div class="rule-dashed frame-dashed-fine w-full" />
+        </div>
+    )
+}
+
+{
+    variant === 'wave' && (
+        <div class:list={['text-main/45 w-full', className]} role="separator">
+            <Mark variant="wave" class="h-4 w-full" stretch stroke={1.5} dash="fine" />
+        </div>
+    )
+}
+
+{
+    variant === 'ornament' && (
+        <div class:list={['flex w-full items-center gap-4', className]} role="separator">
+            <div class="rule-dashed grow" />
+            {hasLabel ? (
+                <span class="text-main/60 font-serif text-sm italic">
+                    <slot />
+                </span>
+            ) : (
+                <Mark variant="star" class="text-main/45 h-4 w-4 shrink-0" stroke={1.5} dash="solid" duration={500} />
+            )}
+            <div class="rule-dashed grow" />
+        </div>
+    )
+}

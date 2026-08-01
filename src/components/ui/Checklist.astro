@@ -1,0 +1,45 @@
+---
+/**
+ * Hand-checked list. Roadmaps, replication steps, "what's left" on a project.
+ * Done items get a drawn tick, not a filled box.
+ */
+import Mark from './Mark.astro';
+
+type Props = {
+    items: { text: string; done?: boolean; note?: string }[];
+    class?: string;
+};
+
+const { items, class: className } = Astro.props;
+---
+
+<ul class:list={['space-y-2.5', className]}>
+    {
+        items.map((item, i) => (
+            <li class="flex items-start gap-3">
+                <span
+                    class:list={[
+                        'relative mt-[0.15rem] h-[15px] w-[15px] shrink-0 rounded-[2px] border border-dashed',
+                        item.done ? 'border-main/50' : 'border-main/35'
+                    ]}
+                    aria-hidden="true"
+                >
+                    {item.done && (
+                        <Mark
+                            variant="check"
+                            class="absolute -top-[3px] left-[2px] h-[15px] w-[15px]"
+                            stroke={2}
+                            dash="solid"
+                            duration={420}
+                            delay={i * 90}
+                        />
+                    )}
+                </span>
+                <span class:list={['text-sm leading-snug', item.done ? 'text-main/50 line-through decoration-main/30' : 'text-main']}>
+                    {item.text}
+                    {item.note && <span class="text-main/45 ml-2 text-xs no-underline">{item.note}</span>}
+                </span>
+            </li>
+        ))
+    }
+</ul>

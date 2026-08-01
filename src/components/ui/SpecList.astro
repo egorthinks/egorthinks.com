@@ -1,0 +1,32 @@
+---
+/**
+ * Term / value rows joined by dot leaders. The spine of a project page:
+ * problem → mechanism → demo → install → changelog, each answered in one line.
+ */
+type Props = {
+    items: { term: string; value: string; href?: string }[];
+    class?: string;
+};
+
+const { items, class: className } = Astro.props;
+---
+
+<dl class:list={['w-full', className]}>
+    {
+        items.map((item) => (
+            <div class="flex items-baseline gap-2 py-2 first:pt-0">
+                <dt class="eyebrow shrink-0">{item.term}</dt>
+                <span class="leader" aria-hidden="true" />
+                <dd class="min-w-0 shrink-0 text-right text-sm">
+                    {item.href ? (
+                        <a class="underline decoration-dashed underline-offset-2 hover:decoration-solid" href={item.href}>
+                            {item.value}
+                        </a>
+                    ) : (
+                        item.value
+                    )}
+                </dd>
+            </div>
+        ))
+    }
+</dl>

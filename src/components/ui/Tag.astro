@@ -1,0 +1,26 @@
+---
+/**
+ * Dashed pill. Topics, stacks, tracks. Cap the vocabulary at five to seven -
+ * past that a tag stops being navigation and becomes decoration.
+ */
+type Props = {
+    href?: string;
+    count?: number;
+    active?: boolean;
+    size?: 'sm' | 'md';
+    class?: string;
+};
+
+const { href, count, active = false, size = 'md', class: className } = Astro.props;
+
+const base =
+    'inline-flex items-center gap-1.5 rounded-full border border-dashed transition-colors' +
+    (size === 'sm' ? ' px-2.5 py-0.5 text-xs' : ' px-3.5 py-1 text-sm');
+const tone = active ? 'border-main bg-muted text-main' : 'border-main/45 text-main/80 hover:border-main hover:bg-muted';
+const El = href ? 'a' : 'span';
+---
+
+<El class:list={[base, tone, className]} href={href}>
+    <slot />
+    {count !== undefined && <span class="text-main/50 tabular-nums">{count}</span>}
+</El>

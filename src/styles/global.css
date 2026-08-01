@@ -61,8 +61,157 @@ html.dark {
     --border-color-main: var(--border-main);
 }
 
+/* ---------------------------------------------------------------------------
+   Design system tokens. One palette (ink on paper, inverted in the dark),
+   one motif (the dash). Documented and rendered at /design/.
+   --------------------------------------------------------------------------- */
+
+:root {
+    /* Dash rhythm, in CSS pixels. Native `border-style: dashed` gives no control
+       over dash length, so every framed surface is drawn with gradients instead.
+       These match the DASH presets in src/utils/sketch-paths.ts one for one, so
+       a frame and the arrow pointing at it share a rhythm. */
+    --dash-on: 7px;
+    --dash-off: 5px;
+    --dash-on-fine: 4px;
+    --dash-off-fine: 3px;
+    --dash-on-coarse: 12px;
+    --dash-off-coarse: 7px;
+
+    --stroke: 1px;
+    --tick: 10px;
+
+    /* Ink levels. The only "colours" this site has. */
+    --ink-100: var(--text-main);
+    --ink-70: color-mix(in srgb, var(--text-main) 70%, transparent);
+    --ink-45: color-mix(in srgb, var(--text-main) 45%, transparent);
+    --ink-25: color-mix(in srgb, var(--text-main) 25%, transparent);
+    --ink-12: color-mix(in srgb, var(--text-main) 12%, transparent);
+}
+
+@layer components {
+    /* Dashed frame on all four sides, with a dash rhythm you can actually set. */
+    .frame-dashed {
+        --c: var(--ink-45);
+        background-image:
+            repeating-linear-gradient(90deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(90deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(0deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(0deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off)));
+        background-position:
+            0 0,
+            0 100%,
+            0 0,
+            100% 0;
+        background-size:
+            100% var(--stroke),
+            100% var(--stroke),
+            var(--stroke) 100%,
+            var(--stroke) 100%;
+        background-repeat: no-repeat;
+    }
+
+    .frame-dashed-fine {
+        --dash-on: var(--dash-on-fine);
+        --dash-off: var(--dash-off-fine);
+    }
+
+    .frame-dashed-coarse {
+        --dash-on: var(--dash-on-coarse);
+        --dash-off: var(--dash-off-coarse);
+    }
+
+    /* Corner ticks: implies a box without drawing one. */
+    .tick-corners {
+        --c: var(--ink-45);
+        background-image:
+            linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0),
+            linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0);
+        background-position:
+            0 0,
+            0 0,
+            100% 0,
+            100% 0,
+            0 100%,
+            0 100%,
+            100% 100%,
+            100% 100%;
+        background-size:
+            var(--tick) var(--stroke),
+            var(--stroke) var(--tick),
+            var(--tick) var(--stroke),
+            var(--stroke) var(--tick),
+            var(--tick) var(--stroke),
+            var(--stroke) var(--tick),
+            var(--tick) var(--stroke),
+            var(--stroke) var(--tick);
+        background-repeat: no-repeat;
+    }
+
+    /* Horizontal rules with a controllable dash. */
+    .rule-dashed {
+        height: var(--stroke);
+        background-image: repeating-linear-gradient(
+            90deg,
+            var(--ink-45) 0 var(--dash-on),
+            transparent 0 calc(var(--dash-on) + var(--dash-off))
+        );
+    }
+
+    /* Vertical spine for changelogs, tracks, quoted asides. */
+    .spine-dashed {
+        width: var(--stroke);
+        background-image: repeating-linear-gradient(
+            180deg,
+            var(--ink-45) 0 var(--dash-on),
+            transparent 0 calc(var(--dash-on) + var(--dash-off))
+        );
+    }
+
+    /* Table-of-contents dot leader: term ....... value */
+    .leader {
+        flex: 1 1 auto;
+        align-self: flex-end;
+        height: 0.75em;
+        border-bottom: 1px dotted var(--ink-25);
+    }
+
+    /* Small uppercase label. Used where serif italic would be too soft. */
+    .eyebrow {
+        font-size: 0.6875rem;
+        line-height: 1;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-70);
+    }
+
+    /* Data tables inside prose, restyled onto the dash grid. */
+    .table-dashed {
+        width: 100%;
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+    }
+    .table-dashed th,
+    .table-dashed td {
+        padding: 0.6rem 0.75rem;
+        text-align: left;
+        border-bottom: 1px dashed var(--ink-25);
+    }
+    .table-dashed th {
+        font-weight: 500;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-70);
+    }
+    .table-dashed tbody tr:last-child td {
+        border-bottom: 0;
+    }
+}
+
 @layer utilities {
     .prose {
+        counter-reset: sidenote;
         --tw-prose-body: var(--text-color-main);
         --tw-prose-headings: var(--text-color-main);
         --tw-prose-lead: var(--text-color-main);
