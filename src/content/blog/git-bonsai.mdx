@@ -14,6 +14,7 @@ seo:
 
 import Annotate from '../../components/ui/Annotate.astro';
 import Artifact from '../../components/ui/Artifact.astro';
+import Button from '../../components/Button.astro';
 import Callout from '../../components/ui/Callout.astro';
 import Frame from '../../components/ui/Frame.astro';
 import Leaderboard from '../../components/ui/Leaderboard.astro';
@@ -39,6 +40,18 @@ I shipped a small side project this week and I like it more than anything I buil
 *This is my tree growing from seed to today. Every account grows exactly one tree.*
 
 Every account gets exactly one tree. Your username is the seed, your history is the shape, so nobody else can ever grow yours. The older your account and the richer your history, the bigger and denser your bonsai. It keeps growing as you keep committing.
+
+<Frame label="playground" class="not-prose my-10 px-5 py-6 sm:px-6 sm:py-7">
+    <span class="eyebrow">Go and meet yours</span>
+    <p class="mt-3 font-serif text-xl leading-snug font-medium sm:text-2xl">Type a username. Watch the tree grow.</p>
+    <p class="text-main/70 mt-2.5 max-w-lg text-sm leading-relaxed">
+        The playground runs this exact engine in your browser: seasons, wind, PNG and GIF export. No install, no token, no signup.
+    </p>
+    <div class="mt-6 flex flex-wrap items-center gap-4">
+        <Button href="/bonsai/">Grow a bonsai</Button>
+        <span class="text-main/50 text-sm">or try <a class="underline decoration-dashed underline-offset-4 hover:decoration-solid" href="/bonsai/?u=torvalds">torvalds</a></span>
+    </div>
+</Frame>
 
 ## Why a bonsai?
 
@@ -112,7 +125,7 @@ There are sixteen keepers in there so far: Dan Abramov's windswept sakura, DHH's
 
 ## How to grow yours
 
-The fastest way to meet your tree is the [playground](/bonsai/): type a username, watch it grow, download the PNG. It runs the same engine in your browser, over public data only.
+The fastest way to meet your tree is the **[playground](/bonsai/)**: type a username, watch it grow, download the PNG. It runs the same engine in your browser, over public data only.
 
 For the real thing, add `.github/workflows/bonsai.yml` to your profile repo (the one named after your username):
 
@@ -157,7 +170,7 @@ No pre-drawn trees, no runtime dependencies, 100% procedural. The username goes 
 
 ## Show me yours
 
-The whole point of a unique tree is showing it off. If you grow one, post it with **#gitbonsai** or drop a link in the [repo discussions](https://github.com/egorthinks/git-bonsai/discussions). I genuinely want to see what a decade of someone else's commits looks like as a living thing. And if your tree comes out with a *shari* scar down the trunk, wear it proudly. It just means you came back.
+The whole point of a unique tree is showing it off. Not ready to add a workflow? **[Grow one in the browser](/bonsai/)** and post the PNG. If you grow one, post it with **#gitbonsai** or drop a link in the [repo discussions](https://github.com/egorthinks/git-bonsai/discussions). I genuinely want to see what a decade of someone else's commits looks like as a living thing. And if your tree comes out with a *shari* scar down the trunk, wear it proudly. It just means you came back.
 
 **PS if you liked this, subscribe to the newsletter below. I write about code, cognition and small strange projects like this one. Thanks!**
 
