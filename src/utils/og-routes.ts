@@ -34,6 +34,14 @@ export function ogEntries(): Promise<Map<string, OgCard>> {
                 }
             },
             {
+                slug: 'bonsai',
+                card: {
+                    kind: 'Playground',
+                    title: 'Every GitHub account grows exactly one tree',
+                    description: clampDescription('Type a username and watch its bonsai grow. Streaks bloom, silences leave deadwood.')
+                }
+            },
+            {
                 slug: 'design',
                 card: {
                     kind: 'Design system',

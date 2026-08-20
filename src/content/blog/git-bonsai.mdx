@@ -25,6 +25,7 @@ import SpecList from '../../components/ui/SpecList.astro';
         items={[
             { term: 'What', value: 'A bonsai grown from your commit history' },
             { term: 'Install', value: 'npx git-bonsai' },
+            { term: 'Playground', value: 'Grow one in the browser', href: '/bonsai/' },
             { term: 'Output', value: 'SVG, PNG, wind loop, growth timelapse' },
             { term: 'Gallery', value: 'Bonsai Hall of Fame', href: 'https://github.com/egorthinks/git-bonsai/blob/main/HALL_OF_FAME.md' },
             { term: 'Source', value: 'egorthinks/git-bonsai', href: 'https://github.com/egorthinks/git-bonsai' }
@@ -111,7 +112,9 @@ There are sixteen keepers in there so far: Dan Abramov's windswept sakura, DHH's
 
 ## How to grow yours
 
-Add `.github/workflows/bonsai.yml` to your profile repo (the one named after your username):
+The fastest way to meet your tree is the [playground](/bonsai/): type a username, watch it grow, download the PNG. It runs the same engine in your browser, over public data only.
+
+For the real thing, add `.github/workflows/bonsai.yml` to your profile repo (the one named after your username):
 
 ```yaml title=".github/workflows/bonsai.yml"
 name: bonsai

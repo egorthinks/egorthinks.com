@@ -1,0 +1,750 @@
+---
+/**
+ * The git-bonsai playground as an artifact.
+ *
+ * One coloured object on a monochrome site, which is the point: the page is the
+ * plate and the tree is the specimen. Everything around the canvas is the usual
+ * ink, dash and tick vocabulary, so a screenshot of this still reads as coming
+ * from here even though the thing in the middle has thirty-two colours.
+ *
+ * Server-rendered complete: without JS the reader still gets the chrome, the
+ * controls and the explanation of what the tree would be. The engine itself is
+ * vendored from the Action (src/vendor/bonsai-engine.js), so the tree grown here
+ * is the tree the Action would grow from the same history.
+ */
+import Artifact from '../ui/Artifact.astro';
+import Segmented from '../ui/controls/Segmented.astro';
+import Toggle from '../ui/controls/Toggle.astro';
+
+type Props = { id?: string; class?: string };
+
+const { id = 'playground', class: className } = Astro.props;
+
+const seasons = [
+    { value: 'auto', label: 'Auto' },
+    { value: 'spring', label: 'Spring' },
+    { value: 'summer', label: 'Summer' },
+    { value: 'autumn', label: 'Autumn' },
+    { value: 'winter', label: 'Winter' }
+];
+
+const numbers = [
+    { key: 'age', label: 'Account age' },
+    { key: 'contributions', label: 'Contributions' },
+    { key: 'streak-best', label: 'Longest streak' },
+    { key: 'streak-now', label: 'Current streak' }
+];
+
+const traits = [
+    { key: 'style', label: 'Style' },
+    { key: 'species', label: 'Species' },
+    { key: 'pot', label: 'Pot' }
+];
+
+const actions = [
+    { key: 'png', label: 'Download PNG' },
+    { key: 'gif', label: 'Download GIF' },
+    { key: 'replay', label: 'Replay the growth' },
+    { key: 'share', label: 'Share on X' }
+];
+---
+
+<Artifact
+    id={id}
+    kind="Playground"
+    title="Grow a tree from a GitHub history"
+    lede="Type a username. Nothing here is drawn by hand: the account is the seed, the history is the shape, and the same name always grows the same tree."
+    source="Rendered in your browser by the engine the GitHub Action runs, over public GitHub data. Private contributions and exact per-language byte sizes only reach the tree when the Action runs on the account itself."
+    class={className}
+>
+    <form slot="controls" class="bonsai-form grid gap-5" data-bonsai-form>
+        <div class="flex flex-wrap items-end gap-x-4 gap-y-3">
+            <div class="min-w-0 grow basis-48">
+                <label class="eyebrow mb-2 block" for={`${id}-login`}>GitHub username</label>
+                <div class="bonsai-field flex items-baseline gap-1.5">
+                    <span class="text-main/35 font-serif text-xl leading-none" aria-hidden="true">@</span>
+                    <input
+                        id={`${id}-login`}
+                        class="bonsai-input w-full min-w-0 font-serif text-xl leading-none"
+                        type="text"
+                        name="login"
+                        placeholder="torvalds"
+                        autocomplete="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        data-bonsai-login
+                    />
+                </div>
+            </div>
+            <button
+                type="submit"
+                class="border-main hover:bg-muted text-main inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full border px-6 py-2 font-serif leading-tight italic transition-colors"
+            >
+                Grow
+            </button>
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-2 sm:items-start">
+            <Segmented name={`${id}-season`} label="Season" options={seasons} value="auto" />
+            <Toggle name={`${id}-demo`} label="Demo mode" hint="No API call. Fabricates a plausible history for the name, deterministically." />
+        </div>
+    </form>
+
+    <div class="bonsai-island" data-artifact-island data-bonsai-island>
+        <figure class="bonsai-plate tick-corners bg-muted/40 relative mx-auto flex w-full max-w-[21rem] items-center justify-center">
+            <canvas
+                class="bonsai-canvas"
+                width="256"
+                height="256"
+                role="img"
+                aria-label="The generated pixel-art bonsai"
+                data-bonsai-canvas
+                hidden></canvas>
+
+            <figcaption class="bonsai-empty absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center" data-bonsai-empty>
+                <span class="eyebrow">No tree yet</span>
+                <span class="text-main/55 font-serif text-lg italic">A name, and something grows here.</span>
+            </figcaption>
+        </figure>
+
+        <p class="text-main/60 mx-auto mt-4 max-w-md text-center text-sm leading-relaxed" role="status" aria-live="polite" data-bonsai-status>
+            Every account grows exactly one tree. Nobody else can grow yours.
+        </p>
+
+        <div class="bonsai-readout" data-bonsai-readout hidden>
+            <dl class="border-main/25 mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-dashed pt-5 sm:grid-cols-4">
+                {
+                    numbers.map((n) => (
+                        <div>
+                            <dt class="eyebrow">{n.label}</dt>
+                            <dd class="mt-1.5 font-serif text-2xl leading-none tabular-nums" data-stat={n.key}>
+                                -
+                            </dd>
+                        </div>
+                    ))
+                }
+            </dl>
+
+            <dl class="border-main/25 mt-5 grid grid-cols-1 gap-x-6 gap-y-4 border-t border-dashed pt-5 sm:grid-cols-3">
+                {
+                    traits.map((t) => (
+                        <div>
+                            <dt class="eyebrow">{t.label}</dt>
+                            <dd class="mt-1.5 text-sm leading-snug" data-stat={t.key}>
+                                -
+                            </dd>
+                        </div>
+                    ))
+                }
+            </dl>
+
+            <div class="mt-5 flex flex-wrap items-center gap-2" data-bonsai-marks hidden></div>
+
+            <div class="border-main/25 mt-6 flex flex-wrap gap-2 border-t border-dashed pt-5">
+                {
+                    actions.map((a) => (
+                        <button type="button" class="bonsai-action" data-bonsai-action={a.key}>
+                            {a.label}
+                        </button>
+                    ))
+                }
+            </div>
+        </div>
+    </div>
+</Artifact>
+
+<style>
+    [hidden] {
+        display: none !important;
+    }
+
+    /* The one field on the site that is typed into: a serif line on a dashed
+       rule, which goes solid when it has focus. Same grammar as the frames. */
+    .bonsai-field {
+        border-bottom: 1px dashed var(--ink-45);
+        padding-bottom: 0.45rem;
+    }
+
+    .bonsai-field:focus-within {
+        border-bottom-style: solid;
+        border-bottom-color: var(--ink-100);
+    }
+
+    .bonsai-input {
+        background: none;
+        border: 0;
+        outline: none;
+        color: var(--ink-100);
+    }
+
+    .bonsai-input::placeholder {
+        color: var(--ink-25);
+    }
+
+    /* Graph paper under the specimen. Faint enough that the pixels stay the
+       only thing with colour in the frame. */
+    .bonsai-plate {
+        aspect-ratio: 1 / 1;
+        background-image: radial-gradient(var(--ink-12) 0.9px, transparent 0.9px);
+        background-size: 11px 11px;
+    }
+
+    .bonsai-canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+        image-rendering: pixelated;
+    }
+
+    .bonsai-action {
+        border: 1px dashed var(--ink-45);
+        border-radius: 999px;
+        padding: 0.25rem 0.9rem;
+        font-size: 0.875rem;
+        color: var(--ink-70);
+        cursor: pointer;
+        transition:
+            color 120ms ease-out,
+            border-color 120ms ease-out,
+            background-color 120ms ease-out;
+    }
+
+    .bonsai-action:hover {
+        color: var(--ink-100);
+        border-color: var(--ink-100);
+        background: var(--bg-muted);
+    }
+
+    .bonsai-action:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
+
+    .bonsai-action:disabled:hover {
+        color: var(--ink-70);
+        border-color: var(--ink-45);
+        background: none;
+    }
+
+    .bonsai-status-error {
+        color: var(--ink-100);
+    }
+</style>
+
+<script>
+    import Bonsai from '../../vendor/bonsai-engine.js';
+    import type { BonsaiDNA, Day, Frame, Metrics, RepoNode, Season, Skeleton } from '../../vendor/bonsai-engine.js';
+
+    /**
+     * Data paths, in order of how much they know:
+     *
+     *  1. /api/bonsai      our own function, tokened. Real calendar, real
+     *                      per-language bytes, no anonymous rate limit. Answers
+     *                      503 when no token is configured and is simply absent
+     *                      in local dev, both of which fall through quietly.
+     *  2. the repo's API   the same idea, deployed with git-bonsai itself. Second
+     *                      in line so the token only has to live in one of the
+     *                      two projects, whichever the keeper prefers.
+     *  3. the public path  api.github.com for the account and its repositories
+     *                      (60 requests an hour per IP, languages approximated
+     *                      from each repo's primary language) plus a contribution
+     *                      calendar from one of two open mirrors.
+     *  4. demo mode        no network at all: a fabricated history, deterministic
+     *                      for the name.
+     */
+    const OWN_API = '/api/bonsai';
+    const REPO_API = 'https://git-bonsai-api.vercel.app/api/metrics';
+    const CALENDAR_MIRRORS = [
+        {
+            label: 'git-bonsai api',
+            url: (login: string, since: number) => `https://git-bonsai-api.vercel.app/api/calendar?u=${encodeURIComponent(login)}&since=${since}`,
+            read: (data: any): Day[] => data.contributions.map((d: any) => ({ date: d.date, count: Number(d.count) || 0 }))
+        },
+        {
+            label: 'jogruber.de',
+            url: (login: string) => `https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(login)}?y=all`,
+            read: (data: any): Day[] => data.contributions.map((d: any) => ({ date: d.date, count: Number(d.count) || 0 }))
+        }
+    ];
+
+    const STYLE_JP: Record<string, string> = {
+        formal: 'chokkan · formal upright',
+        slanted: 'shakan · slanting',
+        'han-kengai': 'han-kengai · semi-cascade',
+        cascade: 'kengai · cascade',
+        bunjin: 'bunjingi · literati',
+        windswept: 'fukinagashi · windswept',
+        broom: 'hokidachi · broom',
+        sokan: 'sokan · twin trunk',
+        kabudachi: 'kabudachi · clump',
+        'yose-ue': 'yose-ue · forest',
+        sekijoju: 'sekijoju · root over rock'
+    };
+
+    const SPECIES_JP: Record<string, string> = {
+        pine: 'pine · matsu',
+        maple: 'maple · momiji',
+        cherry: 'cherry · sakura',
+        juniper: 'juniper · shimpaku',
+        elm: 'elm · zelkova'
+    };
+
+    const POT_JP: Record<string, string> = {
+        shohin: 'shohin · small',
+        chuhin: 'chuhin · medium',
+        dai: 'dai · large tray'
+    };
+
+    const GROWTH_FRAMES = 40;
+    const WIND_FRAMES = 24;
+    const DAY_MS = 86_400_000;
+
+    const sleep = () => new Promise((r) => setTimeout(r, 0));
+
+    class Failure extends Error {}
+
+    /** A JSON body, or null when the answer was not JSON at all (a 404 page). */
+    async function json(res: Response): Promise<any | null> {
+        try {
+            return await res.json();
+        } catch {
+            return null;
+        }
+    }
+
+    async function getJson(url: string, what: string): Promise<any> {
+        let res: Response;
+        try {
+            res = await fetch(url);
+        } catch {
+            throw new Failure(`could not reach ${what}. Network hiccup? Try again, or switch on demo mode.`);
+        }
+        if (res.status === 404) throw new Failure('NOT_FOUND');
+        if (res.status === 403 || res.status === 429) {
+            throw new Failure(
+                "GitHub's anonymous rate limit is 60 requests an hour per address, and this one is spent. Wait a few minutes, or run the Action, which has no such limit."
+            );
+        }
+        if (!res.ok) throw new Failure(`${what} answered HTTP ${res.status}`);
+        return res.json();
+    }
+
+    function initBonsai() {
+        document.querySelectorAll<HTMLElement>('[data-bonsai-island]').forEach((island) => {
+            if (island.dataset.ready === 'true') return;
+            island.dataset.ready = 'true';
+
+            const root = island.closest<HTMLElement>('[data-artifact]');
+            if (!root) return;
+
+            const form = root.querySelector<HTMLFormElement>('[data-bonsai-form]');
+            const input = root.querySelector<HTMLInputElement>('[data-bonsai-login]');
+            const demo = root.querySelector<HTMLInputElement>('input[data-control$="-demo"]');
+            const seasonInputs = root.querySelectorAll<HTMLInputElement>('input[data-control$="-season"]');
+            const canvas = island.querySelector<HTMLCanvasElement>('[data-bonsai-canvas]');
+            const empty = island.querySelector<HTMLElement>('[data-bonsai-empty]');
+            const statusEl = island.querySelector<HTMLElement>('[data-bonsai-status]');
+            const readout = island.querySelector<HTMLElement>('[data-bonsai-readout]');
+            const marks = island.querySelector<HTMLElement>('[data-bonsai-marks]');
+            if (!form || !input || !canvas) return;
+
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const offscreen = document.createElement('canvas');
+
+            const state = {
+                dna: null as BonsaiDNA | null,
+                skel: null as Skeleton | null,
+                metrics: null as Metrics | null,
+                season: 'auto' as Season | 'auto',
+                windFrames: [] as Frame[],
+                windTimer: 0,
+                generation: 0,
+                path: 'public' as 'endpoint' | 'public' | 'demo'
+            };
+
+            // -------------------------------------------------------- drawing
+
+            const currentSeason = (): Season =>
+                state.season === 'auto' ? Bonsai.seasonFromDate(new Date().toISOString().slice(0, 10)) : state.season;
+
+            const palette = () => Bonsai.buildPalette(state.dna!.palettes, state.dna!.species, currentSeason());
+
+            function toImageData(frame: Frame, pal: number[]): ImageData {
+                const img = new ImageData(frame.w, frame.h);
+                for (let i = 0; i < frame.color.length; i++) {
+                    const c = frame.color[i];
+                    if (c === Bonsai.TRANSPARENT) continue;
+                    img.data[i * 4] = pal[c * 3];
+                    img.data[i * 4 + 1] = pal[c * 3 + 1];
+                    img.data[i * 4 + 2] = pal[c * 3 + 2];
+                    img.data[i * 4 + 3] = 255;
+                }
+                return img;
+            }
+
+            function paint(frame: Frame) {
+                offscreen.width = frame.w;
+                offscreen.height = frame.h;
+                offscreen.getContext('2d')!.putImageData(toImageData(frame, palette()), 0, 0);
+                canvas!.width = frame.w;
+                canvas!.height = frame.h;
+                const ctx = canvas!.getContext('2d')!;
+                ctx.imageSmoothingEnabled = false;
+                ctx.clearRect(0, 0, frame.w, frame.h);
+                ctx.drawImage(offscreen, 0, 0);
+                canvas!.hidden = false;
+                if (empty) empty.hidden = true;
+            }
+
+            function stopWind() {
+                if (state.windTimer) {
+                    clearInterval(state.windTimer);
+                    state.windTimer = 0;
+                }
+            }
+
+            /** Growth first, then a wind loop. The frames are computed one at a
+             *  time and yielded between, so the page stays responsive and the
+             *  computation itself plays as the timelapse. */
+            async function grow(metrics: Metrics) {
+                const gen = ++state.generation;
+                stopWind();
+
+                const rng = Bonsai.makeRng(metrics.username.toLowerCase());
+                const dna = Bonsai.deriveDna(metrics, rng);
+                const skel = Bonsai.buildSkeleton(dna, rng);
+                Bonsai.applyThickness(skel, dna);
+
+                state.dna = dna;
+                state.skel = skel;
+                state.metrics = metrics;
+                state.windFrames = [];
+                showReadout(dna, metrics);
+
+                if (reducedMotion) {
+                    paint(Bonsai.renderFrame(dna, skel, { growthT: 1, windPhase: null }));
+                    return;
+                }
+
+                for (let f = 0; f < GROWTH_FRAMES; f++) {
+                    if (state.generation !== gen) return;
+                    const linear = f / (GROWTH_FRAMES - 1);
+                    paint(Bonsai.renderFrame(dna, skel, { growthT: 1 - Math.pow(1 - linear, 2.2), windPhase: null }));
+                    await sleep();
+                }
+
+                const frames: Frame[] = [];
+                for (let f = 0; f < WIND_FRAMES; f++) {
+                    if (state.generation !== gen) return;
+                    frames.push(Bonsai.renderFrame(dna, skel, { windPhase: (f / WIND_FRAMES) * Math.PI * 2 }));
+                    await sleep();
+                }
+                if (state.generation !== gen) return;
+
+                state.windFrames = frames;
+                let i = 0;
+                state.windTimer = window.setInterval(() => {
+                    paint(frames[i]);
+                    i = (i + 1) % frames.length;
+                }, 80);
+            }
+
+            // -------------------------------------------------------- readout
+
+            const setStatus = (text: string, isError = false) => {
+                if (!statusEl) return;
+                statusEl.textContent = text;
+                statusEl.classList.toggle('bonsai-status-error', isError);
+            };
+
+            function showReadout(dna: BonsaiDNA, metrics: Metrics) {
+                const set = (key: string, value: string) => {
+                    const el = island.querySelector<HTMLElement>(`[data-stat="${key}"]`);
+                    if (el) el.textContent = value;
+                };
+                set('age', `${dna.ageYears.toFixed(1)} y`);
+                set('contributions', metrics.totalContributions.toLocaleString('en-US'));
+                set('streak-best', `${metrics.maxStreak} d`);
+                set('streak-now', `${metrics.currentStreak} d`);
+                set('style', STYLE_JP[dna.style] ?? dna.style);
+                set('species', SPECIES_JP[dna.species] ?? dna.species);
+                set('pot', POT_JP[dna.sizeClass] ?? dna.sizeClass);
+
+                if (marks) {
+                    const earned: string[] = [];
+                    if (dna.sumo) earned.push('sumo trunk');
+                    if (dna.shari) earned.push('shari scar');
+                    if (dna.uro) earned.push('uro hollow');
+                    if (dna.flowers > 0) earned.push(`${dna.flowers} blossom clusters`);
+                    if (metrics.isOrg) earned.push('organization');
+                    marks.innerHTML = earned
+                        .map(
+                            (text) =>
+                                `<span class="border-main/45 text-main/80 inline-flex items-center rounded-full border border-dashed px-2.5 py-0.5 text-xs">${text}</span>`
+                        )
+                        .join('');
+                    marks.hidden = earned.length === 0;
+                }
+
+                if (readout) readout.hidden = false;
+            }
+
+            // ----------------------------------------------------------- data
+
+            /** Expand the wire format of /api/bonsai back into a daily series. */
+            const unpack = (days: { from: string; counts: number[] }): Day[] => {
+                const start = Date.parse(days.from + 'T00:00:00Z');
+                return days.counts.map((count, i) => ({ date: new Date(start + i * DAY_MS).toISOString().slice(0, 10), count }));
+            };
+
+            async function fromOwnApi(login: string): Promise<Metrics | null> {
+                let res: Response;
+                try {
+                    res = await fetch(`${OWN_API}?u=${encodeURIComponent(login)}`);
+                } catch {
+                    return null; // offline or the function is not there: try the public path
+                }
+                const body = await json(res);
+                // Not JSON means there is no function behind this path at all
+                // (local dev, or a deploy without one). Anything else with a
+                // body is ours and can be trusted.
+                if (!body) return null;
+                if (res.ok) {
+                    const metrics = Bonsai.normalize(body.username, body.createdAt, new Date(), unpack(body.days), body.repos as RepoNode[], body.isOrg);
+                    if (typeof body.totalContributionsFloor === 'number') {
+                        metrics.totalContributions = Math.max(metrics.totalContributions, body.totalContributionsFloor);
+                    }
+                    state.path = 'endpoint';
+                    return metrics;
+                }
+                if (res.status === 404) throw new Failure(`there is no GitHub account named "${login}"`);
+                return null; // 503 without a token, or an upstream hiccup
+            }
+
+            /**
+             * The playground API that ships with the repo, which answers with a
+             * finished Metrics object. Second in line so the token can live in
+             * either project. Anything other than a clean 200 is treated as "not
+             * available" rather than as an answer: when that service has no
+             * function deployed it 404s, and a 404 there says nothing about
+             * whether the account exists.
+             */
+            async function fromRepoApi(login: string): Promise<Metrics | null> {
+                try {
+                    const res = await fetch(`${REPO_API}?u=${encodeURIComponent(login)}`);
+                    if (!res.ok) return null;
+                    const metrics = (await json(res)) as Metrics | null;
+                    if (!metrics?.username) return null;
+                    state.path = 'endpoint';
+                    return metrics;
+                } catch {
+                    return null;
+                }
+            }
+
+            async function calendar(login: string, sinceYear: number): Promise<Day[]> {
+                const cacheKey = `gitbonsai:cal:${login.toLowerCase()}`;
+                const today = new Date().toISOString().slice(0, 10);
+                try {
+                    const hit = JSON.parse(localStorage.getItem(cacheKey) ?? 'null');
+                    if (hit && hit.day === today) return hit.contributions as Day[];
+                } catch {
+                    /* corrupt cache: refetch */
+                }
+
+                const failures: string[] = [];
+                for (const mirror of CALENDAR_MIRRORS) {
+                    try {
+                        setStatus(`reading the contribution calendar (${mirror.label}) ...`);
+                        const contributions = mirror.read(await getJson(mirror.url(login, sinceYear), mirror.label));
+                        try {
+                            localStorage.setItem(cacheKey, JSON.stringify({ day: today, contributions }));
+                        } catch {
+                            /* storage full or blocked: not worth failing over */
+                        }
+                        return contributions;
+                    } catch (err) {
+                        failures.push(`${mirror.label}: ${(err as Error).message}`);
+                    }
+                }
+                throw new Failure(`every contribution calendar source failed (${failures.join(' · ')}). Try demo mode, or run the Action.`);
+            }
+
+            async function fromPublicApi(login: string): Promise<Metrics> {
+                const user = await getJson(`https://api.github.com/users/${encodeURIComponent(login)}`, 'GitHub').catch((err: Error) => {
+                    if (err.message === 'NOT_FOUND') throw new Failure(`there is no GitHub account named "${login}"`);
+                    throw err;
+                });
+                if (user.type === 'Organization') {
+                    throw new Failure(
+                        'organizations have no public contribution calendar, so this path cannot see one. Run the Action for an org: it grows a yose-ue forest out of the repositories.'
+                    );
+                }
+
+                const now = new Date();
+                const createdDay = user.created_at.slice(0, 10);
+                const [days, repos] = await Promise.all([
+                    calendar(login, new Date(user.created_at).getUTCFullYear()),
+                    getJson(`https://api.github.com/users/${encodeURIComponent(login)}/repos?per_page=100&sort=pushed`, 'GitHub')
+                ]);
+
+                const series = days
+                    .filter((d) => d.date >= createdDay && d.date <= now.toISOString().slice(0, 10))
+                    .sort((a, b) => (a.date < b.date ? -1 : 1));
+                if (series.length === 0) throw new Failure('the contribution calendar came back empty');
+
+                // REST gives one primary language and a repo size in KB, which is
+                // close enough to the GraphQL per-language byte sizes once
+                // normalize() damps it logarithmically.
+                const repoNodes: RepoNode[] = repos
+                    .filter((r: any) => !r.fork)
+                    .map((r: any) => ({
+                        createdAt: r.created_at,
+                        languages: { edges: r.language ? [{ size: r.size * 1024, node: { name: r.language } }] : [] }
+                    }));
+
+                state.path = 'public';
+                return Bonsai.normalize(login, user.created_at, now, series, repoNodes, false);
+            }
+
+            const DONE = {
+                endpoint: 'Grown from the full public history, the same data the Action reads. Private contributions still need the Action itself.',
+                public: 'Grown from public data only. Languages are approximated here; the Action sees exact language bytes and private work.',
+                demo: 'Demo mode: a fabricated history, deterministic for this name. No GitHub account was read.'
+            };
+
+            // --------------------------------------------------------- events
+
+            async function run(login: string, isDemo: boolean) {
+                if (!login) return;
+                if (readout) readout.hidden = true;
+                setStatus(isDemo ? `dreaming up a history for ${login} ...` : `reading @${login}'s history ...`);
+
+                try {
+                    let metrics: Metrics;
+                    if (isDemo) {
+                        state.path = 'demo';
+                        metrics = Bonsai.synthMetrics(login);
+                    } else {
+                        metrics = (await fromOwnApi(login)) ?? (await fromRepoApi(login)) ?? (await fromPublicApi(login));
+                    }
+
+                    const url = new URL(location.href);
+                    url.searchParams.set('u', login);
+                    if (isDemo) url.searchParams.set('demo', '1');
+                    else url.searchParams.delete('demo');
+                    history.replaceState(null, '', url);
+
+                    setStatus(DONE[state.path]);
+                    await grow(metrics);
+                } catch (err) {
+                    setStatus((err as Error)?.message ?? String(err), true);
+                }
+            }
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                void run(input.value.trim().replace(/^@/, ''), demo?.checked ?? false);
+            });
+
+            seasonInputs.forEach((radio) => {
+                radio.addEventListener('change', () => {
+                    if (!radio.checked) return;
+                    state.season = radio.value as Season | 'auto';
+                    // A palette swap, not a regrowth: repaint whatever is up.
+                    if (state.dna && state.skel && !state.windTimer) {
+                        paint(Bonsai.renderFrame(state.dna, state.skel, { growthT: 1, windPhase: null }));
+                    }
+                });
+            });
+
+            /** One box across the still and the wind, so an export never clips a
+             *  branch that only swings out on frame nine. */
+            function cropped() {
+                const still = Bonsai.renderFrame(state.dna!, state.skel!, { growthT: 1, windPhase: null });
+                const box = Bonsai.fitBox([still, ...state.windFrames]);
+                return { still: Bonsai.cropFrame(still, box), wind: state.windFrames.map((f) => Bonsai.cropFrame(f, box)) };
+            }
+
+            function save(name: string, blob: Blob) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = name;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            }
+
+            island.querySelectorAll<HTMLButtonElement>('[data-bonsai-action]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    if (!state.dna || !state.skel || !state.metrics) return;
+                    const kind = button.dataset.bonsaiAction;
+
+                    if (kind === 'replay') {
+                        void grow(state.metrics);
+                        return;
+                    }
+
+                    if (kind === 'share') {
+                        const text = `My GitHub history grew a ${state.dna.style} ${state.dna.species} bonsai #gitbonsai\n${location.href}`;
+                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+                        return;
+                    }
+
+                    if (kind === 'png') {
+                        const { still } = cropped();
+                        const scale = 3;
+                        const out = document.createElement('canvas');
+                        out.width = still.w * scale;
+                        out.height = still.h * scale;
+                        const ctx = out.getContext('2d')!;
+                        ctx.imageSmoothingEnabled = false;
+                        offscreen.width = still.w;
+                        offscreen.height = still.h;
+                        offscreen.getContext('2d')!.putImageData(toImageData(still, palette()), 0, 0);
+                        ctx.drawImage(offscreen, 0, 0, out.width, out.height);
+                        out.toBlob((blob) => blob && save(`bonsai-${state.metrics!.username}.png`, blob), 'image/png');
+                        return;
+                    }
+
+                    if (kind === 'gif') {
+                        const { wind } = cropped();
+                        if (wind.length === 0) {
+                            setStatus('the wind loop is still being computed. Give it a second and try again.');
+                            return;
+                        }
+                        const bytes = Bonsai.encodeGif(
+                            wind.map((f) => f.color),
+                            wind[0].w,
+                            wind[0].h,
+                            palette(),
+                            { delays: wind.map(() => 8), transparentIndex: Bonsai.TRANSPARENT, loops: 0 }
+                        );
+                        save(`bonsai-${state.metrics.username}.gif`, new Blob([bytes], { type: 'image/gif' }));
+                    }
+                });
+            });
+
+            // Deep links: /bonsai/?u=torvalds grows on arrival, which is what
+            // makes a shared tree a shared tree.
+            const params = new URLSearchParams(location.search);
+            const initial = (params.get('u') ?? '').trim();
+            if (initial) {
+                input.value = initial;
+                if (demo) demo.checked = params.get('demo') === '1';
+                void run(initial, demo?.checked ?? false);
+            }
+
+            document.addEventListener(
+                'astro:before-swap',
+                () => {
+                    state.generation++;
+                    stopWind();
+                },
+                { once: true }
+            );
+        });
+    }
+
+    initBonsai();
+    document.addEventListener('astro:after-swap', initBonsai);
+</script>

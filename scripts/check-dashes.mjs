@@ -1,9 +1,12 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Blocks typographic dashes in content: figure dash, en dash, em dash, horizontal bar
 const BANNED = /[‒–—―]/;
-const CONTENT_DIR = new URL('../src/content', import.meta.url).pathname;
+// fileURLToPath, not .pathname: on Windows the latter hands back "/C:/..." and
+// every join after it builds a path that does not exist.
+const CONTENT_DIR = fileURLToPath(new URL('../src/content', import.meta.url));
 
 function* walk(dir) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {

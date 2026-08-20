@@ -1,0 +1,138 @@
+---
+import BonsaiPlayground from '../components/artifacts/BonsaiPlayground.astro';
+import Button from '../components/Button.astro';
+import Annotate from '../components/ui/Annotate.astro';
+import Callout from '../components/ui/Callout.astro';
+import CodeFrame from '../components/ui/CodeFrame.astro';
+import Rule from '../components/ui/Rule.astro';
+import SpecList from '../components/ui/SpecList.astro';
+import Status from '../components/ui/Status.astro';
+import Tag from '../components/ui/Tag.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const description =
+    'Type a GitHub username and watch its one of a kind pixel-art bonsai grow. Account age shapes the trunk, streaks bloom, silences leave deadwood. Deterministic, procedural, no install.';
+
+const keepers = ['torvalds', 'gaearon', 'sindresorhus', 'karpathy', 'antirez', 'egorthinks'];
+
+const rules = [
+    { term: 'Account age', value: 'Trunk height, thickness and branching depth' },
+    { term: 'Contributions', value: 'How dense the crown grows' },
+    { term: 'Streaks', value: 'Sakura blossoms at 7, 30, 100 and 365 days' },
+    { term: 'Silences', value: 'Deadwood: jin, then a shari scar, then an uro hollow' },
+    { term: 'Languages', value: 'The colour of the canopy, one hue per era' },
+    { term: 'Rhythm', value: 'The style: metronome, storm or hermit' },
+    { term: 'Flagships', value: 'One trunk, twin trunks, a clump or a forest' },
+    { term: 'The calendar', value: 'Today: leaves flush in spring and frost in winter' }
+];
+
+const workflow = `name: bonsai
+on:
+  schedule:
+    - cron: '0 3 * * *'   # re-grow daily
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  grow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: egorthinks/git-bonsai@v1`;
+---
+
+<BaseLayout title="Bonsai playground" description={description} showHeader={false}>
+    <article class="mb-20 sm:mb-28">
+        <header class="mb-10 sm:mb-14">
+            <span class="eyebrow">Playground · git-bonsai</span>
+            <h1 class="mt-3 font-serif text-3xl leading-tight font-medium sm:text-5xl sm:leading-tight">
+                Every GitHub account grows
+                <Annotate mark="underline">exactly one tree</Annotate>.
+            </h1>
+            <p class="text-main/75 mt-5 max-w-2xl leading-relaxed">
+                Ten years of an account is not a green calendar. It is a biography, with growth spurts, obsessions, long silences and
+                comebacks. This grows that biography into a bonsai: the username is the seed, the history is the shape, and nobody else can
+                ever grow yours.
+            </p>
+            <div class="mt-6 flex flex-wrap items-center gap-2">
+                <Status state="live" note="v1" />
+                <Tag size="sm">procedural</Tag>
+                <Tag size="sm">deterministic</Tag>
+                <Tag size="sm">no install</Tag>
+            </div>
+        </header>
+
+        <BonsaiPlayground id="playground" />
+
+        <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span class="eyebrow">Or meet one of these</span>
+            {
+                keepers.map((keeper) => (
+                    <Tag href={`/bonsai/?u=${keeper}`} size="sm">
+                        {keeper}
+                    </Tag>
+                ))
+            }
+        </div>
+
+        <Rule variant="dashed" class="my-14" />
+
+        <section class="mb-14">
+            <h2 class="font-serif text-2xl leading-snug font-medium sm:text-3xl">What the tree is reading</h2>
+            <p class="text-main/70 mt-3 max-w-2xl text-sm leading-relaxed">
+                Everything is derived, nothing is chosen. There is no <code>Math.random()</code> anywhere in the engine: the same account with
+                the same history produces the same tree, byte for byte, on every run.
+            </p>
+            <div class="mt-6">
+                <SpecList items={rules} />
+            </div>
+        </section>
+
+        <section class="mb-14">
+            <h2 class="font-serif text-2xl leading-snug font-medium sm:text-3xl">Grow it on your own profile</h2>
+            <p class="text-main/70 mt-3 max-w-2xl text-sm leading-relaxed">
+                The page above sees public data only. The Action sees your private contributions and your exact language bytes, and it re-grows
+                the tree every night. Drop this in the profile repository, the one named after your username:
+            </p>
+
+            <CodeFrame label=".github/workflows/bonsai.yml" class="mt-6">
+                <pre><code>{workflow}</code></pre>
+            </CodeFrame>
+
+            <p class="text-main/70 mt-6 max-w-2xl text-sm leading-relaxed">
+                It writes four files: <code>bonsai.svg</code>, <code>bonsai.png</code>, a wind loop and a seed to today timelapse. Or skip CI
+                entirely and run it once:
+            </p>
+
+            <CodeFrame label="terminal" class="mt-4">
+                <pre><code>$ npx git-bonsai --user yourname --token $GITHUB_TOKEN   # real data
+$ npx git-bonsai --synth yourname                        # offline demo</code></pre>
+            </CodeFrame>
+        </section>
+
+        <Callout variant="warn" title="What the browser can and cannot see" class="mb-12">
+            <p>
+                A tree grown here reads your public contribution calendar and your public repositories. Private contributions never leave
+                GitHub, so a tree grown in a browser is always the smaller, more modest version of the one the Action grows on your own
+                account.
+            </p>
+            <p>
+                Demo mode talks to nothing at all. It fabricates a plausible history from the name, which is still deterministic, and still
+                yours in the sense that the name picks it.
+            </p>
+        </Callout>
+
+        <div class="flex flex-wrap items-center gap-4">
+            <Button href="/blog/git-bonsai/">Read the build</Button>
+            <a class="text-sm underline decoration-dashed underline-offset-4 hover:decoration-solid" href="https://github.com/egorthinks/git-bonsai">
+                Source on GitHub
+            </a>
+            <a
+                class="text-sm underline decoration-dashed underline-offset-4 hover:decoration-solid"
+                href="https://github.com/egorthinks/git-bonsai/blob/main/HALL_OF_FAME.md"
+            >
+                Hall of Fame
+            </a>
+        </div>
+    </article>
+</BaseLayout>

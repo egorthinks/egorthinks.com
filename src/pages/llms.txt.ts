@@ -50,6 +50,12 @@ export const GET: APIRoute = async () => {
         lines.push('');
     }
 
+    lines.push('## Tools');
+    lines.push(
+        `- [Bonsai playground](${siteUrl}/bonsai/): type a GitHub username and it grows a deterministic pixel-art bonsai from that account's public history - account age shapes the trunk, streaks bloom, long silences leave deadwood.`
+    );
+    lines.push('');
+
     lines.push('## Optional');
     if (about) {
         lines.push(`- [About](${siteUrl}/about/): who writes this site`);

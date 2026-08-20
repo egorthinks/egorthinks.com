@@ -31,6 +31,10 @@ const siteConfig: SiteConfig = {
             href: '/about/'
         },
         {
+            text: 'Bonsai',
+            href: '/bonsai/'
+        },
+        {
             text: 'Research',
             href: '/research/'
         },
