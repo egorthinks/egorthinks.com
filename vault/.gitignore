@@ -1,0 +1,9 @@
+dist/
+.astro/
+.vercel/
+node_modules/
+.env
+.env.*
+!.env.example
+# local stand-in for the data repository (VAULT_STORAGE=fs)
+.vault-data/

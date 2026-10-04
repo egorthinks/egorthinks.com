@@ -35,6 +35,10 @@ publishDate: 'Jan 1 2026'
 
 Optional fields: `excerpt`, `updatedDate`, `isFeatured`, `tags`, `seo`.
 
+## Vault
+
+`vault/` is a separate app: a private, end-to-end encrypted notebook served at `vault.egorthinks.com` from its own Vercel project. It shares this site's
+design system through `src/styles/design-system.css`, which is why that file must not import packages by name. See [`vault/README.md`](vault/README.md).
 
 ## License
 
