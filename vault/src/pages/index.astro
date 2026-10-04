@@ -1,0 +1,250 @@
+---
+/**
+ * The whole vault is this one page. Every screen is in the markup from the
+ * start and src/client/main.ts shows one at a time; nothing secret is ever
+ * rendered by the server, which only ever sees ciphertext.
+ */
+import '../styles/vault.css';
+---
+
+<!doctype html>
+<html lang="en" class="wrap-break-words antialiased">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="referrer" content="no-referrer" />
+        <title>Vault</title>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <script is:inline src="/theme.js"></script>
+    </head>
+    <body class="bg-main text-main font-sans">
+        <div class="flex min-h-screen flex-col px-4 md:px-8">
+            <nav class="mx-auto flex w-full max-w-6xl items-center gap-4 pt-4 pb-8 md:pt-8 md:pb-12">
+                <span class="font-serif text-xl">Vault</span>
+                <button
+                    id="save-status"
+                    class="border-main/45 enabled:hover:bg-muted inline-flex items-center gap-2 rounded-full border border-dashed py-1 pr-3.5 pl-3 text-xs enabled:cursor-pointer"
+                    aria-live="polite"
+                    disabled
+                    hidden
+                >
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span class="eyebrow text-main" data-label>Saved</span>
+                </button>
+                <div class="ml-auto flex items-center gap-2">
+                    <button id="settings-open" class="btn-quiet" hidden>Settings</button>
+                    <button id="lock" class="btn-quiet" hidden>Lock</button>
+                    <button id="theme-toggle" class="-mr-2 flex h-8 w-8 cursor-pointer items-center justify-center" aria-label="Change color scheme">
+                        <svg class="h-4 w-4 fill-current" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="8"></circle></svg>
+                    </button>
+                </div>
+            </nav>
+
+            <main class="mx-auto flex w-full max-w-6xl grow flex-col">
+                <!-- Loading -->
+                <section data-screen="loading" class="m-auto">
+                    <p class="text-main/60 font-serif italic">Opening…</p>
+                </section>
+
+                <!-- Sign in with a passkey -->
+                <section data-screen="gate" class="mx-auto w-full max-w-md pt-[8vh]" hidden>
+                    <div class="frame-dashed px-6 py-8 sm:px-10 sm:py-10">
+                        <span class="eyebrow">Private</span>
+                        <h1 class="mt-3 font-serif text-4xl leading-tight font-medium">Vault</h1>
+                        <p class="text-main/70 mt-3 text-sm leading-relaxed">
+                            Notes only their owner can read. They are encrypted in this browser before they leave it.
+                        </p>
+                        <button id="signin" class="btn mt-8 w-full">Sign in with a passkey</button>
+                        <p class="error-line mt-4" data-error="gate" role="alert"></p>
+
+                        <form id="setup" class="mt-8" hidden>
+                            <div class="rule-dashed mb-8"></div>
+                            <label class="label" for="setup-token">First device</label>
+                            <p class="text-main/70 mb-4 text-sm leading-relaxed">
+                                No passkey is registered yet. Enter the setup token from the server's environment to register this device.
+                            </p>
+                            <input id="setup-token" class="field" type="password" autocomplete="off" placeholder="Setup token" required />
+                            <button class="btn mt-4 w-full" type="submit">Register a passkey</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Create the vault -->
+                <section data-screen="create" class="mx-auto w-full max-w-md pt-[8vh]" hidden>
+                    <form id="create-form" class="frame-dashed px-6 py-8 sm:px-10 sm:py-10">
+                        <span class="eyebrow">New vault</span>
+                        <h1 class="mt-3 font-serif text-3xl leading-tight font-medium">Choose a master password</h1>
+                        <p class="text-main/70 mt-3 text-sm leading-relaxed">
+                            It never leaves this browser and nobody can reset it. Lose it and only the recovery key, shown next, gets the notes back.
+                        </p>
+                        <input type="text" autocomplete="username" value="vault" hidden aria-hidden="true" />
+                        <label class="label mt-8" for="create-password">Master password</label>
+                        <input id="create-password" class="field" type="password" autocomplete="new-password" minlength="12" required />
+                        <label class="label mt-5" for="create-confirm">Once more</label>
+                        <input id="create-confirm" class="field" type="password" autocomplete="new-password" minlength="12" required />
+                        <p class="text-main/55 mt-3 text-xs">At least 12 characters. A few unrelated words beat one clever one.</p>
+                        <button class="btn mt-8 w-full" type="submit">Create the vault</button>
+                        <p class="error-line mt-4" data-error="create" role="alert"></p>
+                    </form>
+                </section>
+
+                <!-- Show the recovery key once -->
+                <section data-screen="recovery" class="mx-auto w-full max-w-lg pt-[8vh]" hidden>
+                    <div class="frame-dashed px-6 py-8 sm:px-10 sm:py-10">
+                        <span class="eyebrow">Recovery key</span>
+                        <h1 class="mt-3 font-serif text-3xl leading-tight font-medium">Write this down</h1>
+                        <p class="text-main/70 mt-3 text-sm leading-relaxed">
+                            The only way back in if the master password is forgotten. It is shown once. Keep it on paper or in a password manager, not next to
+                            the vault.
+                        </p>
+                        <div class="tick-corners mt-8 px-5 py-6 text-center">
+                            <code id="recovery-key" class="block font-mono text-base tracking-wider select-all sm:text-lg"></code>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <button id="recovery-copy" class="btn-quiet" type="button">Copy</button>
+                            <button id="recovery-download" class="btn-quiet" type="button">Download as .txt</button>
+                        </div>
+                        <label class="mt-8 flex cursor-pointer items-start gap-3 text-sm">
+                            <input id="recovery-saved" type="checkbox" class="mt-0.5 accent-current" />
+                            <span>It is stored somewhere safe.</span>
+                        </label>
+                        <button id="recovery-done" class="btn mt-6 w-full" disabled>Open the vault</button>
+                        <p class="error-line mt-4" data-error="recovery" role="alert"></p>
+                    </div>
+                </section>
+
+                <!-- Unlock -->
+                <section data-screen="unlock" class="mx-auto w-full max-w-md pt-[8vh]" hidden>
+                    <form id="unlock-form" class="frame-dashed px-6 py-8 sm:px-10 sm:py-10">
+                        <span class="eyebrow">Locked</span>
+                        <h1 class="mt-3 font-serif text-4xl leading-tight font-medium">Unlock</h1>
+                        <input type="text" autocomplete="username" value="vault" hidden aria-hidden="true" />
+                        <label class="label mt-8" for="unlock-password">Master password</label>
+                        <input id="unlock-password" class="field" type="password" autocomplete="current-password" required />
+                        <button class="btn mt-6 w-full" type="submit">Unlock</button>
+                        <p class="error-line mt-4" data-error="unlock" role="alert"></p>
+                        <div class="mt-6 flex flex-wrap justify-between gap-3">
+                            <button id="show-reset" class="btn-link" type="button">Forgot it? Use the recovery key</button>
+                            <button class="btn-link" type="button" data-action="signout">Sign out</button>
+                        </div>
+                    </form>
+
+                    <form id="reset-form" class="frame-dashed mt-6 px-6 py-8 sm:px-10 sm:py-10" hidden>
+                        <span class="eyebrow">Recovery</span>
+                        <h2 class="mt-3 font-serif text-2xl leading-tight font-medium">Set a new master password</h2>
+                        <input type="text" autocomplete="username" value="vault" hidden aria-hidden="true" />
+                        <label class="label mt-6" for="reset-key">Recovery key</label>
+                        <input id="reset-key" class="field font-mono" type="text" autocomplete="off" spellcheck="false" placeholder="ABCD-EFGH-…" required />
+                        <label class="label mt-5" for="reset-password">New master password</label>
+                        <input id="reset-password" class="field" type="password" autocomplete="new-password" minlength="12" required />
+                        <label class="label mt-5" for="reset-confirm">Once more</label>
+                        <input id="reset-confirm" class="field" type="password" autocomplete="new-password" minlength="12" required />
+                        <button class="btn mt-6 w-full" type="submit">Reset and unlock</button>
+                        <p class="error-line mt-4" data-error="reset" role="alert"></p>
+                    </form>
+                </section>
+
+                <!-- The notes -->
+                <section data-screen="app" class="grid grow gap-8 md:grid-cols-[18rem_1fr]" data-view="list" hidden>
+                    <aside id="list-pane" class="flex min-w-0 flex-col">
+                        <div class="flex gap-2">
+                            <input id="search" class="field h-9" type="search" placeholder="Search" autocomplete="off" />
+                            <button id="new-note" class="btn h-9 shrink-0 px-4" title="New note (Alt+N)">New</button>
+                        </div>
+                        <ul id="note-list" class="mt-6 flex flex-col"></ul>
+                        <p id="list-empty" class="text-main/60 mt-6 font-serif italic" hidden>Nothing here yet.</p>
+                    </aside>
+
+                    <div id="note-pane" class="flex min-w-0 flex-col">
+                        <div id="note-empty" class="m-auto py-24 text-center">
+                            <p class="text-main/60 font-serif text-xl italic">Pick a note, or start a new one.</p>
+                        </div>
+
+                        <article id="editor" class="flex grow flex-col" hidden>
+                            <button id="back" class="btn-link mb-4 self-start md:hidden" type="button">← All notes</button>
+                            <input
+                                id="note-title"
+                                class="placeholder:text-main/30 w-full bg-transparent font-serif text-3xl leading-tight font-medium focus:outline-none sm:text-4xl"
+                                placeholder="Untitled"
+                                autocomplete="off"
+                                aria-label="Title"
+                            />
+                            <div class="mt-4 flex flex-wrap items-center gap-2">
+                                <button class="segment" data-mode="write" aria-pressed="true">Write</button>
+                                <button class="segment" data-mode="preview" aria-pressed="false">Preview</button>
+                                <span class="grow"></span>
+                                <button id="attach" class="btn-quiet" type="button">Add image</button>
+                                <input id="attach-input" type="file" accept="image/*" multiple hidden />
+                                <button id="delete-note" class="btn-quiet" type="button">Delete</button>
+                            </div>
+                            <div class="frame-dashed mt-4 grow px-5 py-4 sm:px-6 sm:py-5">
+                                <textarea
+                                    id="note-body"
+                                    class="editor-text w-full bg-transparent text-[0.95rem] leading-relaxed"
+                                    placeholder="Write, or paste. Markdown works; images can be pasted or dropped in."
+                                    spellcheck="true"
+                                    aria-label="Note"></textarea>
+                                <div id="note-preview" class="prose max-w-none" hidden></div>
+                            </div>
+                            <p id="note-meta" class="text-main/50 mt-3 text-xs"></p>
+                        </article>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- Settings -->
+        <dialog id="settings" class="bg-main text-main frame-dashed m-auto w-[min(32rem,calc(100vw-2rem))] p-0">
+            <div class="max-h-[85vh] overflow-y-auto px-6 py-8 sm:px-8">
+                <div class="flex items-baseline justify-between">
+                    <h2 class="font-serif text-2xl font-medium">Settings</h2>
+                    <button class="btn-link" data-action="close-settings" type="button">Close</button>
+                </div>
+
+                <section class="mt-8">
+                    <span class="label">Passkeys</span>
+                    <p class="text-main/70 text-sm leading-relaxed">
+                        Add one on every device that should sign in. Synced passkeys (iCloud Keychain, Google Password Manager) cover the rest of that account's
+                        devices.
+                    </p>
+                    <button id="add-passkey" class="btn-quiet mt-4" type="button">Add a passkey</button>
+                    <p class="error-line mt-3" data-error="passkey" role="alert"></p>
+                </section>
+
+                <div class="rule-dashed my-8"></div>
+
+                <form id="password-form">
+                    <span class="label">Master password</span>
+                    <input type="text" autocomplete="username" value="vault" hidden aria-hidden="true" />
+                    <input id="pw-current" class="field" type="password" autocomplete="current-password" placeholder="Current password" required />
+                    <input id="pw-new" class="field mt-3" type="password" autocomplete="new-password" minlength="12" placeholder="New password" required />
+                    <input id="pw-confirm" class="field mt-3" type="password" autocomplete="new-password" minlength="12" placeholder="Once more" required />
+                    <button class="btn-quiet mt-4" type="submit">Change password</button>
+                    <p class="error-line mt-3" data-error="password" role="alert"></p>
+                </form>
+
+                <div class="rule-dashed my-8"></div>
+
+                <form id="rotate-form">
+                    <span class="label">Recovery key</span>
+                    <p class="text-main/70 text-sm leading-relaxed">A new key replaces the old one, which stops working.</p>
+                    <input type="text" autocomplete="username" value="vault" hidden aria-hidden="true" />
+                    <input id="rotate-password" class="field mt-4" type="password" autocomplete="current-password" placeholder="Master password" required />
+                    <button class="btn-quiet mt-4" type="submit">Make a new recovery key</button>
+                    <p class="error-line mt-3" data-error="rotate" role="alert"></p>
+                </form>
+
+                <div class="rule-dashed my-8"></div>
+
+                <button class="btn-quiet" data-action="signout" type="button">Sign out of this browser</button>
+            </div>
+        </dialog>
+
+        <script>
+            import '../client/main.ts';
+        </script>
+    </body>
+</html>

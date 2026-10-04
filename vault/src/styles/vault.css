@@ -1,0 +1,151 @@
+@import '@fontsource-variable/inter' layer(base);
+@import '@fontsource-variable/newsreader' layer(base);
+@import '@fontsource-variable/newsreader/wght-italic.css' layer(base);
+
+@import 'tailwindcss';
+/* The site's palette, tokens and components, shared with egorthinks.com. */
+@import '../../../src/styles/design-system.css';
+@plugin '@tailwindcss/typography';
+
+/* ---------------------------------------------------------------------------
+   Vault controls. The site renders these through Astro components
+   (Button, Subscribe's input, Segmented, Status); the vault builds and toggles
+   them from script, so the same looks live here as classes.
+   --------------------------------------------------------------------------- */
+
+@layer components {
+    /* src/components/Button.astro */
+    .btn {
+        @apply border-main text-main hover:bg-muted inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border bg-transparent px-6 py-2 font-serif leading-tight italic transition-colors disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent;
+    }
+
+    /* The dashed pill of Tag/Status, as a button: secondary actions. */
+    .btn-quiet {
+        @apply border-main/45 text-main/80 hover:border-main hover:bg-muted inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-dashed px-3.5 py-1 text-sm transition-colors disabled:cursor-default disabled:opacity-40;
+    }
+
+    .btn-link {
+        @apply text-main/70 hover:text-main cursor-pointer text-sm underline decoration-dashed decoration-1 underline-offset-2 hover:decoration-solid;
+    }
+
+    /* Subscribe.astro's input */
+    .field {
+        @apply text-main border-main placeholder:text-main/50 h-10 w-full rounded-full border bg-transparent px-5 py-2 text-sm focus:outline-hidden;
+    }
+    .field:focus-visible {
+        outline: 1px dashed var(--ink-70);
+        outline-offset: 3px;
+    }
+
+    /* .eyebrow, as a block above a field */
+    .label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.6875rem;
+        line-height: 1;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-70);
+    }
+
+    /* Segmented.astro, minus the radio inputs */
+    .segment {
+        @apply border-main/45 cursor-pointer rounded-full border border-dashed px-3.5 py-1 text-sm transition-colors;
+        color: var(--ink-70);
+    }
+    .segment:hover {
+        border-color: var(--ink-70);
+    }
+    .segment[aria-pressed='true'] {
+        border-style: solid;
+        border-color: var(--ink-100);
+        color: var(--ink-100);
+    }
+
+    /* Status.astro */
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: currentColor;
+        flex: none;
+    }
+    [data-state='saving'] .status-dot,
+    [data-state='uploading'] .status-dot {
+        animation: status-pulse 1.2s ease-in-out infinite;
+    }
+    [data-state='dirty'] .status-dot {
+        opacity: 0.4;
+    }
+    [data-state='error'] .status-dot {
+        background: transparent;
+        box-shadow: inset 0 0 0 1px currentColor;
+    }
+
+    .error-line {
+        @apply text-sm;
+        color: var(--ink-100);
+    }
+    .error-line:not(:empty)::before {
+        content: '× ';
+    }
+    .error-line[data-ok]:not(:empty)::before {
+        content: '✓ ';
+    }
+}
+
+@keyframes status-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.35;
+        transform: scale(0.8);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-state] .status-dot {
+        animation: none !important;
+    }
+}
+
+[hidden] {
+    display: none !important;
+}
+
+/* The writing surface: no chrome of its own, the frame around it does that. */
+.editor-text {
+    resize: none;
+    field-sizing: content;
+    min-height: 60vh;
+    tab-size: 4;
+}
+.editor-text:focus {
+    outline: none;
+}
+
+.note-row[aria-current='true'] {
+    background: var(--bg-muted);
+}
+
+.prose img[data-vault] {
+    min-height: 3rem;
+}
+
+dialog::backdrop {
+    background: color-mix(in srgb, var(--bg-main) 70%, transparent);
+    backdrop-filter: blur(2px);
+}
+
+/* One pane at a time on a phone: the list, or the open note. */
+@media (max-width: 767px) {
+    [data-view='list'] #note-pane {
+        display: none;
+    }
+    [data-view='note'] #list-pane {
+        display: none;
+    }
+}

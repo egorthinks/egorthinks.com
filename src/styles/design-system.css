@@ -1,0 +1,433 @@
+/* ---------------------------------------------------------------------------
+   The design system, without its npm imports.
+
+   Imported by src/styles/global.css (the site) and vault/src/styles/vault.css
+   (the vault). Each importer brings its own fonts, tailwindcss and typography
+   plugin, so this file must never resolve a package name: the vault is built
+   on its own and cannot see this project's node_modules.
+   --------------------------------------------------------------------------- */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+    --text-main: #171717;
+    --bg-main: #f2f1ec;
+    --bg-muted: #eae9e1;
+    --border-main: #171717;
+}
+html.dark {
+    --text-main: #f2f1ec;
+    --bg-main: #171717;
+    --bg-muted: #242424;
+    --border-main: #f2f1ec;
+}
+
+/* Cyan */
+/*
+:root {
+    --text-main: #162a2b;
+    --bg-main: #d6e0e2;
+    --bg-muted: #ccd8db;
+    --border-main: #162a2b;
+}
+html.dark {
+    --text-main: #d6e0e2;
+    --bg-main: #162a2b;
+    --bg-muted: #1c3537;
+    --border-main: #d6e0e2;
+}
+*/
+
+/* Green */
+/*
+:root {
+    --text-main: #3a4238;
+    --bg-main: #f3efe6;
+    --bg-muted: #eee9dc;
+    --border-main: #3a4238;
+}
+html.dark {
+    --text-main: #f3efe6;
+    --bg-main: #5e6c5b;
+    --bg-muted: #596756;
+    --border-main: #f3efe6;
+}
+*/
+
+@theme inline {
+    --font-sans: 'Inter Variable', sans-serif;
+    --font-serif: 'Newsreader Variable', serif;
+    --text-color-main: var(--text-main);
+    --background-color-main: var(--bg-main);
+    --background-color-muted: var(--bg-muted);
+    --border-color-main: var(--border-main);
+}
+
+/* ---------------------------------------------------------------------------
+   Design system tokens. One palette (ink on paper, inverted in the dark),
+   one motif (the dash). Documented and rendered at /design/.
+   --------------------------------------------------------------------------- */
+
+:root {
+    /* Dash rhythm, in CSS pixels. Native `border-style: dashed` gives no control
+       over dash length, so every framed surface is drawn with gradients instead.
+       These match the DASH presets in src/utils/sketch-paths.ts one for one, so
+       a frame and the arrow pointing at it share a rhythm. */
+    --dash-on: 7px;
+    --dash-off: 5px;
+    --dash-on-fine: 4px;
+    --dash-off-fine: 3px;
+    --dash-on-coarse: 12px;
+    --dash-off-coarse: 7px;
+
+    --stroke: 1px;
+    --tick: 10px;
+
+    /* Ink levels. The only "colours" this site has. */
+    --ink-100: var(--text-main);
+    --ink-70: color-mix(in srgb, var(--text-main) 70%, transparent);
+    --ink-45: color-mix(in srgb, var(--text-main) 45%, transparent);
+    --ink-25: color-mix(in srgb, var(--text-main) 25%, transparent);
+    --ink-12: color-mix(in srgb, var(--text-main) 12%, transparent);
+}
+
+@layer components {
+    /* Dashed frame on all four sides, with a dash rhythm you can actually set. */
+    .frame-dashed {
+        --c: var(--ink-45);
+        background-image:
+            repeating-linear-gradient(90deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(90deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(0deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(0deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off)));
+        background-position:
+            0 0,
+            0 100%,
+            0 0,
+            100% 0;
+        background-size:
+            100% var(--stroke),
+            100% var(--stroke),
+            var(--stroke) 100%,
+            var(--stroke) 100%;
+        background-repeat: no-repeat;
+    }
+
+    .frame-dashed-fine {
+        --dash-on: var(--dash-on-fine);
+        --dash-off: var(--dash-off-fine);
+    }
+
+    .frame-dashed-coarse {
+        --dash-on: var(--dash-on-coarse);
+        --dash-off: var(--dash-off-coarse);
+    }
+
+    /* Corner ticks: implies a box without drawing one. */
+    .tick-corners {
+        --c: var(--ink-45);
+        background-image:
+            linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0),
+            linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0), linear-gradient(var(--c) 0 0);
+        background-position:
+            0 0,
+            0 0,
+            100% 0,
+            100% 0,
+            0 100%,
+            0 100%,
+            100% 100%,
+            100% 100%;
+        background-size:
+            var(--tick) var(--stroke),
+            var(--stroke) var(--tick),
+            var(--tick) var(--stroke),
+            var(--stroke) var(--tick),
+            var(--tick) var(--stroke),
+            var(--stroke) var(--tick),
+            var(--tick) var(--stroke),
+            var(--stroke) var(--tick);
+        background-repeat: no-repeat;
+    }
+
+    /* Horizontal rules with a controllable dash. */
+    .rule-dashed {
+        height: var(--stroke);
+        background-image: repeating-linear-gradient(
+            90deg,
+            var(--ink-45) 0 var(--dash-on),
+            transparent 0 calc(var(--dash-on) + var(--dash-off))
+        );
+    }
+
+    /* Vertical spine for changelogs, tracks, quoted asides. */
+    .spine-dashed {
+        width: var(--stroke);
+        background-image: repeating-linear-gradient(
+            180deg,
+            var(--ink-45) 0 var(--dash-on),
+            transparent 0 calc(var(--dash-on) + var(--dash-off))
+        );
+    }
+
+    /* Table-of-contents dot leader: term ....... value */
+    .leader {
+        flex: 1 1 auto;
+        align-self: flex-end;
+        height: 0.75em;
+        border-bottom: 1px dotted var(--ink-25);
+    }
+
+    /* Small uppercase label. Used where serif italic would be too soft. */
+    .eyebrow {
+        font-size: 0.6875rem;
+        line-height: 1;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-70);
+    }
+
+    /* ---------------------------------------------------------------------
+       Hatching. The only way this palette can fill an area: not tint, but
+       texture. Direction separates categories, spacing and weight separate
+       magnitudes, and all of it stays inside black and white.
+       --------------------------------------------------------------------- */
+    .hatch {
+        --hatch-angle: 45deg;
+        --hatch-gap: 7px;
+        --hatch-w: 1px;
+        --hatch-c: var(--ink-25);
+        background-image: repeating-linear-gradient(
+            var(--hatch-angle),
+            var(--hatch-c) 0 var(--hatch-w),
+            transparent 0 var(--hatch-gap)
+        );
+    }
+
+    /* Direction. Two series in one figure should never share an angle. */
+    .hatch-up {
+        --hatch-angle: 45deg;
+    }
+    .hatch-down {
+        --hatch-angle: -45deg;
+    }
+    .hatch-vertical {
+        --hatch-angle: 90deg;
+    }
+    .hatch-horizontal {
+        --hatch-angle: 0deg;
+    }
+
+    /* Density. Reads as magnitude: denser is more. */
+    .hatch-dense {
+        --hatch-gap: 4px;
+    }
+    .hatch-wide {
+        --hatch-gap: 13px;
+    }
+
+    /* Weight. The only "darker" this palette has. */
+    .hatch-bold {
+        --hatch-w: 2px;
+        --hatch-c: var(--ink-45);
+    }
+    .hatch-faint {
+        --hatch-c: var(--ink-12);
+    }
+
+    /* Cross-hatch: the heaviest fill before something becomes solid. */
+    .hatch-cross {
+        background-image:
+            repeating-linear-gradient(45deg, var(--hatch-c) 0 var(--hatch-w), transparent 0 var(--hatch-gap)),
+            repeating-linear-gradient(-45deg, var(--hatch-c) 0 var(--hatch-w), transparent 0 var(--hatch-gap));
+    }
+
+    /* Grid and dots, for a fill that should read as empty or provisional. */
+    .hatch-grid {
+        background-image:
+            repeating-linear-gradient(0deg, var(--hatch-c) 0 var(--hatch-w), transparent 0 var(--hatch-gap)),
+            repeating-linear-gradient(90deg, var(--hatch-c) 0 var(--hatch-w), transparent 0 var(--hatch-gap));
+    }
+
+    .hatch-dots {
+        --hatch-gap: 8px;
+        background-image: radial-gradient(var(--hatch-c) 0.9px, transparent 0.9px);
+        background-size: var(--hatch-gap) var(--hatch-gap);
+    }
+
+    /* Data tables inside prose, restyled onto the dash grid. */
+    .table-dashed {
+        width: 100%;
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+    }
+    .table-dashed th,
+    .table-dashed td {
+        padding: 0.6rem 0.75rem;
+        text-align: left;
+        border-bottom: 1px dashed var(--ink-25);
+    }
+    .table-dashed th {
+        font-weight: 500;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-70);
+    }
+    .table-dashed tbody tr:last-child td {
+        border-bottom: 0;
+    }
+}
+
+@layer utilities {
+    .prose {
+        counter-reset: sidenote;
+        --tw-prose-body: var(--text-color-main);
+        --tw-prose-headings: var(--text-color-main);
+        --tw-prose-lead: var(--text-color-main);
+        --tw-prose-links: var(--text-color-main);
+        --tw-prose-bold: var(--text-color-main);
+        --tw-prose-counters: var(--text-color-main);
+        --tw-prose-bullets: var(--text-color-main);
+        --tw-prose-hr: var(--border-color-main);
+        --tw-prose-quotes: var(--text-color-main);
+        --tw-prose-quote-borders: var(--border-color-main);
+        --tw-prose-captions: var(--text-color-main);
+        --tw-prose-kbd: var(--text-color-main);
+        --tw-prose-code: var(--text-color-main);
+        --tw-prose-th-borders: var(--border-color-main);
+        --tw-prose-td-borders: var(--border-color-main);
+    }
+
+    .prose a {
+        @apply underline font-normal decoration-1 underline-offset-2 decoration-dashed hover:decoration-solid;
+    }
+
+    .prose :where(h1, h2, h3, h4, h5, h6) {
+        @apply font-serif font-medium;
+    }
+
+    .prose :where(code, strong) {
+        @apply font-medium;
+    }
+
+    .prose blockquote {
+        @apply my-8 border-l-2 border-main/30 pl-5 font-serif text-[1.125em] leading-relaxed sm:text-[1.25em];
+    }
+
+    .prose blockquote p {
+        @apply italic;
+    }
+
+    /* Lead blockquote: the opening pull-quote of a post. Calm, no italics, subtle left rule. */
+    .prose > blockquote:first-child {
+        @apply mt-0 mb-12 border-l-2 border-main/40 py-1 pl-5 font-serif text-[1.15em] leading-snug text-main sm:text-[1.3em];
+    }
+
+    .prose > blockquote:first-child p {
+        @apply not-italic;
+    }
+
+    .prose :where(h2) {
+        @apply mt-12 mb-4 text-2xl leading-snug sm:text-3xl;
+    }
+
+    .prose :where(h2 + p) {
+        @apply mt-0;
+    }
+
+    .prose :where(p) {
+        @apply leading-[1.8];
+    }
+
+    .prose :where(strong) {
+        @apply font-semibold;
+    }
+
+    .prose :where(ul) {
+        @apply my-6;
+    }
+
+    .prose :where(img) {
+        @apply mx-auto my-10 block rounded-sm;
+    }
+
+    .prose :where(img + em) {
+        @apply -mt-6 mb-10 block text-center text-sm italic text-main/60;
+    }
+
+    /* ---------------------------------------------------------------------
+       Code blocks. Shiki emits .astro-code with its own inline background and
+       a rounded box; both are replaced here so a code block is just another
+       dashed surface. Highlighting stays monochrome (see astro.config.mjs).
+       --------------------------------------------------------------------- */
+    /* The frame lives on the wrapper the Shiki transformer adds, so the label
+       tab and the code share one dashed box. */
+    .code-frame {
+        --c: var(--ink-45);
+        margin: 2rem 0;
+        background-image:
+            repeating-linear-gradient(90deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(90deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(0deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off))),
+            repeating-linear-gradient(0deg, var(--c) 0 var(--dash-on), transparent 0 calc(var(--dash-on) + var(--dash-off)));
+        background-position:
+            0 0,
+            0 100%,
+            0 0,
+            100% 0;
+        background-size:
+            100% var(--stroke),
+            100% var(--stroke),
+            var(--stroke) 100%,
+            var(--stroke) 100%;
+        background-repeat: no-repeat;
+    }
+
+    .code-frame-head {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0;
+        padding: 0.6rem 1.15rem;
+        border-bottom: 1px dashed var(--ink-25);
+        font-size: 0.6875rem;
+        line-height: 1;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-70);
+        text-align: left;
+        font-style: normal;
+    }
+
+    .code-frame-dots {
+        letter-spacing: 0.2em;
+        color: var(--ink-25);
+    }
+
+    .code-frame-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .astro-code {
+        background-color: transparent !important;
+        border-radius: 0;
+        margin: 0;
+        padding: 1rem 1.15rem;
+        overflow-x: auto;
+        font-size: 0.8125rem;
+        line-height: 1.7;
+        tab-size: 2;
+    }
+
+    /* Shiki bakes the light theme into inline styles and parks the dark one in
+       custom properties. Swap when the page inverts. */
+    html.dark .astro-code,
+    html.dark .astro-code span {
+        color: var(--shiki-dark) !important;
+        font-style: var(--shiki-dark-font-style) !important;
+        font-weight: var(--shiki-dark-font-weight) !important;
+    }
+}
