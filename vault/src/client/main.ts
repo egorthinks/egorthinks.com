@@ -21,7 +21,7 @@ import {
     WrongKeyError,
     type VaultHeader
 } from '../lib/crypto.ts';
-import { MAX_DOC_BYTES, safeFileName } from '../lib/docs.ts';
+import { safeFileName } from '../lib/docs.ts';
 import { PATHS, type Note } from '../lib/model.ts';
 
 const AUTO_LOCK_MS = 15 * 60 * 1000;

@@ -71,7 +71,7 @@ test('the offline decryptor restores notes and documents, with safe and unique n
     const big = docs[0];
     const restored = await Promise.all(names.map(async (n) => ({ n, b: await readFile(join(out, 'documents', n)) })));
     assert.ok(
-        restored.some((r) => r.b.length === big.bytes.length && Buffer.compare(r.b, big.bytes) === 0),
+        restored.some((r) => r.b.length === big.bytes.length && r.b.equals(Buffer.from(big.bytes))),
         'the multi-piece document is intact'
     );
     await rm(repo, { recursive: true });
