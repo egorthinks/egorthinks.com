@@ -163,21 +163,139 @@ dialog::backdrop {
     white-space: pre-line;
 }
 
-/* The chat composer grows with what is typed, up to a point, and stays in reach at the bottom. */
+.chat-user {
+    white-space: pre-wrap;
+}
+
+/* Photos in the chat: thumbnails before sending, and in the conversation. */
+.chat-thumb {
+    width: 4.5rem;
+    height: 4.5rem;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    border: 1px dashed var(--ink-45);
+}
+.chat-thumb-remove {
+    position: absolute;
+    top: -0.4rem;
+    right: -0.4rem;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 999px;
+    background: var(--bg-main);
+    border: 1px solid var(--ink-70);
+    font-size: 0.85rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.chat-photo {
+    max-width: min(16rem, 100%);
+    max-height: 16rem;
+    border-radius: 0.75rem;
+    object-fit: contain;
+}
+
+/* ---------------------------------------------------------------------------
+   The chat composer: a pill like the site's inputs (Subscribe.astro), that
+   becomes a rounded box as the text grows. It grows up to a cap measured
+   against the *visible* height (dvh), so with a phone keyboard open it still
+   leaves the conversation in view; past the cap it scrolls.
+   --------------------------------------------------------------------------- */
+.chat-composer {
+    position: sticky;
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    z-index: 5;
+    background: var(--bg-main);
+    border: 1px solid var(--border-main);
+    border-radius: 1.5rem;
+    padding: 0.3rem;
+    transition: border-radius 0.15s ease;
+}
+.chat-composer:focus-within {
+    outline: 1px dashed var(--ink-70);
+    outline-offset: 3px;
+}
+.chat-composer-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.25rem;
+}
+.chat-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding: 0.5rem 0.5rem 0.4rem;
+}
 .chat-input {
+    flex: 1 1 auto;
+    min-width: 0;
     resize: none;
-    field-sizing: content;
-    min-height: 2.25rem;
-    max-height: 40vh;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    /* 16px: anything smaller and iOS zooms the page on focus. */
+    font-size: 1rem;
+    line-height: 1.5rem;
+    padding: 0.5rem 0.4rem;
+    min-height: 2.5rem;
+    max-height: min(40dvh, 16rem);
+    overflow-y: hidden;
 }
 .chat-input:focus {
     outline: none;
 }
-.chat-composer {
-    position: sticky;
-    bottom: 0.75rem;
+.chat-input::placeholder {
+    color: var(--ink-45);
 }
 
-.chat-user {
-    white-space: pre-wrap;
+.chat-icon-button,
+.chat-send-button {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* 40px: a comfortable thumb target, and the height of one line of text plus padding. */
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition:
+        background-color 0.15s ease,
+        opacity 0.15s ease;
+}
+.chat-icon-button svg,
+.chat-send-button svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.chat-icon-button {
+    color: var(--ink-70);
+}
+.chat-icon-button:hover {
+    background: var(--bg-muted);
+    color: var(--ink-100);
+}
+/* Ink on paper, inverted: the one solid control, so the eye finds it. */
+.chat-send-button {
+    background: var(--text-main);
+    color: var(--bg-main);
+}
+.chat-send-button rect {
+    fill: currentColor;
+    stroke: none;
+}
+.chat-send-button:disabled {
+    opacity: 0.25;
+    cursor: default;
+}
+
+@media (pointer: coarse) {
+    .desktop-only {
+        display: none;
+    }
 }

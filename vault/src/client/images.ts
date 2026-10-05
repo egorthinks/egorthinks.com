@@ -41,3 +41,32 @@ export async function prepareImage(file: File): Promise<{ bytes: Bytes; type: st
     bitmap.close();
     throw new Error('This image is too large even after shrinking it');
 }
+
+/**
+ * A photo for a model. Always redrawn, never sent as is: 1568 px on the long
+ * side is what vision models work at anyway (more costs tokens and buys
+ * nothing), and redrawing onto a canvas drops every byte of metadata. A phone
+ * photo's EXIF carries where and when it was taken and on which device; none
+ * of that reaches the provider or the vault.
+ */
+export async function prepareForModel(file: File): Promise<{ bytes: Bytes; type: string }> {
+    let bitmap: ImageBitmap;
+    try {
+        bitmap = await createImageBitmap(file);
+    } catch {
+        throw new Error(`${file.name || 'This image'} cannot be read by this browser. Try a JPEG or PNG.`);
+    }
+    const scale = Math.min(1, 1568 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const ctx = canvas.getContext('2d')!;
+    // JPEG has no transparency: put a white page under it rather than black.
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await toBlob(canvas, 'image/jpeg', 0.85);
+    if (!blob) throw new Error('The image could not be encoded');
+    return { bytes: new Uint8Array(await blob.arrayBuffer()), type: 'image/jpeg' };
+}

@@ -24,6 +24,8 @@ import {
     parseChatKeyName,
     sealChat,
     sealChatMeta,
+    openChatImage,
+    sealChatImage,
     titleFrom,
     unwrapChatKey,
     type Chat
@@ -152,4 +154,19 @@ test('the key store creates, replaces, expires and burns', async () => {
     await keys.putChatKey({ id: b, expires: null, wrapped: w });
     assert.equal(await keys.burnChatKeys(), 2);
     assert.deepEqual(await keys.listChatKeys(), []);
+});
+
+test('a chat photo opens only with its chat key, at its own place', async () => {
+    const { key: vaultKey } = await createVault('pw', FAST);
+    const [chat, other, img, img2] = [randomId(), randomId(), randomId(), randomId()];
+    const k = await newChatKey(vaultKey, chat);
+    const k2 = await newChatKey(vaultKey, other);
+    const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+    const sealed = await sealChatImage(k.key, chat, img, 'image/jpeg', jpeg);
+    const back = await openChatImage(k.key, chat, img, sealed);
+    assert.equal(back.type, 'image/jpeg');
+    assert.deepEqual(back.bytes, jpeg);
+    await assert.rejects(openChatImage(k2.key, chat, img, sealed), CorruptObjectError, 'another chat key');
+    await assert.rejects(openChatImage(k.key, other, img, sealed), CorruptObjectError, 'moved to another chat');
+    await assert.rejects(openChatImage(k.key, chat, img2, sealed), CorruptObjectError, 'swapped with another photo');
 });

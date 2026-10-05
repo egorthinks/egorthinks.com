@@ -49,6 +49,10 @@ it is built so that as few parties as possible see the text, none of them keep i
   the key's guardrail should require ZDR as well, so one mistake cannot route a prompt to a provider that keeps it. The model list is
   `/models?zdr=true`. What ZDR does not cover (per OpenRouter): request metadata on OpenRouter, in-memory prompt caching at providers, and plugins
   and tools, which is why the chat has none: no web search, no file parsing, no function calls.
+- **Photos.** Only for models OpenRouter lists as taking images (marked "sees images"). Every photo is redrawn in the browser before it goes
+  anywhere: at most 1568 px on the long side, JPEG, and with all metadata gone, so the location, time and device a phone writes into a photo never
+  reach the provider or the vault. Stored as `chats/<chat>/<photo>.enc`, sealed with the chat's key, so burning a chat burns its photos. Up to
+  four per message; a chat's photos are sent again with every later turn, as any vision chat does.
 - **Replies are untrusted.** They go through the same sanitiser as notes and remote images are never loaded, so a prompt injection cannot make the
   page send anything anywhere. Only role and content of past turns are sent back; errors and usage stay home.
 - **Destroyable history.** Each chat has its own random key. Messages (`chats/<id>.enc`) and title (inside `manifest.enc`) are sealed with it in
