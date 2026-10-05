@@ -21,6 +21,7 @@ import {
     WrongKeyError,
     type VaultHeader
 } from '../lib/crypto.ts';
+import { MAX_DOC_BYTES, safeFileName } from '../lib/docs.ts';
 import { PATHS, type Note } from '../lib/model.ts';
 
 const AUTO_LOCK_MS = 15 * 60 * 1000;
@@ -250,7 +251,7 @@ const search = $<HTMLInputElement>('#search');
 const titleInput = $<HTMLInputElement>('#note-title');
 const body = $<HTMLTextAreaElement>('#note-body');
 const preview = $('#note-preview');
-const appScreen = $('[data-screen="app"]');
+const appScreen = $('#notes-view');
 const statusEl = $<HTMLButtonElement>('#save-status');
 
 let current: Note | null = null;
@@ -280,6 +281,7 @@ function enterApp(v: Vault) {
     show('app');
     setStatus('saved');
     renderList();
+    renderDocs();
 }
 
 function renderList() {
@@ -563,6 +565,7 @@ document.addEventListener('keydown', (e) => {
         void save();
     } else if (e.altKey && e.code === 'KeyN') {
         e.preventDefault();
+        setSection('notes');
         void newNote();
     }
 });
@@ -573,6 +576,7 @@ document.addEventListener('visibilitychange', async () => {
     try {
         const changed = await vault.refresh();
         renderList();
+        renderDocs();
         if (!current || dirty) return;
         if (!vault.manifest.notes[current.id] && changed.includes(current.id)) showNote(null);
         else if (changed.includes(current.id)) showNote(await vault.readNote(current.id));
@@ -585,8 +589,198 @@ document.addEventListener('visibilitychange', async () => {
 });
 
 window.addEventListener('beforeunload', (e) => {
-    if (dirty || saving) e.preventDefault();
+    if (dirty || saving || docBusy) e.preventDefault();
 });
+
+/* Documents --------------------------------------------------------------- */
+
+const docList = $<HTMLUListElement>('#doc-list');
+const docSearch = $<HTMLInputElement>('#doc-search');
+const docInput = $<HTMLInputElement>('#doc-input');
+const docDrop = $('#doc-drop');
+let docBusy = false;
+
+function setSection(section: 'notes' | 'docs') {
+    $('#notes-view').hidden = section !== 'notes';
+    $('#docs-view').hidden = section !== 'docs';
+    $('#tab-notes').setAttribute('aria-pressed', String(section === 'notes'));
+    $('#tab-docs').setAttribute('aria-pressed', String(section === 'docs'));
+    if (section === 'docs') void save();
+}
+
+function formatSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(bytes < 10 * 1024 * 1024 ? 1 : 0)} MB`;
+}
+
+function extensionOf(name: string): string {
+    const dot = name.lastIndexOf('.');
+    return dot > 0 && name.length - dot <= 6 ? name.slice(dot + 1).toUpperCase() : 'FILE';
+}
+
+function renderDocs() {
+    if (!vault) return;
+    const all = vault.listDocs();
+    $('#doc-count').textContent = all.length ? String(all.length) : '';
+    const q = docSearch.value.trim().toLowerCase();
+    const docs = all.filter((d) => !q || d.name.toLowerCase().includes(q));
+
+    docList.replaceChildren(
+        ...docs.map((d) => {
+            const li = document.createElement('li');
+            li.className = 'doc-row border-main/25 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-dashed px-3 py-3';
+            li.dataset.id = d.id;
+
+            const text = document.createElement('div');
+            text.className = 'min-w-0 grow basis-48';
+            const name = document.createElement('span');
+            name.className = 'block truncate font-serif text-lg leading-snug';
+            name.textContent = d.name;
+            name.title = d.name;
+            const meta = document.createElement('span');
+            meta.className = 'eyebrow mt-1.5 block';
+            meta.textContent = `${extensionOf(d.name)} · ${formatSize(d.size)} · ${dateFmt.format(new Date(d.added))}`;
+            text.append(name, meta);
+
+            const actions = document.createElement('div');
+            actions.className = 'flex gap-2';
+            const download = document.createElement('button');
+            download.className = 'btn-quiet';
+            download.type = 'button';
+            download.dataset.action = 'download-doc';
+            download.textContent = 'Download';
+            const remove = document.createElement('button');
+            remove.className = 'btn-quiet';
+            remove.type = 'button';
+            remove.dataset.action = 'delete-doc';
+            remove.textContent = 'Delete';
+            actions.append(download, remove);
+
+            li.append(text, actions);
+            return li;
+        })
+    );
+    const empty = $('#doc-empty');
+    empty.hidden = docs.length > 0;
+    empty.textContent = q ? 'Nothing matches.' : 'No files yet.';
+}
+
+/** One document operation at a time; the progress shows in the status pill. */
+async function withDocBusy(fn: () => Promise<void>) {
+    if (docBusy) return;
+    docBusy = true;
+    document.querySelectorAll<HTMLButtonElement>('#docs-view button').forEach((b) => (b.disabled = true));
+    try {
+        await fn();
+    } finally {
+        docBusy = false;
+        document.querySelectorAll<HTMLButtonElement>('#docs-view button').forEach((b) => (b.disabled = false));
+        setStatus(dirty ? 'dirty' : 'saved');
+    }
+}
+
+function progress(verb: string, prefix = '') {
+    return (done: number, total: number) => {
+        lastActivity = Date.now();
+        setStatus('uploading', total > 1 ? `${verb} ${prefix}${Math.round((done / total) * 100)}%` : `${verb} ${prefix}`.trim());
+    };
+}
+
+async function addDocs(files: File[]) {
+    if (!vault || !files.length) return;
+    say('docs', '');
+    await withDocBusy(async () => {
+        const failures: string[] = [];
+        for (const [n, file] of files.entries()) {
+            const prefix = files.length > 1 ? `${n + 1}/${files.length} ` : '';
+            setStatus('uploading', `Encrypting ${prefix}`.trim());
+            try {
+                await vault!.addDoc(file, progress('Uploading', prefix));
+                renderDocs();
+            } catch (err) {
+                console.error(err);
+                failures.push(`${file.name}: ${describe(err)}`);
+            }
+        }
+        if (failures.length) say('docs', failures.join('\n'));
+    });
+}
+
+async function downloadDoc(id: string) {
+    if (!vault) return;
+    say('docs', '');
+    await withDocBusy(async () => {
+        try {
+            setStatus('uploading', 'Decrypting');
+            const { meta, blob } = await vault!.readDoc(id, progress('Decrypting'));
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = safeFileName(meta.name);
+            document.body.append(a);
+            a.click();
+            a.remove();
+            // Long enough for a slow save dialog, short enough not to hold the plaintext in memory.
+            setTimeout(() => URL.revokeObjectURL(a.href), 60_000);
+        } catch (err) {
+            console.error(err);
+            say('docs', describe(err));
+        }
+    });
+}
+
+async function deleteDoc(id: string) {
+    const meta = vault?.manifest.docs[id];
+    if (!vault || !meta) return;
+    if (!confirm(`Delete “${meta.name}”? It disappears from the vault; the encrypted copy stays in the repository's history.`)) return;
+    say('docs', '');
+    await withDocBusy(async () => {
+        try {
+            setStatus('saving', 'Deleting');
+            await vault!.deleteDoc(id);
+            renderDocs();
+        } catch (err) {
+            console.error(err);
+            say('docs', describe(err));
+        }
+    });
+}
+
+$('#tab-notes').addEventListener('click', () => setSection('notes'));
+$('#tab-docs').addEventListener('click', () => setSection('docs'));
+$('#doc-upload').addEventListener('click', () => docInput.click());
+docInput.addEventListener('change', () => {
+    void addDocs(Array.from(docInput.files ?? []));
+    docInput.value = '';
+});
+docSearch.addEventListener('input', renderDocs);
+docList.addEventListener('click', (e) => {
+    const button = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-action]');
+    const id = button?.closest<HTMLElement>('.doc-row')?.dataset.id;
+    if (!button || !id) return;
+    if (button.dataset.action === 'download-doc') void downloadDoc(id);
+    else void deleteDoc(id);
+});
+
+docDrop.addEventListener('dragover', (e) => {
+    if (!e.dataTransfer?.types.includes('Files')) return;
+    e.preventDefault();
+    docDrop.classList.add('is-dragging');
+});
+docDrop.addEventListener('dragleave', () => docDrop.classList.remove('is-dragging'));
+docDrop.addEventListener('drop', (e) => {
+    e.preventDefault();
+    docDrop.classList.remove('is-dragging');
+    void addDocs(Array.from(e.dataTransfer?.files ?? []));
+});
+
+// A file dropped anywhere else would make the browser open it and leave this page,
+// taking the unlocked vault and any unsaved note with it.
+for (const type of ['dragover', 'drop']) {
+    document.addEventListener(type, (e) => {
+        if ((e as DragEvent).dataTransfer?.types.includes('Files')) e.preventDefault();
+    });
+}
 
 /* Settings ---------------------------------------------------------------- */
 

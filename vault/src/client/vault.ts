@@ -11,8 +11,9 @@
  * places at once keeps the later save, and the earlier one stays in git history.
  */
 import * as api from './api.ts';
-import { open, openJson, seal, sealJson, type Bytes, type VaultHeader } from '../lib/crypto.ts';
-import { decodeFile, emptyManifest, encodeFile, metaOf, PATHS, type Manifest, type Note } from '../lib/model.ts';
+import { open, openJson, randomId, seal, sealJson, type Bytes, type VaultHeader } from '../lib/crypto.ts';
+import { CHUNK_BYTES, chunkCount, MAX_DOC_BYTES, openDocChunk, safeFileName, sealDocChunk, verifyDoc } from '../lib/docs.ts';
+import { decodeFile, emptyManifest, encodeFile, metaOf, PATHS, type DocMeta, type Manifest, type Note } from '../lib/model.ts';
 
 type Put = { path: string; bytes: Bytes };
 type Edit = { puts?: Put[]; deletes?: string[] };
@@ -49,7 +50,13 @@ export class Vault {
     /** Read the manifest for a vault that exists. */
     async load(): Promise<void> {
         const entry = this.files[PATHS.manifest];
-        this.manifest = entry ? await openJson<Manifest>(this.key, PATHS.manifest, await api.blob(entry.sha)) : emptyManifest();
+        if (!entry) {
+            this.manifest = emptyManifest();
+            return;
+        }
+        // A manifest written before documents existed has no `docs`.
+        const m = await openJson<Partial<Manifest>>(this.key, PATHS.manifest, await api.blob(entry.sha));
+        this.manifest = { v: 1, notes: m.notes ?? {}, files: m.files ?? {}, docs: m.docs ?? {} };
     }
 
     /**
@@ -181,5 +188,87 @@ export class Vault {
         const url = URL.createObjectURL(new Blob([file.bytes as BlobPart], { type: file.type }));
         this.images.set(id, url);
         return url;
+    }
+
+    /* Documents ------------------------------------------------------------ */
+
+    listDocs(): ({ id: string } & DocMeta)[] {
+        return Object.entries(this.manifest.docs)
+            .map(([id, m]) => ({ id, ...m }))
+            .sort((a, b) => b.added.localeCompare(a.added));
+    }
+
+    /**
+     * Seal and commit a document piece by piece: memory stays at one piece, and
+     * each commit fits a request. The index entry goes in with the last piece, so
+     * a document that fails halfway never appears in the list, and the pieces
+     * already committed are taken back out.
+     */
+    async addDoc(file: File, onProgress?: (done: number, total: number) => void): Promise<string> {
+        const name = safeFileName(file.name);
+        if (file.size > MAX_DOC_BYTES) throw new Error(`Over ${MAX_DOC_BYTES / 1024 / 1024} MB, the most one document may be.`);
+        const id = randomId();
+        const meta: DocMeta = {
+            name,
+            type: file.type || 'application/octet-stream',
+            size: file.size,
+            added: new Date().toISOString(),
+            chunks: chunkCount(file.size)
+        };
+        const committed: string[] = [];
+        try {
+            for (let i = 0; i < meta.chunks; i++) {
+                const data = new Uint8Array(await file.slice(i * CHUNK_BYTES, (i + 1) * CHUNK_BYTES).arrayBuffer());
+                const bytes = await sealDocChunk(this.key, id, i, data, i === 0 ? meta : undefined);
+                const last = i === meta.chunks - 1;
+                await this.transact(async (draft) => {
+                    if (last) draft.docs[id] = meta;
+                    return { puts: [{ path: PATHS.doc(id, i), bytes }] };
+                });
+                committed.push(PATHS.doc(id, i));
+                onProgress?.(i + 1, meta.chunks);
+            }
+        } catch (err) {
+            if (committed.length) await this.transact(async () => ({ deletes: committed })).catch(() => {});
+            throw err;
+        }
+        return id;
+    }
+
+    /** Fetch, decrypt and check every piece. The caller turns the result into a download. */
+    async readDoc(id: string, onProgress?: (done: number, total: number) => void): Promise<{ meta: DocMeta; blob: Blob }> {
+        const meta = this.manifest.docs[id];
+        if (!meta) throw new Error('This document is not in the vault any more');
+        const parts: Bytes[] = new Array(meta.chunks);
+        let header: DocMeta | undefined;
+        let done = 0;
+
+        const pending = Array.from({ length: meta.chunks }, (_, i) => i);
+        const worker = async () => {
+            for (let i = pending.shift(); i !== undefined; i = pending.shift()) {
+                const entry = this.files[PATHS.doc(id, i)];
+                if (!entry) throw new Error('A piece of this document is missing from the repository');
+                const piece = await openDocChunk(this.key, id, i, await api.blob(entry.sha));
+                parts[i] = piece.data;
+                if (i === 0) header = piece.header;
+                onProgress?.(++done, meta.chunks);
+            }
+        };
+        // Four pieces in flight at a time: fast enough, and gentle on the function.
+        await Promise.all(Array.from({ length: Math.min(4, meta.chunks) }, worker));
+
+        verifyDoc(id, header!, parts, meta);
+        // octet-stream: a document is saved, never rendered by this page.
+        return { meta, blob: new Blob(parts as BlobPart[], { type: 'application/octet-stream' }) };
+    }
+
+    async deleteDoc(id: string): Promise<void> {
+        await this.transact(async (draft) => {
+            const meta = draft.docs[id];
+            delete draft.docs[id];
+            const count = meta?.chunks ?? 0;
+            const deletes = Array.from({ length: count }, (_, i) => PATHS.doc(id, i)).filter((p) => this.files[p]);
+            return { deletes };
+        });
     }
 }

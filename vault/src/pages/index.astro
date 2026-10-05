@@ -148,49 +148,75 @@ import '../styles/vault.css';
                 </section>
 
                 <!-- The notes -->
-                <section data-screen="app" class="grid grow gap-8 md:grid-cols-[18rem_1fr]" data-view="list" hidden>
-                    <aside id="list-pane" class="flex min-w-0 flex-col">
-                        <div class="flex gap-2">
-                            <input id="search" class="field h-9" type="search" placeholder="Search" autocomplete="off" />
-                            <button id="new-note" class="btn h-9 shrink-0 px-4" title="New note (Alt+N)">New</button>
-                        </div>
-                        <ul id="note-list" class="mt-6 flex flex-col"></ul>
-                        <p id="list-empty" class="text-main/60 mt-6 font-serif italic" hidden>Nothing here yet.</p>
-                    </aside>
+                <section data-screen="app" class="flex grow flex-col" hidden>
+                    <div class="mb-6 flex gap-1.5" role="group" aria-label="Section">
+                        <button id="tab-notes" class="segment" aria-pressed="true" type="button">Notes</button>
+                        <button id="tab-docs" class="segment" aria-pressed="false" type="button"
+                            >Files <span id="doc-count" class="text-main/50 tabular-nums"></span></button
+                        >
+                    </div>
 
-                    <div id="note-pane" class="flex min-w-0 flex-col">
-                        <div id="note-empty" class="m-auto py-24 text-center">
-                            <p class="text-main/60 font-serif text-xl italic">Pick a note, or start a new one.</p>
+                    <div id="notes-view" class="grid grow gap-8 md:grid-cols-[18rem_1fr]" data-view="list">
+                        <aside id="list-pane" class="flex min-w-0 flex-col">
+                            <div class="flex gap-2">
+                                <input id="search" class="field h-9" type="search" placeholder="Search" autocomplete="off" />
+                                <button id="new-note" class="btn h-9 shrink-0 px-4" title="New note (Alt+N)">New</button>
+                            </div>
+                            <ul id="note-list" class="mt-6 flex flex-col"></ul>
+                            <p id="list-empty" class="text-main/60 mt-6 font-serif italic" hidden>Nothing here yet.</p>
+                        </aside>
+
+                        <div id="note-pane" class="flex min-w-0 flex-col">
+                            <div id="note-empty" class="m-auto py-24 text-center">
+                                <p class="text-main/60 font-serif text-xl italic">Pick a note, or start a new one.</p>
+                            </div>
+
+                            <article id="editor" class="flex grow flex-col" hidden>
+                                <button id="back" class="btn-link mb-4 self-start md:hidden" type="button">← All notes</button>
+                                <input
+                                    id="note-title"
+                                    class="placeholder:text-main/30 w-full bg-transparent font-serif text-3xl leading-tight font-medium focus:outline-none sm:text-4xl"
+                                    placeholder="Untitled"
+                                    autocomplete="off"
+                                    aria-label="Title"
+                                />
+                                <div class="mt-4 flex flex-wrap items-center gap-2">
+                                    <button class="segment" data-mode="write" aria-pressed="true">Write</button>
+                                    <button class="segment" data-mode="preview" aria-pressed="false">Preview</button>
+                                    <span class="grow"></span>
+                                    <button id="attach" class="btn-quiet" type="button">Add image</button>
+                                    <input id="attach-input" type="file" accept="image/*" multiple hidden />
+                                    <button id="delete-note" class="btn-quiet" type="button">Delete</button>
+                                </div>
+                                <div class="frame-dashed mt-4 grow px-5 py-4 sm:px-6 sm:py-5">
+                                    <textarea
+                                        id="note-body"
+                                        class="editor-text w-full bg-transparent text-[0.95rem] leading-relaxed"
+                                        placeholder="Write, or paste. Markdown works; images can be pasted or dropped in."
+                                        spellcheck="true"
+                                        aria-label="Note"></textarea>
+                                    <div id="note-preview" class="prose max-w-none" hidden></div>
+                                </div>
+                                <p id="note-meta" class="text-main/50 mt-3 text-xs"></p>
+                            </article>
+                        </div>
+                    </div>
+
+                    <!-- Documents: added whole, downloaded whole, never edited -->
+                    <div id="docs-view" class="mx-auto flex w-full max-w-3xl flex-col" hidden>
+                        <div id="doc-drop" class="doc-drop frame-dashed px-6 py-8 text-center sm:px-10">
+                            <p class="font-serif text-xl italic">Drop files here</p>
+                            <p class="text-main/60 mt-2 text-sm leading-relaxed">
+                                PDF, spreadsheets, documents, anything. Up to 50 MB each. Encrypted before they leave this browser.
+                            </p>
+                            <button id="doc-upload" class="btn mt-5" type="button">Choose files</button>
+                            <input id="doc-input" type="file" multiple hidden />
+                            <p class="error-line mt-4" data-error="docs" role="alert"></p>
                         </div>
 
-                        <article id="editor" class="flex grow flex-col" hidden>
-                            <button id="back" class="btn-link mb-4 self-start md:hidden" type="button">← All notes</button>
-                            <input
-                                id="note-title"
-                                class="placeholder:text-main/30 w-full bg-transparent font-serif text-3xl leading-tight font-medium focus:outline-none sm:text-4xl"
-                                placeholder="Untitled"
-                                autocomplete="off"
-                                aria-label="Title"
-                            />
-                            <div class="mt-4 flex flex-wrap items-center gap-2">
-                                <button class="segment" data-mode="write" aria-pressed="true">Write</button>
-                                <button class="segment" data-mode="preview" aria-pressed="false">Preview</button>
-                                <span class="grow"></span>
-                                <button id="attach" class="btn-quiet" type="button">Add image</button>
-                                <input id="attach-input" type="file" accept="image/*" multiple hidden />
-                                <button id="delete-note" class="btn-quiet" type="button">Delete</button>
-                            </div>
-                            <div class="frame-dashed mt-4 grow px-5 py-4 sm:px-6 sm:py-5">
-                                <textarea
-                                    id="note-body"
-                                    class="editor-text w-full bg-transparent text-[0.95rem] leading-relaxed"
-                                    placeholder="Write, or paste. Markdown works; images can be pasted or dropped in."
-                                    spellcheck="true"
-                                    aria-label="Note"></textarea>
-                                <div id="note-preview" class="prose max-w-none" hidden></div>
-                            </div>
-                            <p id="note-meta" class="text-main/50 mt-3 text-xs"></p>
-                        </article>
+                        <input id="doc-search" class="field mt-8 h-9" type="search" placeholder="Search files" autocomplete="off" aria-label="Search files" />
+                        <ul id="doc-list" class="mt-4 flex flex-col"></ul>
+                        <p id="doc-empty" class="text-main/60 mt-6 font-serif italic" hidden>No files yet.</p>
                     </div>
                 </section>
             </main>

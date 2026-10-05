@@ -24,7 +24,8 @@ master password or the recovery key; the server that writes here never sees eith
 - \`vault.json\`: key slots (Argon2id-wrapped and recovery-wrapped vault key)
 - \`manifest.enc\`: encrypted index of notes
 - \`notes/*.md.enc\`: one encrypted note each
-- \`files/*.enc\`: encrypted attachments
+- \`files/*.enc\`: encrypted images attached to notes
+- \`docs/<id>/<n>.enc\`: encrypted pieces of stored documents (pdf, xlsx, ...)
 - \`.vault/passkeys.json\`: public keys of the passkeys allowed to sign in
 
 To get plain markdown back without the website: clone this repository, then from
