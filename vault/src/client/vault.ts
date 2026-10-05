@@ -13,7 +13,8 @@
 import * as api from './api.ts';
 import { open, openJson, randomId, seal, sealJson, type Bytes, type VaultHeader } from '../lib/crypto.ts';
 import { CHUNK_BYTES, chunkCount, MAX_DOC_BYTES, openDocChunk, safeFileName, sealDocChunk, verifyDoc } from '../lib/docs.ts';
-import { decodeFile, emptyManifest, encodeFile, metaOf, PATHS, type DocMeta, type Manifest, type Note } from '../lib/model.ts';
+import { newChatKey, openChat, openChatMeta, sealChat, sealChatMeta, unwrapChatKey, type Chat, type ChatMeta } from '../lib/chat.ts';
+import { decodeFile, emptyManifest, encodeFile, metaOf, PATHS, type DocMeta, type Manifest, type Note, type Settings } from '../lib/model.ts';
 
 type Put = { path: string; bytes: Bytes };
 type Edit = { puts?: Put[]; deletes?: string[] };
@@ -54,9 +55,9 @@ export class Vault {
             this.manifest = emptyManifest();
             return;
         }
-        // A manifest written before documents existed has no `docs`.
+        // A manifest written before documents or chats existed lacks those keys.
         const m = await openJson<Partial<Manifest>>(this.key, PATHS.manifest, await api.blob(entry.sha));
-        this.manifest = { v: 1, notes: m.notes ?? {}, files: m.files ?? {}, docs: m.docs ?? {} };
+        this.manifest = { v: 1, notes: m.notes ?? {}, files: m.files ?? {}, docs: m.docs ?? {}, chats: m.chats ?? {} };
     }
 
     /**
@@ -269,6 +270,145 @@ export class Vault {
             const count = meta?.chunks ?? 0;
             const deletes = Array.from({ length: count }, (_, i) => PATHS.doc(id, i)).filter((p) => this.files[p]);
             return { deletes };
+        });
+    }
+
+    /* Settings -------------------------------------------------------------- */
+
+    async readSettings(): Promise<Settings> {
+        const entry = this.files[PATHS.settings];
+        return entry ? openJson<Settings>(this.key, PATHS.settings, await api.blob(entry.sha)) : { v: 1 };
+    }
+
+    async saveSettings(settings: Settings): Promise<void> {
+        const bytes = await sealJson(this.key, PATHS.settings, settings);
+        await this.transact(async () => ({ puts: [{ path: PATHS.settings, bytes }] }));
+    }
+
+    /* Chats ----------------------------------------------------------------- */
+    /*
+     * A chat exists while its key exists in Blob (see lib/chat.ts). Everything
+     * here keeps that order: the key is created before anything is written
+     * with it, and destroyed before anything else is cleaned up, so a failure
+     * halfway always leaves the safe state behind.
+     */
+
+    private chatKeys = new Map<string, { key: CryptoKey; wrapped: string; expires: number | null }>();
+    chatMeta = new Map<string, ChatMeta>();
+
+    /** Fetch the live keys and open what they unlock. Index entries whose key is gone are tidied out of the manifest. */
+    async loadChats(): Promise<void> {
+        const records = await api.chatKeys();
+        const keys = new Map<string, { key: CryptoKey; wrapped: string; expires: number | null }>();
+        await Promise.all(
+            records.map(async (r) => {
+                try {
+                    keys.set(r.id, { key: await unwrapChatKey(this.key, r.id, r.wrapped), wrapped: r.wrapped, expires: r.expires });
+                } catch {
+                    // Not wrapped with this vault's key: nothing this browser can open.
+                }
+            })
+        );
+        this.chatKeys = keys;
+
+        const meta = new Map<string, ChatMeta>();
+        const orphans: string[] = [];
+        for (const [id, sealed] of Object.entries(this.manifest.chats)) {
+            const k = keys.get(id);
+            if (!k) {
+                orphans.push(id);
+                continue;
+            }
+            try {
+                meta.set(id, await openChatMeta(k.key, id, sealed));
+            } catch {
+                orphans.push(id);
+            }
+        }
+        this.chatMeta = meta;
+        if (orphans.length) await this.dropChatRecords(orphans).catch(() => {});
+    }
+
+    listChats(): ({ id: string; expires: number | null } & ChatMeta)[] {
+        return [...this.chatMeta.entries()]
+            .map(([id, m]) => ({ id, expires: this.chatKeys.get(id)?.expires ?? null, ...m }))
+            .sort((a, b) => b.updated.localeCompare(a.updated));
+    }
+
+    chatExpiry(id: string): number | null {
+        return this.chatKeys.get(id)?.expires ?? null;
+    }
+
+    /** A new chat's key goes to Blob first; only then can anything be sealed with it. */
+    async createChat(expires: number | null): Promise<string> {
+        const id = randomId();
+        const { key, wrapped } = await newChatKey(this.key, id);
+        await api.putChatKey({ id, expires, wrapped });
+        this.chatKeys.set(id, { key, wrapped, expires });
+        return id;
+    }
+
+    async readChat(id: string): Promise<Chat> {
+        const k = this.chatKeys.get(id);
+        if (!k) throw new Error('This chat has been deleted');
+        const entry = this.files[PATHS.chat(id)];
+        if (!entry) return { v: 1, id, messages: [] };
+        return openChat(k.key, id, await api.blob(entry.sha));
+    }
+
+    async saveChat(chat: Chat, meta: ChatMeta): Promise<void> {
+        const k = this.chatKeys.get(chat.id);
+        if (!k) throw new Error('This chat has been deleted');
+        const bytes = await sealChat(k.key, chat);
+        const sealedMeta = await sealChatMeta(k.key, chat.id, meta);
+        await this.transact(async (draft) => {
+            draft.chats[chat.id] = sealedMeta;
+            return { puts: [{ path: PATHS.chat(chat.id), bytes }] };
+        });
+        this.chatMeta.set(chat.id, meta);
+    }
+
+    async setChatExpiry(id: string, expires: number | null): Promise<void> {
+        const k = this.chatKeys.get(id);
+        if (!k) throw new Error('This chat has been deleted');
+        await api.putChatKey({ id, expires, wrapped: k.wrapped });
+        k.expires = expires;
+    }
+
+    /** Destroy the key (the real deletion), then tidy the ciphertext out of the current tree. */
+    async deleteChat(id: string): Promise<void> {
+        await api.deleteChatKey(id);
+        this.chatKeys.delete(id);
+        this.chatMeta.delete(id);
+        await this.dropChatRecords([id]);
+    }
+
+    /** Every chat, at once. Returns how many keys were destroyed. */
+    async burnChats(): Promise<number> {
+        const burned = await api.burnChatKeys();
+        this.chatKeys.clear();
+        this.chatMeta.clear();
+        const ids = new Set([
+            ...Object.keys(this.manifest.chats),
+            ...Object.keys(this.files)
+                .filter((p) => p.startsWith('chats/'))
+                .map((p) => p.slice(6, 38))
+        ]);
+        if (ids.size) await this.dropChatRecords([...ids]);
+        return burned;
+    }
+
+    /** Chats whose expiry has passed. The server deletes their keys too; this makes it immediate on screen. */
+    async expireChats(now = Math.floor(Date.now() / 1000)): Promise<string[]> {
+        const due = [...this.chatKeys.entries()].filter(([, k]) => k.expires !== null && k.expires <= now).map(([id]) => id);
+        for (const id of due) await this.deleteChat(id);
+        return due;
+    }
+
+    private async dropChatRecords(ids: string[]): Promise<void> {
+        await this.transact(async (draft) => {
+            for (const id of ids) delete draft.chats[id];
+            return { deletes: ids.map(PATHS.chat).filter((p) => this.files[p]) };
         });
     }
 }

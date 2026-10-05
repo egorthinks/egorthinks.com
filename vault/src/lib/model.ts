@@ -7,6 +7,8 @@
  *   notes/<id>.md.enc      one note: title + markdown body
  *   files/<id>.enc         one image attached to a note: type + bytes
  *   docs/<id>/<n>.enc      one piece of a stored document (pdf, xlsx, ...); see docs.ts
+ *   chats/<id>.enc         one AI chat, sealed with that chat's own key; see chat.ts
+ *   settings.enc           the OpenRouter key and chat preferences
  *   .vault/passkeys.json   public keys of registered passkeys; server-only
  *
  * File names are random ids, so the tree says how many notes and documents
@@ -22,14 +24,17 @@ export const PATHS = {
     passkeys: '.vault/passkeys.json',
     note: (id: string) => `notes/${id}.md.enc`,
     file: (id: string) => `files/${id}.enc`,
-    doc: (id: string, index: number) => `docs/${id}/${index}.enc`
+    doc: (id: string, index: number) => `docs/${id}/${index}.enc`,
+    chat: (id: string) => `chats/${id}.enc`,
+    settings: 'settings.enc'
 };
 
 export const ID_RE = /^[0-9a-f]{32}$/;
 export const SHA_RE = /^[0-9a-f]{40}$/;
 
 /** Paths the browser may write. The passkey list is the server's alone. */
-export const CLIENT_PATH_RE = /^(?:vault\.json|manifest\.enc|notes\/[0-9a-f]{32}\.md\.enc|files\/[0-9a-f]{32}\.enc|docs\/[0-9a-f]{32}\/\d{1,3}\.enc)$/;
+export const CLIENT_PATH_RE =
+    /^(?:vault\.json|manifest\.enc|notes\/[0-9a-f]{32}\.md\.enc|files\/[0-9a-f]{32}\.enc|docs\/[0-9a-f]{32}\/\d{1,3}\.enc|chats\/[0-9a-f]{32}\.enc|settings\.enc)$/;
 
 /** Vercel functions take 4.5 MB of body; leave room for headers. */
 export const MAX_OBJECT_BYTES = 4 * 1024 * 1024;
@@ -54,7 +59,11 @@ export type Manifest = {
     notes: Record<string, NoteMeta>;
     files: Record<string, FileMeta>;
     docs: Record<string, DocMeta>;
+    /** Chat id -> title and dates, sealed with that chat's key (base64). Unreadable once the key is burned. */
+    chats: Record<string, string>;
 };
+
+export type Settings = { v: 1; openrouterKey?: string; lastModel?: string };
 
 export type Note = {
     v: 1;
@@ -67,7 +76,7 @@ export type Note = {
 };
 
 export function emptyManifest(): Manifest {
-    return { v: 1, notes: {}, files: {}, docs: {} };
+    return { v: 1, notes: {}, files: {}, docs: {}, chats: {} };
 }
 
 export function excerptOf(body: string): string {

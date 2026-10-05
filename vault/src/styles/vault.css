@@ -142,6 +142,10 @@ dialog::backdrop {
 
 /* One pane at a time on a phone: the list, or the open note. */
 @media (max-width: 767px) {
+    [data-view='list'] #chat-pane,
+    [data-view='note'] #chat-list-pane {
+        display: none;
+    }
     [data-view='list'] #note-pane {
         display: none;
     }
@@ -157,4 +161,23 @@ dialog::backdrop {
 /* More than one failure reads as a list. */
 .error-line {
     white-space: pre-line;
+}
+
+/* The chat composer grows with what is typed, up to a point, and stays in reach at the bottom. */
+.chat-input {
+    resize: none;
+    field-sizing: content;
+    min-height: 2.25rem;
+    max-height: 40vh;
+}
+.chat-input:focus {
+    outline: none;
+}
+.chat-composer {
+    position: sticky;
+    bottom: 0.75rem;
+}
+
+.chat-user {
+    white-space: pre-wrap;
 }

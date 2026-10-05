@@ -154,6 +154,7 @@ import '../styles/vault.css';
                         <button id="tab-docs" class="segment" aria-pressed="false" type="button"
                             >Files <span id="doc-count" class="text-main/50 tabular-nums"></span></button
                         >
+                        <button id="tab-chat" class="segment" aria-pressed="false" type="button">Chat</button>
                     </div>
 
                     <div id="notes-view" class="grid grow gap-8 md:grid-cols-[18rem_1fr]" data-view="list">
@@ -218,6 +219,69 @@ import '../styles/vault.css';
                         <ul id="doc-list" class="mt-4 flex flex-col"></ul>
                         <p id="doc-empty" class="text-main/60 mt-6 font-serif italic" hidden>No files yet.</p>
                     </div>
+
+                    <!-- AI chat: browser to OpenRouter directly, zero data retention, history sealed with destroyable keys -->
+                    <div id="chat-view" class="grid grow gap-8 md:grid-cols-[18rem_1fr]" data-view="list" hidden>
+                        <aside id="chat-list-pane" class="flex min-w-0 flex-col">
+                            <button id="chat-new" class="btn h-9" type="button">New chat</button>
+                            <ul id="chat-list" class="mt-6 flex flex-col"></ul>
+                            <p id="chat-list-empty" class="text-main/60 mt-6 font-serif italic" hidden>No chats yet.</p>
+                        </aside>
+
+                        <div id="chat-pane" class="flex min-w-0 flex-col">
+                            <form id="chat-setup" class="frame-dashed mx-auto w-full max-w-lg px-6 py-8 sm:px-10" hidden>
+                                <span class="eyebrow">AI chat</span>
+                                <h2 class="mt-3 font-serif text-2xl leading-tight font-medium">Connect OpenRouter</h2>
+                                <p class="text-main/70 mt-3 text-sm leading-relaxed">
+                                    The key is sealed into the vault like a note and used only from this browser. Before pasting it, on openrouter.ai:
+                                </p>
+                                <ol class="text-main/80 mt-3 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed">
+                                    <li>Settings → Privacy: turn on zero data retention for every model group; leave prompt logging off.</li>
+                                    <li>Create a key just for the vault, with a spending limit and a guardrail that enforces ZDR.</li>
+                                </ol>
+                                <input type="text" autocomplete="username" value="openrouter" hidden aria-hidden="true" />
+                                <input id="chat-key" class="field mt-6" type="password" autocomplete="off" placeholder="sk-or-…" required />
+                                <button class="btn mt-4 w-full" type="submit">Save key</button>
+                                <p class="error-line mt-4" data-error="chat-setup" role="alert"></p>
+                            </form>
+
+                            <div id="chat-empty" class="m-auto py-24 text-center" hidden>
+                                <p class="text-main/60 font-serif text-xl italic">Pick a chat, or start a new one.</p>
+                            </div>
+
+                            <article id="chat-main" class="flex grow flex-col" hidden>
+                                <button id="chat-back" class="btn-link mb-4 self-start md:hidden" type="button">← All chats</button>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <select id="chat-model" class="field h-9 min-w-0 grow basis-60" aria-label="Model"></select>
+                                    <select id="chat-expiry" class="field h-9 w-auto" aria-label="Delete automatically">
+                                        <option value="">Keep</option>
+                                        <option value="1">Delete in 1 day</option>
+                                        <option value="7">Delete in 7 days</option>
+                                        <option value="30">Delete in 30 days</option>
+                                    </select>
+                                    <button id="chat-delete" class="btn-quiet" type="button">Delete</button>
+                                </div>
+                                <p id="chat-expiry-note" class="text-main/55 mt-2 text-xs"></p>
+
+                                <div id="chat-messages" class="mt-6 flex grow flex-col gap-6" aria-live="polite"></div>
+
+                                <form id="chat-form" class="chat-composer frame-dashed bg-main mt-6 flex items-end gap-3 px-4 py-3">
+                                    <textarea
+                                        id="chat-input"
+                                        class="chat-input grow bg-transparent text-[0.95rem] leading-relaxed"
+                                        rows="1"
+                                        placeholder="Message"
+                                        aria-label="Message"></textarea>
+                                    <button id="chat-send" class="btn h-9 shrink-0 px-4" type="submit">Send</button>
+                                    <button id="chat-stop" class="btn-quiet shrink-0" type="button" hidden>Stop</button>
+                                </form>
+                                <p class="error-line mt-3" data-error="chat" role="alert"></p>
+                                <p class="text-main/50 mt-2 text-xs leading-relaxed">
+                                    Sent from this browser to OpenRouter, only to providers with zero data retention. Enter sends, Shift+Enter breaks a line.
+                                </p>
+                            </article>
+                        </div>
+                    </div>
                 </section>
             </main>
         </div>
@@ -262,6 +326,47 @@ import '../styles/vault.css';
                     <button class="btn-quiet mt-4" type="submit">Make a new recovery key</button>
                     <p class="error-line mt-3" data-error="rotate" role="alert"></p>
                 </form>
+
+                <div class="rule-dashed my-8"></div>
+
+                <form id="chat-key-form">
+                    <span class="label">AI chat</span>
+                    <p class="text-main/70 text-sm leading-relaxed">The OpenRouter key, sealed in the vault. Paste a new one to replace it.</p>
+                    <input type="text" autocomplete="username" value="openrouter" hidden aria-hidden="true" />
+                    <input id="settings-chat-key" class="field mt-4" type="password" autocomplete="off" placeholder="sk-or-…" required />
+                    <button class="btn-quiet mt-4" type="submit">Replace key</button>
+                    <p class="error-line mt-3" data-error="chat-key" role="alert"></p>
+                </form>
+
+                <div class="rule-dashed my-8"></div>
+
+                <form id="panic-form">
+                    <span class="label">Panic password</span>
+                    <p class="text-main/70 text-sm leading-relaxed">
+                        A second password. Typed at the unlock screen, it opens the vault as usual and silently destroys every chat first. It opens the notes
+                        too, so make it as strong as the master password.
+                    </p>
+                    <p id="panic-state" class="mt-3 text-sm"></p>
+                    <input type="text" autocomplete="username" value="vault" hidden aria-hidden="true" />
+                    <input id="panic-master" class="field mt-4" type="password" autocomplete="current-password" placeholder="Master password" required />
+                    <input id="panic-new" class="field mt-3" type="password" autocomplete="new-password" minlength="12" placeholder="Panic password" />
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <button class="btn-quiet" type="submit" data-panic="set">Set panic password</button>
+                        <button class="btn-quiet" type="submit" data-panic="remove">Remove it</button>
+                    </div>
+                    <p class="error-line mt-3" data-error="panic" role="alert"></p>
+                </form>
+
+                <div class="rule-dashed my-8"></div>
+
+                <section>
+                    <span class="label">Burn all chats</span>
+                    <p class="text-main/70 text-sm leading-relaxed">
+                        Destroys every chat's key. What the repository keeps of them becomes unreadable for good, to anyone, including you.
+                    </p>
+                    <button id="burn-chats" class="btn-quiet mt-4" type="button">Burn all chats</button>
+                    <p class="error-line mt-3" data-error="burn" role="alert"></p>
+                </section>
 
                 <div class="rule-dashed my-8"></div>
 

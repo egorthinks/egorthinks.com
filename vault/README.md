@@ -32,9 +32,36 @@ note ─AES-256-GCM─▶ ciphertext ──────────────�
   repository's history; keep large files out unless you want them there for good.
 - **Storage.** Every save is one atomic commit (GraphQL `createCommitOnBranch`), applied only if nobody else committed since this browser last looked.
   Otherwise the browser re-reads and retries, so two devices editing different notes never lose anything. History is git history.
-- **The page.** Strict CSP (scripts, styles, fonts and connections from this origin only; images from this origin or decrypted `blob:` URLs), no inline
+- **The page.** Strict CSP (scripts, styles, fonts and connections from this origin only, plus `https://openrouter.ai` for the chat; images from this
+  origin or decrypted `blob:` URLs), no inline
   script or style, no third-party anything. Markdown is sanitised with DOMPurify, and remote images are never loaded. Auto-lock after 15 minutes idle;
   locking reloads the page, which drops the key and every decrypted note.
+
+### The AI chat
+
+The Chat tab talks to models through OpenRouter. A model has to read the text to answer it, so this part cannot be zero-knowledge the way notes are;
+it is built so that as few parties as possible see the text, none of them keep it, and the history can be destroyed for real.
+
+- **Who sees a prompt.** The browser, OpenRouter in transit, and the provider running the model, nobody else. The browser calls OpenRouter
+  directly: the vault's server never sees a prompt or a reply. The OpenRouter key is sealed in `settings.enc` like a note and decrypted only in the
+  browser.
+- **Zero data retention, three times.** Every request carries `provider: { zdr: true, data_collection: "deny" }`; the account's privacy settings and
+  the key's guardrail should require ZDR as well, so one mistake cannot route a prompt to a provider that keeps it. The model list is
+  `/models?zdr=true`. What ZDR does not cover (per OpenRouter): request metadata on OpenRouter, in-memory prompt caching at providers, and plugins
+  and tools, which is why the chat has none: no web search, no file parsing, no function calls.
+- **Replies are untrusted.** They go through the same sanitiser as notes and remote images are never loaded, so a prompt injection cannot make the
+  page send anything anywhere. Only role and content of past turns are sent back; errors and usage stay home.
+- **Destroyable history.** Each chat has its own random key. Messages (`chats/<id>.enc`) and title (inside `manifest.enc`) are sealed with it in
+  git, but the key itself lives only in Vercel Blob, wrapped with the vault key and written into the object's name
+  (`chatkeys/<id>.<expiry>.<wrapped key>`). Deleting that object is the deletion: what git keeps afterwards is noise to everyone, owner included.
+  - **Delete a chat**: its key object goes, then its ciphertext leaves the current tree.
+  - **Auto-delete** (off by default, per chat: 1, 7 or 30 days): the expiry sits in the object name in plain digits, so the server deletes expired
+    keys on every listing and from a daily cron (`/api/cron/expire-chats`), even if the vault is never opened again.
+  - **Burn all chats** (Settings): every key object goes at once.
+  - **Panic password** (Settings): a second password that opens the vault normally after silently burning every chat. It opens the notes too, so
+    it must be as strong as the master password.
+- **Not in the offline export.** `npm run decrypt` restores notes, images and documents but not chats: their keys are deliberately not in the
+  repository.
 
 The code to read first: [`src/lib/crypto.ts`](src/lib/crypto.ts) (all of the cryptography), then [`src/client/vault.ts`](src/client/vault.ts) (what is
 read and written), then [`src/middleware.ts`](src/middleware.ts) (what the server enforces).
@@ -59,6 +86,10 @@ read and written), then [`src/middleware.ts`](src/middleware.ts) (what the serve
     | `VAULT_GITHUB_TOKEN`   | the token from step 2                                                                  |
     | `VAULT_SESSION_SECRET` | `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`       |
     | `VAULT_SETUP_TOKEN`    | another random value, as above                                                         |
+    | `CRON_SECRET`          | another random value; Vercel sends it to the daily chat-expiry job                     |
+
+    For the chat, also connect a **Blob store** to the project (Storage → Blob → Connect); that adds `BLOB_READ_WRITE_TOKEN` by itself. Private or
+    public store both work: the objects hold nothing but wrapped keys in their names.
 
 5. **Domain.** Project → Settings → Domains → add `vault.egorthinks.com`. If the DNS for egorthinks.com is not on Vercel, add the CNAME it asks for.
 
@@ -69,6 +100,10 @@ read and written), then [`src/middleware.ts`](src/middleware.ts) (what the serve
    (Touch ID, Windows Hello, "Chrome profile") does not. To give a phone its own passkey, sign in on a computer, open Settings → Add a passkey, and in
    the browser's dialog choose **"Use a phone or tablet"**: scan the QR code with the phone (Bluetooth on) and the phone saves the passkey. Adding a
    passkey has to start from a signed-in browser, so it cannot be done on the new device itself.
+
+8. **AI chat.** On openrouter.ai: Settings → Privacy, turn on zero data retention for every model group and leave prompt logging off; then create a
+   key only for the vault, with a spending limit and a guardrail that enforces ZDR. Paste it in the Chat tab; it is checked against the model list
+   before it is saved.
 
 Optional but worth it: Settings → Deployment Protection → Vercel Authentication for preview deployments, and two-factor authentication on GitHub and
 Vercel, which matters more than any cipher here (see below).
@@ -86,7 +121,7 @@ Vercel, which matters more than any cipher here (see below).
 
 Code that encrypts in a web page is delivered by the same server it protects you from. Someone who could change what this site serves (through the
 GitHub account, the Vercel account, or a compromised npm package in this folder) could ship a page that reads the password as it is typed. The
-defences are the ones above: a separate origin, a strict CSP, very few dependencies (`hash-wasm`, `marked`, `dompurify`, `@simplewebauthn/*`), and
+defences are the ones above: a separate origin, a strict CSP, very few dependencies (`hash-wasm`, `marked`, `dompurify`, `@simplewebauthn/*`, and `@vercel/blob` on the server), and
 2FA on the accounts that can deploy. The data at rest is safe against everything short of that.
 
 ## Developing

@@ -7,7 +7,8 @@
  *   (plus WebAssembly, which Argon2 needs), connections only to this origin,
  *   images only from this origin or decrypted blob: URLs. The CSP is the
  *   backstop for the one weakness of encrypting in a web page: if hostile script
- *   ever ran here, it could read the password as it is typed.
+ *   ever ran here, it could read the password as it is typed. The only
+ *   connection allowed outside this origin is to OpenRouter, for the AI chat.
  */
 import { defineMiddleware } from 'astro:middleware';
 import { origin } from './server/config.ts';
@@ -23,7 +24,8 @@ const CSP = [
     `style-src 'self'${dev ? " 'unsafe-inline'" : ''}`,
     "img-src 'self' blob: data:",
     "font-src 'self'",
-    `connect-src 'self'${dev ? ' ws: wss:' : ''}`,
+    // OpenRouter is the one outside address: the browser talks to it directly, so prompts never pass through this server.
+    `connect-src 'self' https://openrouter.ai${dev ? ' ws: wss:' : ''}`,
     "manifest-src 'self'",
     "base-uri 'none'",
     "form-action 'self'",

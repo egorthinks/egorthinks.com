@@ -52,6 +52,11 @@ export type VaultHeader = {
     slots: {
         password: WrappedKey & { kdf: KdfParams };
         recovery: WrappedKey;
+        /**
+         * Optional duress password. It opens the vault like the master password,
+         * and the caller destroys the chat history first (see unlock()).
+         */
+        panic?: WrappedKey & { kdf: KdfParams };
     };
 };
 
@@ -225,9 +230,21 @@ async function unwrap(kek: CryptoKey, wrapped: WrappedKey, slot: string): Promis
     return raw;
 }
 
-async function passwordSlot(password: string, vaultKey: Bytes, params: Omit<KdfParams, 'alg' | 'salt'>) {
+async function passwordSlot(password: string, vaultKey: Bytes, params: Omit<KdfParams, 'alg' | 'salt'>, slot: 'password' | 'panic' = 'password') {
     const kdf: KdfParams = { alg: 'argon2id', ...params, salt: toBase64(randomBytes(16)) };
-    return { kdf, ...(await wrap(await passwordKek(password, kdf), vaultKey, 'password')) };
+    return { kdf, ...(await wrap(await passwordKek(password, kdf), vaultKey, slot)) };
+}
+
+async function opensPanicSlot(header: VaultHeader, password: string): Promise<boolean> {
+    const slot = header.slots.panic;
+    if (!slot) return false;
+    try {
+        (await unwrap(await passwordKek(password, slot.kdf), slot, 'panic')).fill(0);
+        return true;
+    } catch (err) {
+        if (err instanceof WrongKeyError) return false;
+        throw err;
+    }
 }
 
 /* ------------------------------------------------------------------------ */
@@ -287,8 +304,49 @@ export async function unlockWithRecovery(header: VaultHeader, recoveryKey: strin
     }
 }
 
-/** New password, proven by the current one. The recovery slot is untouched. */
+/**
+ * The master password first, then the panic password. `panic: true` tells the
+ * caller to destroy the chat history before showing anything: from the outside
+ * the vault simply opens, with no chats in it.
+ */
+export async function unlock(header: VaultHeader, password: string): Promise<{ key: CryptoKey; panic: boolean }> {
+    try {
+        return { key: await unlockWithPassword(header, password), panic: false };
+    } catch (err) {
+        if (!(err instanceof WrongKeyError) || !header.slots.panic) throw err;
+    }
+    const slot = header.slots.panic;
+    const raw = await unwrap(await passwordKek(password, slot.kdf), slot, 'panic');
+    try {
+        return { key: await aesKey(raw), panic: true };
+    } finally {
+        raw.fill(0);
+    }
+}
+
+/** Sets (or replaces) the panic password. It must differ from the master password, or it could never fire. */
+export async function setPanicPassword(header: VaultHeader, master: string, panic: string): Promise<VaultHeader> {
+    if (panic === master) throw new Error('The panic password must differ from the master password.');
+    const raw = await rawFromPassword(header, master);
+    try {
+        const { kdf } = header.slots.password;
+        const slot = await passwordSlot(panic, raw, { memory: kdf.memory, iterations: kdf.iterations, parallelism: kdf.parallelism }, 'panic');
+        return { ...header, slots: { ...header.slots, panic: slot } };
+    } finally {
+        raw.fill(0);
+    }
+}
+
+export async function removePanicPassword(header: VaultHeader, master: string): Promise<VaultHeader> {
+    (await rawFromPassword(header, master)).fill(0);
+    const { panic: _, ...slots } = header.slots;
+    return { ...header, slots };
+}
+
+/** New password, proven by the current one. The recovery and panic slots are untouched. */
 export async function changePassword(header: VaultHeader, current: string, next: string): Promise<VaultHeader> {
+    // A master password equal to the panic password would shadow it for good.
+    if (await opensPanicSlot(header, next)) throw new Error('That is the panic password. Choose another.');
     const raw = await rawFromPassword(header, current);
     try {
         const { kdf } = header.slots.password;
