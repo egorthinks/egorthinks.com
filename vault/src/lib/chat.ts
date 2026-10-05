@@ -21,7 +21,10 @@
  * can delete expired keys on its own.
  */
 import { open, openJson, randomBytes, seal, sealJson, toBase64, fromBase64, type Bytes } from './crypto.ts';
-import { ID_RE, PATHS } from './model.ts';
+import { decodeFile, encodeFile, ID_RE, PATHS } from './model.ts';
+
+/** Per message. Each photo is re-sent with every later turn, so more would be slow and costly. */
+export const MAX_CHAT_IMAGES = 4;
 
 export const CHAT_KEY_PREFIX = 'chatkeys/';
 const NAME_RE = /^chatkeys\/([0-9a-f]{32})\.(never|\d{1,12})\.([A-Za-z0-9_-]{60,200})$/;
@@ -36,6 +39,8 @@ export type ChatMessage = {
     model?: string;
     usage?: { prompt: number; completion: number; cost?: number };
     error?: string;
+    /** Photos sent with a user message: ids of chats/<chat>/<image>.enc. */
+    images?: string[];
 };
 
 export type Chat = { v: 1; id: string; messages: ChatMessage[] };
@@ -124,4 +129,17 @@ export async function openChat(key: CryptoKey, id: string, sealed: Bytes): Promi
 export function titleFrom(text: string): string {
     const line = text.trim().split('\n')[0].replace(/\s+/g, ' ');
     return line.length > 60 ? line.slice(0, 59).trimEnd() + '…' : line || 'New chat';
+}
+
+/**
+ * A photo in a chat: sealed with the chat's key, at a path inside the chat, so
+ * burning the chat's key burns its photos too.
+ */
+export async function sealChatImage(key: CryptoKey, chatId: string, imageId: string, type: string, bytes: Bytes): Promise<Bytes> {
+    return seal(key, PATHS.chatImage(chatId, imageId), encodeFile(type, '', bytes));
+}
+
+export async function openChatImage(key: CryptoKey, chatId: string, imageId: string, sealed: Bytes): Promise<{ type: string; bytes: Bytes }> {
+    const { type, bytes } = decodeFile(await open(key, PATHS.chatImage(chatId, imageId), sealed));
+    return { type, bytes };
 }

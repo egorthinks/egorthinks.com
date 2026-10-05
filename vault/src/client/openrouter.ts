@@ -10,9 +10,12 @@
  */
 const BASE = 'https://openrouter.ai/api/v1';
 
-export type Model = { id: string; name: string; context: number; prompt: number; completion: number };
+/** `vision`: the model takes images (OpenRouter lists "image" in its input modalities). */
+export type Model = { id: string; name: string; context: number; prompt: number; completion: number; vision: boolean };
 export type Usage = { prompt: number; completion: number; cost?: number };
-export type Turn = { role: 'user' | 'assistant'; content: string };
+export type Part = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } };
+/** Text first, then images: OpenRouter's advice for how providers parse mixed content. */
+export type Turn = { role: 'user' | 'assistant'; content: string | Part[] };
 
 export class OpenRouterError extends Error {
     status: number;
@@ -51,7 +54,13 @@ export async function zdrModels(key: string): Promise<Model[]> {
     const res = await fetch(`${BASE}/models?zdr=true`, { ...init(key), method: 'GET' });
     if (!res.ok) throw await explain(res);
     const body = (await res.json()) as {
-        data: { id: string; name?: string; context_length?: number; pricing?: { prompt?: string; completion?: string } }[];
+        data: {
+            id: string;
+            name?: string;
+            context_length?: number;
+            pricing?: { prompt?: string; completion?: string };
+            architecture?: { input_modalities?: string[] };
+        }[];
     };
     return body.data
         .map((m) => ({
@@ -59,7 +68,8 @@ export async function zdrModels(key: string): Promise<Model[]> {
             name: m.name ?? m.id,
             context: m.context_length ?? 0,
             prompt: Number(m.pricing?.prompt ?? 0),
-            completion: Number(m.pricing?.completion ?? 0)
+            completion: Number(m.pricing?.completion ?? 0),
+            vision: m.architecture?.input_modalities?.includes('image') ?? false
         }))
         .sort((a, b) => a.id.localeCompare(b.id));
 }

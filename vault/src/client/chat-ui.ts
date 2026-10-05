@@ -7,10 +7,12 @@
  * model output is untrusted text, and a reply that tries to load an image from
  * somewhere is exactly how a prompt injection would smuggle data out.
  */
+import { prepareForModel } from './images.ts';
 import { render } from './markdown.ts';
-import { OpenRouterError, streamChat, zdrModels, type Model } from './openrouter.ts';
+import { OpenRouterError, streamChat, zdrModels, type Model, type Part, type Turn } from './openrouter.ts';
 import type { Vault } from './vault.ts';
-import { titleFrom, type Chat, type ChatMeta } from '../lib/chat.ts';
+import { MAX_CHAT_IMAGES, titleFrom, type Chat, type ChatMeta } from '../lib/chat.ts';
+import { randomId, toBase64, type Bytes } from '../lib/crypto.ts';
 import type { Settings } from '../lib/model.ts';
 
 type StatusState = 'saved' | 'dirty' | 'saving' | 'uploading' | 'error';
@@ -38,6 +40,15 @@ export function initChat(ctx: ChatContext) {
     const expirySelect = $<HTMLSelectElement>('#chat-expiry');
     const sendButton = $<HTMLButtonElement>('#chat-send');
     const stopButton = $<HTMLButtonElement>('#chat-stop');
+    const attachments = $('#chat-attachments');
+    const photoInput = $<HTMLInputElement>('#chat-photo-input');
+    const composer = $('#chat-form');
+
+    /** Photos chosen for the next message, already shrunk and stripped of metadata. */
+    let pending: { id: string; type: string; bytes: Bytes; url: string }[] = [];
+    /** Photos this tab has seen, by chat/image id: bytes to resend, URLs to show. */
+    const localImages = new Map<string, { type: string; bytes: Bytes }>();
+    const imageUrls = new Map<string, string>();
 
     const dateFmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
     const dateTimeFmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
@@ -106,7 +117,8 @@ export function initChat(ctx: ChatContext) {
             const group = document.createElement('optgroup');
             group.label = author;
             for (const m of ms) {
-                group.append(new Option(`${m.name} · $${perMillion(m.prompt)} / $${perMillion(m.completion)} per M`, m.id, false, m.id === chosen));
+                const label = `${m.name}${m.vision ? ' · sees images' : ''} · $${perMillion(m.prompt)} / $${perMillion(m.completion)} per M`;
+                group.append(new Option(label, m.id, false, m.id === chosen));
             }
             nodes.push(group);
         }
@@ -144,12 +156,44 @@ export function initChat(ctx: ChatContext) {
         $('#chat-list-empty').hidden = chats.length > 0;
     }
 
+    /** A decrypted photo as a blob: URL, made once. */
+    async function imageUrl(cid: string, imageId: string): Promise<string> {
+        const k = `${cid}/${imageId}`;
+        const known = imageUrls.get(k);
+        if (known) return known;
+        const v = ctx.vault();
+        const image = localImages.get(k) ?? (await v!.readChatImage(cid, imageId));
+        const url = URL.createObjectURL(new Blob([image.bytes as BlobPart], { type: image.type }));
+        imageUrls.set(k, url);
+        return url;
+    }
+
     function messageNode(m: Chat['messages'][number]): HTMLElement {
         if (m.role === 'user') {
-            const el = document.createElement('div');
-            el.className = 'chat-user border-main/45 max-w-[85%] self-end rounded-[1.25rem] border border-dashed px-4 py-2.5 text-[0.95rem] leading-relaxed';
-            el.textContent = m.content;
-            return el;
+            const wrap = document.createElement('div');
+            wrap.className = 'flex max-w-[85%] flex-col items-end gap-2 self-end';
+            if (m.images?.length && chatId) {
+                const row = document.createElement('div');
+                row.className = 'flex flex-wrap justify-end gap-2';
+                for (const imageId of m.images) {
+                    const img = document.createElement('img');
+                    img.className = 'chat-photo';
+                    img.alt = 'Attached photo';
+                    const cid = chatId;
+                    imageUrl(cid, imageId)
+                        .then((url) => (img.src = url))
+                        .catch(() => (img.alt = 'Photo unavailable'));
+                    row.append(img);
+                }
+                wrap.append(row);
+            }
+            if (m.content) {
+                const el = document.createElement('div');
+                el.className = 'chat-user border-main/45 rounded-[1.25rem] border border-dashed px-4 py-2.5 text-[0.95rem] leading-relaxed';
+                el.textContent = m.content;
+                wrap.append(el);
+            }
+            return wrap;
         }
         const wrap = document.createElement('div');
         wrap.className = 'min-w-0';
@@ -206,8 +250,109 @@ export function initChat(ctx: ChatContext) {
         list.querySelectorAll<HTMLElement>('.note-row').forEach((r) => r.setAttribute('aria-current', String(r.dataset.id === chatId)));
     }
 
+    function renderAttachments() {
+        attachments.hidden = pending.length === 0;
+        updateSend();
+        queueMicrotask(autosize);
+        attachments.replaceChildren(
+            ...pending.map((p) => {
+                const box = document.createElement('div');
+                box.className = 'relative';
+                const img = document.createElement('img');
+                img.className = 'chat-thumb';
+                img.src = p.url;
+                img.alt = 'Photo to send';
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'chat-thumb-remove';
+                remove.textContent = '×';
+                remove.setAttribute('aria-label', 'Remove photo');
+                remove.addEventListener('click', () => {
+                    URL.revokeObjectURL(p.url);
+                    pending = pending.filter((x) => x !== p);
+                    renderAttachments();
+                });
+                box.append(img, remove);
+                return box;
+            })
+        );
+    }
+
+    /** Grow with the text, up to the CSS max-height; past it, scroll. */
+    function autosize() {
+        input.style.height = 'auto';
+        const max = parseFloat(getComputedStyle(input).maxHeight) || 256;
+        const height = Math.min(input.scrollHeight, max);
+        input.style.height = `${height}px`;
+        input.style.overflowY = input.scrollHeight > max ? 'auto' : 'hidden';
+        // One line: a pill. More: a rounded box, so the corners do not eat the text.
+        composer.style.borderRadius = height > 48 || pending.length ? '1.25rem' : '';
+    }
+
+    function updateSend() {
+        sendButton.disabled = !input.value.trim() && pending.length === 0;
+    }
+
+    function clearPending() {
+        for (const p of pending) URL.revokeObjectURL(p.url);
+        pending = [];
+        renderAttachments();
+    }
+
+    function selectedModel(): Model | undefined {
+        return models?.find((m) => m.id === modelSelect.value);
+    }
+
+    async function addPhotos(files: File[]) {
+        const images = files.filter((f) => f.type.startsWith('image/') || /\.(heic|heif)$/i.test(f.name));
+        if (!images.length || !chat) return;
+        ctx.say('chat', '');
+        if (selectedModel() && !selectedModel()!.vision) ctx.say('chat', 'This model cannot see images. Pick one marked “sees images” before sending.');
+        for (const file of images) {
+            if (pending.length >= MAX_CHAT_IMAGES) {
+                ctx.say('chat', `Up to ${MAX_CHAT_IMAGES} photos per message.`);
+                break;
+            }
+            try {
+                ctx.setStatus('uploading', 'Preparing photo');
+                const { bytes, type } = await prepareForModel(file);
+                pending.push({ id: randomId(), type, bytes, url: URL.createObjectURL(new Blob([bytes as BlobPart], { type })) });
+                renderAttachments();
+            } catch (err) {
+                ctx.say('chat', ctx.describe(err));
+            }
+        }
+        ctx.idleStatus();
+        input.focus();
+    }
+
+    /** What OpenRouter receives: each turn's text, and its photos when the model can see them. */
+    async function turnsFor(c: Chat, vision: boolean): Promise<Turn[]> {
+        const turns: Turn[] = [];
+        for (const m of c.messages) {
+            if (m.error) continue;
+            if (m.role !== 'user' || !m.images?.length) {
+                turns.push({ role: m.role, content: m.content });
+                continue;
+            }
+            if (!vision) {
+                turns.push({ role: 'user', content: m.content || '[a photo the current model cannot see]' });
+                continue;
+            }
+            const parts: Part[] = m.content ? [{ type: 'text', text: m.content }] : [];
+            for (const imageId of m.images) {
+                const k = `${c.id}/${imageId}`;
+                const image = localImages.get(k) ?? (await ctx.vault()!.readChatImage(c.id, imageId));
+                parts.push({ type: 'image_url', image_url: { url: `data:${image.type};base64,${toBase64(image.bytes)}` } });
+            }
+            turns.push({ role: 'user', content: parts });
+        }
+        return turns;
+    }
+
     function reset() {
         streaming?.abort();
+        clearPending();
         chatId = null;
         chat = null;
         meta = null;
@@ -238,6 +383,7 @@ export function initChat(ctx: ChatContext) {
         const v = ctx.vault();
         if (!v || streaming) return;
         ctx.say('chat', '');
+        clearPending();
         try {
             chat = await v.readChat(id);
             chatId = id;
@@ -264,6 +410,7 @@ export function initChat(ctx: ChatContext) {
         meta = null;
         draftExpiryDays = null;
         expirySelect.value = '';
+        clearPending();
         chat = { v: 1, id: '', messages: [] };
         fillModels();
         renderMessages();
@@ -275,9 +422,11 @@ export function initChat(ctx: ChatContext) {
     async function send(text: string) {
         const v = ctx.vault();
         const key = settings?.openrouterKey;
-        if (!v || !key || !chat || streaming || !text.trim()) return;
+        if (!v || !key || !chat || streaming || (!text.trim() && !pending.length)) return;
         const model = modelSelect.value;
         if (!model) return ctx.say('chat', 'Pick a model first.');
+        const vision = selectedModel()?.vision ?? false;
+        if (pending.length && !vision) return ctx.say('chat', 'This model cannot see images. Pick one marked “sees images”, or remove the photos.');
         ctx.say('chat', '');
 
         const now = new Date().toISOString();
@@ -290,10 +439,19 @@ export function initChat(ctx: ChatContext) {
                 return ctx.say('chat', ctx.describe(err));
             }
             chat = { v: 1, id: chatId, messages: [] };
-            meta = { title: titleFrom(text), model, created: now, updated: now };
+            meta = { title: titleFrom(text || 'Photo'), model, created: now, updated: now };
         }
-        chat.messages.push({ role: 'user', content: text, at: now });
+        const photos = pending;
+        pending = [];
+        renderAttachments();
+        for (const p of photos) {
+            localImages.set(`${chatId}/${p.id}`, { type: p.type, bytes: p.bytes });
+            imageUrls.set(`${chatId}/${p.id}`, p.url);
+        }
+        chat.messages.push({ role: 'user', content: text, at: now, ...(photos.length ? { images: photos.map((p) => p.id) } : {}) });
         input.value = '';
+        autosize();
+        updateSend();
         renderMessages();
 
         const reply = document.createElement('div');
@@ -310,8 +468,8 @@ export function initChat(ctx: ChatContext) {
             const result = await streamChat({
                 key,
                 model,
-                // Only what was said; failed turns and metadata stay home.
-                messages: chat.messages.filter((m) => !m.error).map((m) => ({ role: m.role, content: m.content })),
+                // Only what was said (and shown); failed turns and metadata stay home.
+                messages: await turnsFor(chat, vision),
                 signal: streaming.signal,
                 onDelta: (piece) => {
                     partial += piece;
@@ -336,12 +494,15 @@ export function initChat(ctx: ChatContext) {
             streaming = null;
             sendButton.hidden = false;
             stopButton.hidden = true;
+            updateSend();
         }
         renderMessages();
 
         meta = { ...meta!, model, updated: new Date().toISOString() };
         ctx.setStatus('saving');
         try {
+            // Photos first, one commit each, sealed with this chat's key; then the chat that refers to them.
+            for (const p of photos) await v.saveChatImage(chatId!, p.id, p.type, p.bytes);
             await v.saveChat(chat, meta);
             if (settings && settings.lastModel !== model) {
                 settings = { ...settings, lastModel: model };
@@ -384,13 +545,47 @@ export function initChat(ctx: ChatContext) {
         e.preventDefault();
         void send(input.value);
     });
+    // On a phone, Return is for new lines and the arrow button sends; on a keyboard, Enter sends.
+    const touchFirst = window.matchMedia('(pointer: coarse)').matches;
     input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && !touchFirst) {
             e.preventDefault();
             void send(input.value);
         }
     });
+    input.addEventListener('input', () => {
+        autosize();
+        updateSend();
+    });
+    window.addEventListener('resize', () => autosize());
     stopButton.addEventListener('click', () => streaming?.abort());
+
+    // A warning about photos belongs to the model it was about.
+    modelSelect.addEventListener('change', () => {
+        const model = selectedModel();
+        ctx.say('chat', pending.length && model && !model.vision ? 'This model cannot see images. Pick one marked “sees images” before sending.' : '');
+    });
+
+    $('#chat-attach').addEventListener('click', () => photoInput.click());
+    photoInput.addEventListener('change', () => {
+        void addPhotos(Array.from(photoInput.files ?? []));
+        photoInput.value = '';
+    });
+    input.addEventListener('paste', (e) => {
+        const files = Array.from(e.clipboardData?.files ?? []).filter((f) => f.type.startsWith('image/'));
+        if (!files.length) return;
+        e.preventDefault();
+        void addPhotos(files);
+    });
+    composer.addEventListener('dragover', (e) => {
+        if (e.dataTransfer?.types.includes('Files')) e.preventDefault();
+    });
+    composer.addEventListener('drop', (e) => {
+        const files = Array.from(e.dataTransfer?.files ?? []);
+        if (!files.length) return;
+        e.preventDefault();
+        void addPhotos(files);
+    });
 
     expirySelect.addEventListener('change', async () => {
         const days = expirySelect.value ? Number(expirySelect.value) : null;

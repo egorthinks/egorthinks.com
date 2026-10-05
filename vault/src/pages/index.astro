@@ -265,19 +265,36 @@ import '../styles/vault.css';
 
                                 <div id="chat-messages" class="mt-6 flex grow flex-col gap-6" aria-live="polite"></div>
 
-                                <form id="chat-form" class="chat-composer frame-dashed bg-main mt-6 flex items-end gap-3 px-4 py-3">
-                                    <textarea
-                                        id="chat-input"
-                                        class="chat-input grow bg-transparent text-[0.95rem] leading-relaxed"
-                                        rows="1"
-                                        placeholder="Message"
-                                        aria-label="Message"></textarea>
-                                    <button id="chat-send" class="btn h-9 shrink-0 px-4" type="submit">Send</button>
-                                    <button id="chat-stop" class="btn-quiet shrink-0" type="button" hidden>Stop</button>
+                                <form id="chat-form" class="chat-composer mt-6">
+                                    <div id="chat-attachments" class="chat-attachments" hidden></div>
+                                    <div class="chat-composer-row">
+                                        <button
+                                            id="chat-attach"
+                                            class="chat-icon-button"
+                                            type="button"
+                                            aria-label="Attach photos"
+                                            title="Attach photos (or paste, or drop them here)"
+                                        >
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"
+                                                ><path
+                                                    d="M20.5 11.5 12.4 19.6a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.4 8.4a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"
+                                                ></path></svg
+                                            >
+                                        </button>
+                                        <input id="chat-photo-input" type="file" accept="image/*" multiple hidden />
+                                        <textarea id="chat-input" class="chat-input" rows="1" placeholder="Message" aria-label="Message"></textarea>
+                                        <button id="chat-send" class="chat-send-button" type="submit" aria-label="Send" disabled>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"></path></svg>
+                                        </button>
+                                        <button id="chat-stop" class="chat-send-button" type="button" aria-label="Stop" hidden>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5"></rect></svg>
+                                        </button>
+                                    </div>
                                 </form>
                                 <p class="error-line mt-3" data-error="chat" role="alert"></p>
                                 <p class="text-main/50 mt-2 text-xs leading-relaxed">
-                                    Sent from this browser to OpenRouter, only to providers with zero data retention. Enter sends, Shift+Enter breaks a line.
+                                    Sent from this browser to OpenRouter, only to providers with zero data retention. Photos are shrunk and stripped of location
+                                    and camera data before they leave.<span class="desktop-only"> Enter sends, Shift+Enter breaks a line.</span>
                                 </p>
                             </article>
                         </div>

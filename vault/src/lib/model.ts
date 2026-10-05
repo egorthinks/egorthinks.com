@@ -8,6 +8,7 @@
  *   files/<id>.enc         one image attached to a note: type + bytes
  *   docs/<id>/<n>.enc      one piece of a stored document (pdf, xlsx, ...); see docs.ts
  *   chats/<id>.enc         one AI chat, sealed with that chat's own key; see chat.ts
+ *   chats/<id>/<img>.enc   a photo sent in that chat, sealed with the same key
  *   settings.enc           the OpenRouter key and chat preferences
  *   .vault/passkeys.json   public keys of registered passkeys; server-only
  *
@@ -26,6 +27,7 @@ export const PATHS = {
     file: (id: string) => `files/${id}.enc`,
     doc: (id: string, index: number) => `docs/${id}/${index}.enc`,
     chat: (id: string) => `chats/${id}.enc`,
+    chatImage: (chatId: string, imageId: string) => `chats/${chatId}/${imageId}.enc`,
     settings: 'settings.enc'
 };
 
@@ -34,7 +36,7 @@ export const SHA_RE = /^[0-9a-f]{40}$/;
 
 /** Paths the browser may write. The passkey list is the server's alone. */
 export const CLIENT_PATH_RE =
-    /^(?:vault\.json|manifest\.enc|notes\/[0-9a-f]{32}\.md\.enc|files\/[0-9a-f]{32}\.enc|docs\/[0-9a-f]{32}\/\d{1,3}\.enc|chats\/[0-9a-f]{32}\.enc|settings\.enc)$/;
+    /^(?:vault\.json|manifest\.enc|notes\/[0-9a-f]{32}\.md\.enc|files\/[0-9a-f]{32}\.enc|docs\/[0-9a-f]{32}\/\d{1,3}\.enc|chats\/[0-9a-f]{32}\.enc|chats\/[0-9a-f]{32}\/[0-9a-f]{32}\.enc|settings\.enc)$/;
 
 /** Vercel functions take 4.5 MB of body; leave room for headers. */
 export const MAX_OBJECT_BYTES = 4 * 1024 * 1024;

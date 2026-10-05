@@ -13,7 +13,18 @@
 import * as api from './api.ts';
 import { open, openJson, randomId, seal, sealJson, type Bytes, type VaultHeader } from '../lib/crypto.ts';
 import { CHUNK_BYTES, chunkCount, MAX_DOC_BYTES, openDocChunk, safeFileName, sealDocChunk, verifyDoc } from '../lib/docs.ts';
-import { newChatKey, openChat, openChatMeta, sealChat, sealChatMeta, unwrapChatKey, type Chat, type ChatMeta } from '../lib/chat.ts';
+import {
+    newChatKey,
+    openChat,
+    openChatImage,
+    openChatMeta,
+    sealChat,
+    sealChatImage,
+    sealChatMeta,
+    unwrapChatKey,
+    type Chat,
+    type ChatMeta
+} from '../lib/chat.ts';
 import { decodeFile, emptyManifest, encodeFile, metaOf, PATHS, type DocMeta, type Manifest, type Note, type Settings } from '../lib/model.ts';
 
 type Put = { path: string; bytes: Bytes };
@@ -405,10 +416,36 @@ export class Vault {
         return due;
     }
 
+    /** Removes a chat's ciphertext (messages and photos) and its index entry from the current tree. */
     private async dropChatRecords(ids: string[]): Promise<void> {
         await this.transact(async (draft) => {
             for (const id of ids) delete draft.chats[id];
-            return { deletes: ids.map(PATHS.chat).filter((p) => this.files[p]) };
+            const doomed = (p: string) => ids.some((id) => p === PATHS.chat(id) || p.startsWith(`chats/${id}/`));
+            return { deletes: Object.keys(this.files).filter(doomed) };
         });
+        for (const id of ids) for (const k of [...this.chatImages.keys()]) if (k.startsWith(`${id}/`)) this.chatImages.delete(k);
+    }
+
+    private chatImages = new Map<string, { type: string; bytes: Bytes }>();
+
+    /** One photo, one commit: a commit has to fit a Vercel request, and a few photos together might not. */
+    async saveChatImage(chatId: string, imageId: string, type: string, bytes: Bytes): Promise<void> {
+        const k = this.chatKeys.get(chatId);
+        if (!k) throw new Error('This chat has been deleted');
+        const sealed = await sealChatImage(k.key, chatId, imageId, type, bytes);
+        await this.transact(async () => ({ puts: [{ path: PATHS.chatImage(chatId, imageId), bytes: sealed }] }));
+        this.chatImages.set(`${chatId}/${imageId}`, { type, bytes });
+    }
+
+    /** Decrypted once per unlock, then kept: every later turn sends the photo again. */
+    async readChatImage(chatId: string, imageId: string): Promise<{ type: string; bytes: Bytes }> {
+        const cached = this.chatImages.get(`${chatId}/${imageId}`);
+        if (cached) return cached;
+        const k = this.chatKeys.get(chatId);
+        const entry = this.files[PATHS.chatImage(chatId, imageId)];
+        if (!k || !entry) throw new Error('This photo is not in the vault any more');
+        const image = await openChatImage(k.key, chatId, imageId, await api.blob(entry.sha));
+        this.chatImages.set(`${chatId}/${imageId}`, image);
+        return image;
     }
 }
