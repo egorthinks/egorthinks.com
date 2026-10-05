@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -10,6 +11,7 @@ import { CHUNK_BYTES, chunkCount, sealDoc } from '../src/lib/docs.ts';
 import { PATHS, type DocMeta, type Note } from '../src/lib/model.ts';
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'decrypt.ts');
+const sha = (b: Uint8Array) => createHash('sha256').update(b).digest('hex');
 const FAST = { memory: 1024, iterations: 1, parallelism: 1 };
 
 function fill(n: number): Bytes {
@@ -69,9 +71,9 @@ test('the offline decryptor restores notes and documents, with safe and unique n
     );
 
     const big = docs[0];
-    const restored = await Promise.all(names.map(async (n) => ({ n, b: await readFile(join(out, 'documents', n)) })));
+    const restored = await Promise.all(names.map(async (n) => ({ n, b: new Uint8Array(await readFile(join(out, 'documents', n))) })));
     assert.ok(
-        restored.some((r) => r.b.length === big.bytes.length && r.b.equals(Buffer.from(big.bytes))),
+        restored.some((r) => r.b.length === big.bytes.length && sha(r.b) === sha(big.bytes)),
         'the multi-piece document is intact'
     );
     await rm(repo, { recursive: true });
