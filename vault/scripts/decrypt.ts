@@ -7,6 +7,9 @@
  * Asks for the master password (or pass --recovery to use the recovery key).
  * VAULT_PASSWORD / VAULT_RECOVERY_KEY in the environment skip the prompt.
  *
+ * AI chats are not exported, by design: their keys live only in Vercel Blob
+ * (see src/lib/chat.ts), so that deleting them there destroys the chats.
+ *
  * Writes one .md per note, with its title and dates as front matter, and the
  * attachments under files/, with every vault:<id> image link rewritten to the
  * file. Stored documents (pdf, xlsx, ...) come out under documents/ with their

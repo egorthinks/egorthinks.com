@@ -87,3 +87,24 @@ export async function commit(parent: string | null, changes: { path: string; byt
     const res = await call('/api/vault/commit', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body });
     return ((await res.json()) as { commit: string }).commit;
 }
+
+/* Chat keys: the destroyable half of every chat (see lib/chat.ts) */
+
+export type ChatKeyRecord = { id: string; expires: number | null; wrapped: string };
+
+export async function chatKeys(): Promise<ChatKeyRecord[]> {
+    return ((await (await call('/api/vault/chatkeys', { cache: 'no-store' })).json()) as { keys: ChatKeyRecord[] }).keys;
+}
+
+export async function putChatKey(record: ChatKeyRecord): Promise<void> {
+    await post('/api/vault/chatkeys', record);
+}
+
+export async function deleteChatKey(id: string): Promise<void> {
+    // A content type keeps Astro's form-CSRF check out of the way; the middleware's own Origin check still applies.
+    await call(`/api/vault/chatkeys/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+}
+
+export async function burnChatKeys(): Promise<number> {
+    return ((await (await post('/api/vault/chatkeys', { burn: true })).json()) as { burned: number }).burned;
+}

@@ -7,6 +7,7 @@
  */
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from '@simplewebauthn/browser';
 import * as api from './api.ts';
+import { initChat } from './chat-ui.ts';
 import { prepareImage } from './images.ts';
 import { render } from './markdown.ts';
 import { Vault } from './vault.ts';
@@ -16,8 +17,10 @@ import {
     parseHeader,
     randomId,
     resetPassword,
+    removePanicPassword,
     rotateRecoveryKey,
-    unlockWithPassword,
+    setPanicPassword,
+    unlock,
     WrongKeyError,
     type VaultHeader
 } from '../lib/crypto.ts';
@@ -206,10 +209,13 @@ $<HTMLFormElement>('#unlock-form').addEventListener('submit', (e) => {
     const form = e.currentTarget as HTMLFormElement;
     act(submitButton(form), 'unlock', async () => {
         const { state, header } = pending!;
-        const key = await unlockWithPassword(header!, $<HTMLInputElement>('#unlock-password').value);
+        const { key, panic } = await unlock(header!, $<HTMLInputElement>('#unlock-password').value);
         const v = new Vault(key, header!, state);
         await v.load();
         form.reset();
+        // A panic unlock looks exactly like any other; the chats are gone before the vault appears.
+        vault = v;
+        await chat.enter({ panic });
         enterApp(v);
     });
 });
@@ -274,6 +280,15 @@ function setStatus(state: SaveState, label = STATUS_LABEL[state]) {
     statusEl.disabled = state !== 'error';
     statusEl.title = state === 'error' ? 'Try again' : '';
 }
+
+const chat = initChat({
+    vault: () => vault,
+    setStatus: (state, label) => setStatus(state, label),
+    idleStatus: () => setStatus(dirty ? 'dirty' : 'saved'),
+    say,
+    describe,
+    touch: () => (lastActivity = Date.now())
+});
 
 function enterApp(v: Vault) {
     vault = v;
@@ -577,6 +592,7 @@ document.addEventListener('visibilitychange', async () => {
         const changed = await vault.refresh();
         renderList();
         renderDocs();
+        void chat.refresh().catch(() => {});
         if (!current || dirty) return;
         if (!vault.manifest.notes[current.id] && changed.includes(current.id)) showNote(null);
         else if (changed.includes(current.id)) showNote(await vault.readNote(current.id));
@@ -589,7 +605,7 @@ document.addEventListener('visibilitychange', async () => {
 });
 
 window.addEventListener('beforeunload', (e) => {
-    if (dirty || saving || docBusy) e.preventDefault();
+    if (dirty || saving || docBusy || chat.busy()) e.preventDefault();
 });
 
 /* Documents --------------------------------------------------------------- */
@@ -600,12 +616,13 @@ const docInput = $<HTMLInputElement>('#doc-input');
 const docDrop = $('#doc-drop');
 let docBusy = false;
 
-function setSection(section: 'notes' | 'docs') {
-    $('#notes-view').hidden = section !== 'notes';
-    $('#docs-view').hidden = section !== 'docs';
-    $('#tab-notes').setAttribute('aria-pressed', String(section === 'notes'));
-    $('#tab-docs').setAttribute('aria-pressed', String(section === 'docs'));
-    if (section === 'docs') void save();
+function setSection(section: 'notes' | 'docs' | 'chat') {
+    for (const name of ['notes', 'docs', 'chat'] as const) {
+        $(`#${name}-view`).hidden = section !== name;
+        $(`#tab-${name}`).setAttribute('aria-pressed', String(section === name));
+    }
+    if (section !== 'notes') void save();
+    if (section === 'chat') void chat.show();
 }
 
 function formatSize(bytes: number): string {
@@ -747,6 +764,7 @@ async function deleteDoc(id: string) {
 }
 
 $('#tab-notes').addEventListener('click', () => setSection('notes'));
+$('#tab-chat').addEventListener('click', () => setSection('chat'));
 $('#tab-docs').addEventListener('click', () => setSection('docs'));
 $('#doc-upload').addEventListener('click', () => docInput.click());
 docInput.addEventListener('change', () => {
@@ -819,8 +837,33 @@ $<HTMLFormElement>('#rotate-form').addEventListener('submit', (e) => {
     });
 });
 
+$('#settings-open').addEventListener('click', () => {
+    $('#panic-state').textContent = vault?.header.slots.panic ? 'A panic password is set.' : 'No panic password is set.';
+});
+
+$<HTMLFormElement>('#panic-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const form = e.currentTarget as HTMLFormElement;
+    const action = ((e as SubmitEvent).submitter as HTMLButtonElement | null)?.dataset.panic ?? 'set';
+    act(null, 'panic', async () => {
+        const master = $<HTMLInputElement>('#panic-master').value;
+        let header: VaultHeader;
+        if (action === 'remove') {
+            header = await removePanicPassword(vault!.header, master);
+        } else {
+            const panic = $<HTMLInputElement>('#panic-new').value;
+            if (panic.length < MIN_PASSWORD) throw new Error(`Use at least ${MIN_PASSWORD} characters for the panic password too.`);
+            header = await setPanicPassword(vault!.header, master, panic);
+        }
+        await vault!.saveHeader(header);
+        form.reset();
+        $('#panic-state').textContent = header.slots.panic ? 'A panic password is set.' : 'No panic password is set.';
+        say('panic', action === 'remove' ? 'Panic password removed.' : 'Panic password set. Typing it at the unlock screen destroys every chat.', true);
+    });
+});
+
 settings.addEventListener('close', () => {
-    for (const name of ['passkey', 'password', 'rotate']) say(name, '');
+    for (const name of ['passkey', 'password', 'rotate', 'chat-key', 'panic', 'burn']) say(name, '');
 });
 
 /* Locking ----------------------------------------------------------------- */
