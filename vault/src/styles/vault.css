@@ -149,3 +149,12 @@ dialog::backdrop {
         display: none;
     }
 }
+
+.doc-drop.is-dragging {
+    background-color: var(--bg-muted);
+}
+
+/* More than one failure reads as a list. */
+.error-line {
+    white-space: pre-line;
+}

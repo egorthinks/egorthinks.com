@@ -3,14 +3,16 @@
  *
  *   README.md              written once by the server: what this repo is
  *   vault.json             key slots (see crypto.ts); the only plaintext the client writes
- *   manifest.enc           { notes, files } index, so the list opens with one fetch
+ *   manifest.enc           { notes, files, docs } index, so the lists open with one fetch
  *   notes/<id>.md.enc      one note: title + markdown body
- *   files/<id>.enc         one attachment: type + bytes
+ *   files/<id>.enc         one image attached to a note: type + bytes
+ *   docs/<id>/<n>.enc      one piece of a stored document (pdf, xlsx, ...); see docs.ts
  *   .vault/passkeys.json   public keys of registered passkeys; server-only
  *
- * File names are random ids, so the tree says how many notes there are and
- * roughly how long, and nothing else. Every note also carries its own title,
- * so the manifest is an index that can be rebuilt, not the only copy.
+ * File names are random ids, so the tree says how many notes and documents
+ * there are and roughly how long, and nothing else. Every note also carries its
+ * own title, and a document's first piece carries its name, so the manifest is
+ * an index that can be rebuilt, not the only copy.
  */
 import type { Bytes } from './crypto.ts';
 
@@ -19,14 +21,15 @@ export const PATHS = {
     manifest: 'manifest.enc',
     passkeys: '.vault/passkeys.json',
     note: (id: string) => `notes/${id}.md.enc`,
-    file: (id: string) => `files/${id}.enc`
+    file: (id: string) => `files/${id}.enc`,
+    doc: (id: string, index: number) => `docs/${id}/${index}.enc`
 };
 
 export const ID_RE = /^[0-9a-f]{32}$/;
 export const SHA_RE = /^[0-9a-f]{40}$/;
 
 /** Paths the browser may write. The passkey list is the server's alone. */
-export const CLIENT_PATH_RE = /^(?:vault\.json|manifest\.enc|notes\/[0-9a-f]{32}\.md\.enc|files\/[0-9a-f]{32}\.enc)$/;
+export const CLIENT_PATH_RE = /^(?:vault\.json|manifest\.enc|notes\/[0-9a-f]{32}\.md\.enc|files\/[0-9a-f]{32}\.enc|docs\/[0-9a-f]{32}\/\d{1,3}\.enc)$/;
 
 /** Vercel functions take 4.5 MB of body; leave room for headers. */
 export const MAX_OBJECT_BYTES = 4 * 1024 * 1024;
@@ -43,10 +46,14 @@ export type NoteMeta = {
 
 export type FileMeta = { type: string; size: number; note: string };
 
+/** A stored document: opaque bytes with a name, added whole and never edited. */
+export type DocMeta = { name: string; type: string; size: number; added: string; chunks: number };
+
 export type Manifest = {
     v: 1;
     notes: Record<string, NoteMeta>;
     files: Record<string, FileMeta>;
+    docs: Record<string, DocMeta>;
 };
 
 export type Note = {
@@ -60,7 +67,7 @@ export type Note = {
 };
 
 export function emptyManifest(): Manifest {
-    return { v: 1, notes: {}, files: {} };
+    return { v: 1, notes: {}, files: {}, docs: {} };
 }
 
 export function excerptOf(body: string): string {

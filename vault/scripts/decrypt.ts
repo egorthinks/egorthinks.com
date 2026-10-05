@@ -9,7 +9,9 @@
  *
  * Writes one .md per note, with its title and dates as front matter, and the
  * attachments under files/, with every vault:<id> image link rewritten to the
- * file. Nothing touches the network: this is the way out if the site, Vercel or
+ * file. Stored documents (pdf, xlsx, ...) come out under documents/ with their
+ * own names, after a check that no piece is missing. Nothing touches the
+ * network: this is the way out if the site, Vercel or
  * this code's server half ever disappears. It reads notes/ directly rather than
  * trusting the manifest, so a damaged index loses nothing.
  */
@@ -17,6 +19,7 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { open, openJson, parseHeader, unlockWithPassword, unlockWithRecovery, type Bytes } from '../src/lib/crypto.ts';
+import { openDocChunk, safeFileName, verifyDoc } from '../src/lib/docs.ts';
 import { decodeFile, ID_RE, PATHS, type Note } from '../src/lib/model.ts';
 
 const EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif', 'image/avif': 'avif' };
@@ -47,6 +50,18 @@ async function list(dir: string): Promise<string[]> {
     } catch {
         return [];
     }
+}
+
+/** `name.ext` -> `name (abc123).ext` when `name.ext` is already taken. */
+function uniqueName(name: string, id: string, taken: Set<string>): string {
+    let candidate = name;
+    if (taken.has(candidate.toLowerCase())) {
+        const dot = name.lastIndexOf('.');
+        const stem = dot > 0 ? name.slice(0, dot) : name;
+        candidate = `${stem} (${id.slice(0, 6)})${dot > 0 ? name.slice(dot) : ''}`;
+    }
+    taken.add(candidate.toLowerCase());
+    return candidate;
 }
 
 function fileName(title: string, id: string, taken: Set<string>): string {
@@ -100,7 +115,33 @@ async function main() {
         count++;
     }
 
-    console.log(`Decrypted ${count} note(s) and ${fileLinks.size} attachment(s) into ${out}`);
+    // Documents. Each is rebuilt from its own pieces, never from the manifest.
+    const docNames = new Set<string>();
+    let docs = 0;
+    for (const id of (await list(join(repo, 'docs'))).sort()) {
+        if (!ID_RE.test(id)) continue;
+        const pieces = (await list(join(repo, 'docs', id)))
+            .map((f) => /^(\d+)\.enc$/.exec(f)?.[1])
+            .filter((n): n is string => n !== undefined)
+            .map(Number)
+            .sort((a, b) => a - b);
+        const first = await openDocChunk(key, id, 0, await read(join(repo, PATHS.doc(id, 0))));
+        const parts: Bytes[] = [first.data];
+        for (const i of pieces.filter((n) => n > 0)) parts.push((await openDocChunk(key, id, i, await read(join(repo, PATHS.doc(id, i))))).data);
+        verifyDoc(id, first.header!, parts);
+
+        await mkdir(join(out, 'documents'), { recursive: true });
+        const whole = new Uint8Array(first.header!.size);
+        let at = 0;
+        for (const part of parts) {
+            whole.set(part, at);
+            at += part.length;
+        }
+        await writeFile(join(out, 'documents', uniqueName(safeFileName(first.header!.name), id, docNames)), whole);
+        docs++;
+    }
+
+    console.log(`Decrypted ${count} note(s), ${fileLinks.size} attachment(s) and ${docs} document(s) into ${out}`);
 }
 
 main().catch((err) => {
